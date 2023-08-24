@@ -1,7 +1,5 @@
-import type { DiscordBot } from "../mod.js";
+import type { Bot } from "@discordeno/bot";
 
-type Tail<T extends any[]> = T extends [any, ...infer U] ? U : never;
-
-/* Complicated stuff to replace the Bot instance in the arguments with DiscordBot */
+/* Complicated stuff to add a DiscordBot argument to a function */
 export type Args<T> = T extends (...args: infer U) => unknown ? U : never;
-export type ReplaceBot<T extends any[], U = Promise<void> | void> = (bot: DiscordBot, ...args: Tail<T>) => U;
+export type ReplaceBot<T extends any[], U = Promise<void> | void> = (bot: Bot, ...args: T) => U;

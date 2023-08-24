@@ -13,14 +13,19 @@
 		"rest": "node build/rest/mod.js",
 		"gateway": "node build/gateway/mod.js",
 		"db": "node build/db/mod.js",
-		"bot": "node build/bot/mod.js"
+		"bot": "node build/bot/mod.js",
+		"lint": "npx eslint --fix"
 	},
 	"dependencies": {
 		"@dqbd/tiktoken": "^1.0.7",
 		"@napi-rs/canvas": "^0.1.44",
 		"@supabase/supabase-js": "^2.32.0",
 		"colorette": "^2.0.20",
-		"discordeno": "^16.0.1",
+		"@discordeno/bot": "^19.0.0-next.b2f65c2",
+		"@discordeno/gateway": "^19.0.0-next.b2f65c2",
+		"@discordeno/rest": "^19.0.0-next.b2f65c2",
+		"@discordeno/types": "^19.0.0-next.b2f65c2",
+		"@discordeno/utils": "^19.0.0-next.b2f65c2",
 		"dotenv": "^16.0.3",
 		"express": "^4.18.2",
 		"node-fetch": "^3.2.10",

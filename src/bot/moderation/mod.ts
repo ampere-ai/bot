@@ -1,4 +1,5 @@
-import type { DiscordEmbedField, Embed } from "discordeno";
+import type { DiscordEmbedField, Embed } from "@discordeno/bot";
+import type { Bot } from "@discordeno/bot";
 
 import RabbitMQ from "rabbitmq-client";
 import { randomUUID } from "crypto";
@@ -8,7 +9,6 @@ import type { DBInfraction, GiveInfractionOptions } from "../../db/types/moderat
 import type { DBEnvironment } from "../../db/types/mod.js";
 import type { DBGuild } from "../../db/types/guild.js";
 import type { DBUser } from "../../db/types/user.js";
-import type { DiscordBot } from "../mod.js";
 
 import { EmbedColor, type MessageResponse } from "../utils/response.js";
 import { RABBITMQ_URI, SUPPORT_INVITE } from "../../config.js";
@@ -72,7 +72,7 @@ export function moderationNotice({ result }: ModerationNoticeOptions): MessageRe
 	};
 }
 
-export function giveInfraction<T extends DBGuild | DBUser>(bot: DiscordBot, entry: T, {
+export function giveInfraction<T extends DBGuild | DBUser>(bot: Bot, entry: T, {
 	by, reason, type, moderation, reference, until, seen
 }: GiveInfractionOptions): Promise<T> {
 	/* Raw infraction data */
@@ -130,8 +130,7 @@ export function banNotice(entry: DBGuild | DBUser, infraction: DBInfraction): Me
 		embeds: {
 			title: `${location === "guild" ? "This server is" : "You are"} banned **${infraction.until ? "temporarily" : "permanently"}** from using the bot 😔`,
 			description: `_If you want to appeal or have questions about this ban, join the **[support server](https://${SUPPORT_INVITE})**_.`,
-			timestamp: infraction.when, fields,
-			color: EmbedColor.Red
+			fields, color: EmbedColor.Red
 		}
 	};
 }

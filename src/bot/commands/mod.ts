@@ -1,4 +1,4 @@
-import { CreateApplicationCommand } from "discordeno";
+import { CreateApplicationCommand } from "@discordeno/bot";
 
 import type { Command } from "../types/command.js";
 import { bot } from "../mod.js";

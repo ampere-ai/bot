@@ -1,4 +1,4 @@
-import { Intents } from "discordeno";
+import { Intents } from "@discordeno/bot";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -51,6 +51,6 @@ export const SUPPORT_INVITE = `discord.gg/${process.env.SUPPORT_INVITE_CODE!}`;
 export const BRANDING_COLOR = parseInt(process.env.BRANDING_COLOR!, 16);
 
 /** Which gateway intents should be used */
-export const INTENTS: Intents =
+export const INTENTS =
     Intents.DirectMessages |
     Intents.GuildMessages;

@@ -1,6 +1,5 @@
-import type { CustomInteraction } from "../../types/discordeno.js";
+import type { Bot, Interaction } from "@discordeno/bot";
 import type { CommandOptionValue } from "../../types/command.js";
-import type { DiscordBot } from "../../mod.js";
 
 import { handleError } from "../../moderation/error.js";
 import { ResponseError } from "../../error/response.js";
@@ -12,7 +11,7 @@ import { banNotice, isBanned } from "../../moderation/mod.js";
 
 import { COMMANDS } from "../../commands/mod.js";
 
-export async function executeCommand(bot: DiscordBot, interaction: CustomInteraction) {
+export async function executeCommand(bot: Bot, interaction: Interaction) {
 	if (!interaction.data) return;
 
 	const command = COMMANDS.find(c => c.name === interaction.data?.name) ?? null;
@@ -79,7 +78,7 @@ export async function executeCommand(bot: DiscordBot, interaction: CustomInterac
 	}
 }
 
-function parseCommandOptions(interaction: CustomInteraction) {
+function parseCommandOptions(interaction: Interaction) {
 	const args: Record<string, CommandOptionValue> = {};
 
 	if (interaction.data!.options) for (const option of interaction.data!.options) {

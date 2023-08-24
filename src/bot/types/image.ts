@@ -1,5 +1,5 @@
+import type { Bot } from "@discordeno/bot";
 import type { Emitter } from "../utils/event.js";
-import type { DiscordBot } from "../mod.js";
 
 interface ImageConfigModelSize {
     width: number;
@@ -66,14 +66,14 @@ export interface ImageGenerationSize {
 }
 
 export interface ImageGenerationOptions {
-	bot: DiscordBot;
+	bot: Bot;
 	model: ImageModel;
 	emitter: Emitter<ImageGenerationResult>;
 	body: ImageGenerationBody;
 }
 
 export interface ImageUpscaleOptions {
-	bot: DiscordBot;
+	bot: Bot;
 	url: string;
 }
 

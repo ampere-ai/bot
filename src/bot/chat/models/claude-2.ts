@@ -4,26 +4,27 @@ import { RestrictionName } from "../../utils/restriction.js";
 import { createChatModel } from "../../helpers/chat.js";
 
 export default createChatModel({
-	name: "GPT-4", description: "OpenAI's newest GPT-4 model", id: "gpt-4",
-	emoji: { name: "✨" },
+	name: "Claude 2", description: "Second version of Anthropic's AI assistant", id: "claude-2",
+	emoji: { name: "anthropic", id: 1097849339432423454n },
 
-	restrictions: [ RestrictionName.Premium ],
-	maxTokens: 8191,
+	restrictions: [ RestrictionName.PremiumPlan ],
+	maxTokens: 100000,
 
-	cooldown: {
-		subscription: 30 * 1000,
-	},
+	initialPrompt: [
+		{
+			role: "user", content: "Who are you?"
+		},
 
-	initialPrompt: {
-		role: "system",
-		content: "You are GPT-4, a new GPT model by OpenAI released on the 14th March 2023, an AI language model created by OpenAI."
-	},
+		{
+			role: "assistant", content: "I am Claude, an AI chatbot created by Anthropic."
+		}
+	],
 
 	handler: async ({ bot, emitter, history }) => {
-		const event: EventEmitter = await bot.api.text.gpt({
+		const event: EventEmitter = await bot.api.text.anthropic({
 			messages: history.messages,
 			max_tokens: history.maxTokens,
-			model: "gpt-4"
+			model: "claude-instant-1-100k"
 		}) as EventEmitter;
 
 		event.on("data", data => {

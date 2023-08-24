@@ -1,7 +1,7 @@
+import type { Bot, ComponentEmoji } from "@discordeno/bot";
+
 import type { RestrictionName } from "../utils/restriction.js";
-import type { DiscordComponentEmoji } from "./discordeno.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
-import type { DiscordBot } from "../mod.js";
 
 export enum SettingsLocation {
 	Guild = "g",
@@ -13,11 +13,14 @@ export enum SettingsOptionType {
     /** Simple true-false value */
     Boolean,
 
-    /** Users can choose from a list */
-    Choices
+    /** Users can choose one option from a list */
+    Choices,
+
+	/** Users can choose multiple options from a list */
+	MultipleChoices
 }
 
-export type DBSettings = Record<string, string | number | boolean>
+export type DBSettings = Record<string, any>
 
 export interface SettingsOptionChoice<T> {
 	/** Name of the choice */
@@ -27,7 +30,7 @@ export interface SettingsOptionChoice<T> {
     description?: string;
 
 	/** Emoji of the choice */
-	emoji?: DiscordComponentEmoji | string;
+	emoji?: ComponentEmoji | string;
 
 	/** Restrictions of the choice */
 	restrictions?: RestrictionName[];
@@ -36,7 +39,7 @@ export interface SettingsOptionChoice<T> {
 	value: T;
 }
 
-export type SettingsOption<T extends string | number | boolean = any> = BooleanSettingsOption | ChoiceSettingsOption<T>
+export type SettingsOption<T extends string | number | boolean = any> = BooleanSettingsOption | ChoiceSettingsOption<T> | MultipleChoiceSettingsOption<T>
 
 interface BaseSettingsOption<T> {
     /** Name of the settings option */
@@ -55,7 +58,7 @@ interface BaseSettingsOption<T> {
     location?: SettingsLocation;
 
     /** Handler to execute when this setting is changed */
-    handler?: (bot: DiscordBot, env: DBEnvironment, value: T) => Promise<void> | void;
+    handler?: (bot: Bot, env: DBEnvironment, value: T) => Promise<void> | void;
 
     /** Default value of this settings option */
     default: T;
@@ -72,12 +75,23 @@ type ChoiceSettingsOption<T> = BaseSettingsOption<T> & {
 	choices: SettingsOptionChoice<T>[];
 }
 
+type MultipleChoiceSettingsOption<T> = BaseSettingsOption<T> & {
+	type: SettingsOptionType.MultipleChoices;
+
+	/** Choices for the option */
+	choices: SettingsOptionChoice<T>[];
+
+	/* Minimum & maximum of options to pick */
+	min: number;
+	max: number;
+}
+
 export interface SettingsCategory {
     /** Name of the category */
     name: string;
 
     /** Emoji for the category */
-    emoji: DiscordComponentEmoji | string;
+    emoji: ComponentEmoji | string;
 
 	/** Available options for the category */
 	options: SettingsOption[];

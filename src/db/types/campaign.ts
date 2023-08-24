@@ -1,4 +1,4 @@
-import type { ActionRow, Embed } from "discordeno";
+import type { ActionRow, Embed } from "@discordeno/bot";
 
 import type { EmbedColor } from "../../bot/utils/response.js";
 

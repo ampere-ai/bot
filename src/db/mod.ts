@@ -1,6 +1,6 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient as createRedisClient } from "redis";
-import { createLogger } from "discordeno/logger";
+import { createLogger } from "@discordeno/utils";
 import RabbitMQ from "rabbitmq-client";
 import { bold } from "colorette";
 

@@ -1,14 +1,15 @@
+import type { Bot, ComponentEmoji } from "@discordeno/bot";
+
 import type { ConversationMessage, ConversationUserMessage } from "../../types/conversation.js";
-import type { DiscordComponentEmoji } from "../../types/discordeno.js";
 import type { RestrictionName } from "../../utils/restriction.js";
 import type { CommandCooldown } from "../../types/command.js";
 import type { DBEnvironment } from "../../../db/types/mod.js";
+import type { ToolData } from "../../types/plugin.js";
+import type { Emitter } from "../../utils/event.js";
 import type { HistoryData } from "../history.js";
-import type { DiscordBot } from "../../mod.js";
-
-import { Emitter } from "../../utils/event.js";
 
 import OpenChat from "./openchat.js";
+import Claude2 from "./claude-2.js";
 import ChatGPT from "./chatgpt.js";
 import Claude from "./claude.js";
 import GPT4 from "./gpt-4.js";
@@ -24,7 +25,7 @@ export interface ChatModel {
 	description: string;
 
 	/** Emoji of the chat model */
-	emoji: DiscordComponentEmoji | string;
+	emoji: ComponentEmoji | string;
 
 	/** Which users this chat model is restricted to */
 	restrictions?: RestrictionName[];
@@ -43,7 +44,7 @@ export interface ChatModel {
 }
 
 interface ChatModelHandlerOptions {
-	bot: DiscordBot;
+	bot: Bot;
 	env: DBEnvironment;
 	history: HistoryData;
 	input: ConversationUserMessage;
@@ -61,11 +62,14 @@ export interface ChatModelResult {
 
 	/** Why the generation stopped */
 	finishReason?: ChatModelFinishReason;
+
+	/** Tool execution results */
+	tool?: ToolData;
 	
 	/** Whether the generation is done */
 	done: boolean;
 }
 
 export const CHAT_MODELS: ChatModel[] = [
-	ChatGPT, GPT4, Claude, OpenChat
+	ChatGPT, GPT4, Claude, Claude2, OpenChat
 ];

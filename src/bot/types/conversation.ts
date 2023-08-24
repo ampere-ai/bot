@@ -16,7 +16,7 @@ export interface ConversationInteraction {
 	output: ConversationMessage;
 }
 
-export type ConversationResult = Pick<ChatModelResult, "done" | "cost" | "finishReason"> & {
+export type ConversationResult = Pick<ChatModelResult, "done" | "cost" | "finishReason" | "tool"> & {
 	/** The ID of the message */
 	id: string;
 	

@@ -1,6 +1,5 @@
+import type { Bot, Interaction } from "@discordeno/bot";
 import type { InteractionHandler } from "../types/interaction.js";
-import type { CustomInteraction } from "../types/discordeno.js";
-import type { DiscordBot } from "../mod.js";
 
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../utils/cooldown.js";
 import { handleError } from "../moderation/error.js";
@@ -13,7 +12,7 @@ export const HANDLERS: InteractionHandler[] = [
 	Settings, Premium, Campaign
 ];
 
-export async function handleInteraction(bot: DiscordBot, interaction: CustomInteraction) {
+export async function handleInteraction(bot: Bot, interaction: Interaction) {
 	if (!interaction.data || !interaction.data.customId) return;
 
 	const args = interaction.data.customId.split(":");
@@ -28,7 +27,7 @@ export async function handleInteraction(bot: DiscordBot, interaction: CustomInte
 	if (handler.cooldown) {
 		if (hasCooldown(interaction)) {
 			const { remaining } = getCooldown(interaction)!;
-			await interaction.reply(cooldownNotice(interaction));
+			await interaction.reply(cooldownNotice(interaction, env));
 
 			return void setTimeout(() => {
 				interaction.deleteReply().catch(() => {});

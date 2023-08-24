@@ -1,6 +1,6 @@
-import type { DBEnvironment } from "../../db/types/mod.js";
-import type { DiscordBot } from "../mod.js";
+import type { Bot } from "@discordeno/bot";
 
+import type { DBEnvironment } from "../../db/types/mod.js";
 import { DBRole } from "../../db/types/user.js";
 
 export interface RestrictionType {
@@ -35,7 +35,7 @@ export enum RestrictionName {
 }
 
 /** Determine which restriction type applies to a user. */
-function restrictions(bot: DiscordBot, env: DBEnvironment): RestrictionName[] {
+function restrictions(bot: Bot, env: DBEnvironment): RestrictionName[] {
 	const types: RestrictionName[] = [];
 
 	if (env.user.roles.includes(DBRole.Owner)) types.push(RestrictionName.Developer);
@@ -54,7 +54,7 @@ function restrictions(bot: DiscordBot, env: DBEnvironment): RestrictionName[] {
 }
 
 /** Determine whether a user is equal to the restriction type. */
-export function canUse(bot: DiscordBot, env: DBEnvironment, types: RestrictionName[]): boolean {
+export function canUse(bot: Bot, env: DBEnvironment, types: RestrictionName[]): boolean {
 	return restrictions(bot, env).some(r => types.includes(r));
 }
 

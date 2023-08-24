@@ -1,6 +1,4 @@
-import { InteractionTypes } from "discordeno";
-
-import type { CustomInteraction } from "../../types/discordeno.js";
+import { InteractionTypes } from "@discordeno/bot";
 
 import { handleInteraction } from "../../interactions/mod.js";
 import { createEvent } from "../../helpers/event.js";
@@ -8,8 +6,8 @@ import { executeCommand } from "./command.js";
 
 export default createEvent("interactionCreate", async (bot, interaction) => {
 	if (interaction.type === InteractionTypes.ApplicationCommand) {
-		return await executeCommand(bot, interaction as CustomInteraction);
+		return await executeCommand(bot, interaction);
 	}
 
-	await handleInteraction(bot, interaction as CustomInteraction);
+	await handleInteraction(bot, interaction);
 });

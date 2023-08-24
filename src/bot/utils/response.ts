@@ -1,7 +1,6 @@
-import type { ActionRow, CreateMessage, EditMessage, Embed, InteractionCallbackData } from "discordeno";
-import type { CustomMessage } from "../types/discordeno.js";
-
-import { ApplicationCommandFlags } from "discordeno";
+import {
+	MessageFlags, type ActionRow, type CreateMessageOptions, type EditMessage, type Embed, type InteractionCallbackData, type Message
+} from "@discordeno/bot";
 
 export interface MessageResponse {
     /** Content of the response */
@@ -26,7 +25,7 @@ export interface MessageResponse {
     ephemeral?: boolean;
 
     /** Message to reply to */
-    reference?: CustomMessage;
+    reference?: Message;
 }
 
 export enum EmbedColor {
@@ -61,10 +60,10 @@ export enum EmbedColor {
 	NotQuiteBlack = 0x23272a
 }
 
-export function transformResponse<T extends (CreateMessage | EditMessage | InteractionCallbackData) & {
-    messageReference?: CreateMessage["messageReference"],
+export function transformResponse<T extends (CreateMessageOptions | EditMessage | InteractionCallbackData) & {
+    messageReference?: CreateMessageOptions["messageReference"],
     ephemeral?: boolean
-} = CreateMessage>(
+} = CreateMessageOptions>(
 	response: MessageResponse
 ): T {
 	return {
@@ -76,7 +75,7 @@ export function transformResponse<T extends (CreateMessage | EditMessage | Inter
 				: [ response.embeds ]
 			: undefined,
 
-		flags: response.ephemeral ? ApplicationCommandFlags.Ephemeral : undefined,
+		flags: response.ephemeral ? MessageFlags.Ephemeral : undefined,
 		components: response.components,
 		file: response.file,
 
@@ -86,5 +85,5 @@ export function transformResponse<T extends (CreateMessage | EditMessage | Inter
 			guildId: response.reference.guildId,
 			messageId: response.reference.id
 		} : undefined
-	} as T;
+	} as unknown as T;
 }

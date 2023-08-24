@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { ApplicationCommandOptionTypes, DiscordEmbedField } from "discordeno";
+import type { Bot, Interaction } from "@discordeno/bot";
+
+import { ApplicationCommandOptionTypes, DiscordEmbedField } from "@discordeno/bot";
 import { createCommand } from "../helpers/command.js";
 
 import type { ImageGenerationAction, ImageModel, ImagePrompt, ImageSampler, ImageGenerationOptions, ImageGenerationSize } from "../types/image.js";
-import type { CustomInteraction, CustomMessage } from "../types/discordeno.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
-import type { DiscordBot } from "../mod.js";
 
-import { EmbedColor, MessageResponse, transformResponse } from "../utils/response.js";
+import { EmbedColor, MessageResponse } from "../utils/response.js";
 import { moderate, moderationNotice } from "../moderation/mod.js";
 import { ModerationSource } from "../moderation/types/mod.js";
 import { ResponseError } from "../error/response.js";
@@ -26,8 +25,8 @@ import { Emitter } from "../utils/event.js";
 import { charge } from "../premium.js";
 
 interface ImageStartOptions {
-	bot: DiscordBot;
-	interaction: CustomInteraction;
+	bot: Bot;
+	interaction: Interaction;
 	env: DBEnvironment;
 	guidance: number;
 	sampler: ImageSampler;
@@ -44,7 +43,7 @@ export interface ImageFormatOptions {
 	result: ImageGenerationResult;
 	action: ImageGenerationAction;
 	prompt: ImagePrompt;
-	interaction: CustomInteraction;
+	interaction: Interaction;
 	size: ImageGenerationSize;
 	env: DBEnvironment;
 }
@@ -174,7 +173,7 @@ export default createCommand({
 				}
 			});
 
-			const message = await bot.helpers.getOriginalInteractionResponse(interaction.token) as CustomMessage;
+			const message = await bot.helpers.getOriginalInteractionResponse(interaction.token);
 			await message.edit(result);
 
 		} catch (error) {
@@ -222,7 +221,7 @@ async function start(options: ImageStartOptions): Promise<MessageResponse> {
 	);
 
 	/* Fetch the interaction reply, so we can edit it later. */
-	const message = await bot.helpers.getOriginalInteractionResponse(interaction.token) as CustomMessage;
+	const message = await bot.helpers.getOriginalInteractionResponse(interaction.token);
 
 	const handler = async (data: ImageGenerationResult) => {
 		if (data.done) return;

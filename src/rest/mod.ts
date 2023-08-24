@@ -1,18 +1,16 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { BASE_URL, RequestMethod, createRestManager } from "discordeno";
-import { createLogger } from "discordeno/logger";
+import { RequestMethods, createRestManager } from "@discordeno/bot";
+import { createLogger } from "@discordeno/utils";
 import express from "express";
 
-import { BOT_TOKEN, REST_URL, REST_PORT, HTTP_AUTH } from "../config.js";
+import { BOT_TOKEN, REST_PORT, HTTP_AUTH } from "../config.js";
 
 const logger = createLogger({ name: "[REST]" });
 
 const rest = createRestManager({
-	token: BOT_TOKEN,
-	secretKey: HTTP_AUTH,
-	customUrl: REST_URL
+	token: BOT_TOKEN
 });
 
 interface RESTError {
@@ -50,8 +48,9 @@ app.all("/*", async (req, res) => {
 			req.body.file.blob = new Blob([ Buffer.from(req.body.file.blob, "base64") ]);
 		}
 
-		const result = await rest.runMethod(
-			rest, req.method as RequestMethod, `${BASE_URL}${req.url}`, req.body
+		const result = await rest.makeRequest(
+			req.method as RequestMethods, req.url.substring(4),
+			{ body: req.method !== "DELETE" && req.method !== "GET" ? req.body : undefined }
 		);
 
 		logger.debug(req.method, req.url);

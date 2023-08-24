@@ -1,3 +1,5 @@
+import type { Bot } from "@discordeno/bot";
+
 import { get_encoding } from "@dqbd/tiktoken";
 const encoder = get_encoding("cl100k_base");
 
@@ -5,12 +7,11 @@ import type { Conversation, ConversationMessage, ConversationUserMessage } from 
 import type { DBEnvironment } from "../../db/types/mod.js";
 import type { ChatModel } from "./models/mod.js";
 import type { ChatTone } from "./tones/mod.js";
-import type { DiscordBot } from "../mod.js";
 
 import { ChatError, ChatErrorType } from "../error/chat.js";
 
 interface BuildHistoryOptions {
-	bot: DiscordBot;
+	bot: Bot;
 	conversation: Conversation;
 	input: ConversationUserMessage;
 	model: ChatModel;

@@ -1,4 +1,4 @@
-import { ButtonStyles, MessageComponentTypes } from "discordeno";
+import { ButtonStyles, MessageComponentTypes } from "@discordeno/bot";
 
 import { createInteractionHandler } from "../helpers/interaction.js";
 import { getCampaign, trackingURL } from "../campaign.js";

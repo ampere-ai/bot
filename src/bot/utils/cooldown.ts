@@ -1,13 +1,12 @@
-import { Collection, type Embed } from "discordeno";
+import { Collection, type Interaction, type Embed } from "@discordeno/bot";
 
-import type { CustomInteraction } from "../types/discordeno.js";
 import type { Conversation } from "../types/conversation.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
 import { EmbedColor, type MessageResponse } from "./response.js";
 import { advertisement } from "../campaign.js";
 
-type CooldownTarget = Conversation | CustomInteraction
+type CooldownTarget = Conversation | Interaction
 
 /** Global command cool-downs */
 const cooldowns: Collection<string, number> = new Collection();

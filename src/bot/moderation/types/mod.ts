@@ -1,6 +1,7 @@
+import type { Bot } from "@discordeno/bot";
+
 import type { DBEnvironment } from "../../../db/types/mod.js";
 import type { ModerationFilterAction } from "./filter.js";
-import type { DiscordBot } from "../../mod.js";
 
 export enum ModerationSource {
 	ChatFromUser = "chatUser",
@@ -9,7 +10,7 @@ export enum ModerationSource {
 }
 
 export interface ModerationOptions {
-	bot: DiscordBot;
+	bot: Bot;
 	env: DBEnvironment;
 	source: ModerationSource;
 	content: string;

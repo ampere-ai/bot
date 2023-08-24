@@ -1,4 +1,4 @@
-import { MessageComponentTypes, ButtonStyles, type ActionRow, type Embed } from "discordeno";
+import { MessageComponentTypes, ButtonStyles, type ActionRow, type Embed } from "@discordeno/bot";
 
 import type { CampaignDisplay, CampaignRender, DBCampaign } from "../db/types/campaign.js";
 import type { DBEnvironment } from "../db/types/mod.js";

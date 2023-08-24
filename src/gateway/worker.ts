@@ -1,131 +1,142 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { ActivityTypes, DiscordGuild, DiscordMessage, DiscordReady, DiscordUnavailableGuild } from "discordeno";
-import { parentPort, workerData } from "worker_threads";
-import { createLogger } from "discordeno/logger";
-import { createShardManager } from "discordeno";
-import RabbitMQ from "rabbitmq-client";
-
 import type { WorkerCreateData, WorkerMessage } from "./types/worker.js";
 
-import { RABBITMQ_URI } from "../config.js";
+
+import { ActivityTypes, DiscordGatewayPayload, DiscordGuild, DiscordMessage, DiscordReady, DiscordUnavailableGuild } from "@discordeno/types";
+import { Collection, createLogger, snakelize } from "@discordeno/utils";
+import { parentPort, workerData } from "worker_threads";
+import { DiscordenoShard } from "@discordeno/gateway";
+import RabbitMQ from "rabbitmq-client";
+
+import { BOT_TOKEN, INTENTS, RABBITMQ_URI } from "../config.js";
 
 if (!parentPort) throw new Error("Parent port is null");
 
 const parent = parentPort!;
 const data: WorkerCreateData = workerData;
 
-const logger = createLogger({ name: `[WORKER #${data.workerID}]` });
+const logger = createLogger({ name: `[WORKER #${data.workerId}]` });
 const identifyPromises = new Map<number, () => void>();
 
 const connection = new RabbitMQ.Connection(RABBITMQ_URI);
 const publisher = connection.createPublisher();
 
+const shards = new Collection<number, DiscordenoShard>();
+
 /* Store loading guild & guild IDs to change GUILD_CREATE to GUILD_LOADED_DD, if needed. */
 const loadingGuilds: Set<bigint> = new Set();
 const guilds: Set<bigint> = new Set();
 
-const manager = createShardManager({
-	gatewayConfig: {
-		intents: data.intents,
-		token: data.token
-	},
-
-	totalShards: data.totalShards,
-	shardIds: [],
-
-	createShardOptions: {
-		makePresence: () => ({
-			status: "online",
-
-			activities: [
-				{
-					type: ActivityTypes.Game,
-					name: ".gg/turing » @ChatGPT",
-					createdAt: Date.now()
-				}
-			]
-		})
-	},
-
-	handleMessage: async (shard, message) => {
-		if (!message.t) return;
-
-		if (message.t === "READY") {
+const manage = async (shard: DiscordenoShard, payload: DiscordGatewayPayload) => {
+	switch (payload.t) {
+		case "READY": {
 			/* Marks which guilds the bot is in, when doing initial loading in cache. */
-			(message.d as DiscordReady).guilds.forEach((g) => loadingGuilds.add(BigInt(g.id)));
+			(payload.d as DiscordReady).guilds.forEach((g) => loadingGuilds.add(BigInt(g.id)));
 			
 			parent.postMessage({
-				type: "READY",
-				shardID: shard.id
+				type: "READY", shardId: shard.id
 			});
+
+			break;
 		}
 
-		// If GUILD_CREATE event came from a shard loaded event, change event to GUILD_LOADED_DD.
-		if (message.t === "GUILD_CREATE") {
-			const guild = message.d as DiscordGuild;
+		case "GUILD_CREATE": {
+			const guild = (payload.d as DiscordGuild);
 			const id = BigInt(guild.id);
 
 			const existing = guilds.has(id);
 			if (existing) return;
 
 			if (loadingGuilds.has(id)) {
-				message.t = "GUILD_CREATE";
+				payload.t = "GUILD_CREATE";
 				loadingGuilds.delete(id);
 			}
 
 			guilds.add(id);
+
+			break;
 		}
 
-		/* If a guild gets deleted, remove it from the cache so GUILD_CREATE works properly later. */
-		if (message.t === "GUILD_DELETE") {
-			const guild = message.d as DiscordUnavailableGuild;
+		case "GUILD_DELETE": {
+			const guild = payload.d as DiscordUnavailableGuild;
 			if (guild.unavailable) return;
 
 			guilds.delete(BigInt(guild.id));
+
+			break;
 		}
 
-		switch (message.t) {
-			case "MESSAGE_CREATE":
-			case "INTERACTION_CREATE":
-				if (message.t === "MESSAGE_CREATE" && (message.d as DiscordMessage).content?.length === 0) return;
+		case "MESSAGE_CREATE":
+		case "INTERACTION_CREATE": {
+			if (payload.t === "MESSAGE_CREATE" && (payload.d as DiscordMessage).content?.length === 0) return;
 
-				await publisher.send("gateway", {
-					shard: shard.id, data: message
-				});
-
-				break;
-
-			default:
-				break;
-		}
-	},
-
-	requestIdentify: async function (id: number) {
-		return await new Promise((resolve) => {
-			identifyPromises.set(id, resolve);
-
-			parent.postMessage({
-				type: "REQUEST_IDENTIFY",
-				shardID: id
+			await publisher.send("gateway", {
+				shard: shard.id, payload
 			});
-		});
+
+			break;
+		}
+
+		default:
+			break;
 	}
-});
+};
 
 parent.on("message", async (data: WorkerMessage) => {
 	switch (data.type) {
 		case "IDENTIFY_SHARD": {
-			logger.info(`Starting to identify shard #${data.shardID}`);
-			await manager.identify(data.shardID);
+			logger.info(`Identifying ${shards.has(data.shardId) ? "existing" : "new"} shard #${data.shardId}`);
+
+			const shard =
+				shards.get(data.shardId) ??
+
+				new DiscordenoShard({
+					id: data.shardId,
+
+					connection: {
+						compress: false,
+						intents: INTENTS,
+						properties: {
+							os: "linux",
+							device: "Discordeno",
+							browser: "Discordeno"
+						},
+						token: BOT_TOKEN,
+						totalShards: 1,
+						url: "wss://gateway.discord.gg",
+						version: 10,
+					},
+
+					events: {
+						message: async (shard, payload) => {
+							await manage(shard, snakelize(payload));
+						}
+					}
+				});
+
+			shard.makePresence = async () => ({
+				status: "online",
+				since: null,
+	
+				activities: [
+					{
+						type: ActivityTypes.Game,
+						name: ".gg/turing » @ChatGPT"
+					}
+				]
+			});
+
+			shards.set(shard.id, shard);
+			await shard.identify();
 
 			break;
 		}
 
 		case "ALLOW_IDENTIFY": {
-			identifyPromises.get(data.shardID)?.();
-			identifyPromises.delete(data.shardID);
+			identifyPromises.get(data.shardId)?.();
+			identifyPromises.delete(data.shardId);
 
 			break;
 		}

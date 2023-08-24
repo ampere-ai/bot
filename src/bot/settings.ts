@@ -1,4 +1,4 @@
-import { ActionRow, ButtonComponent, ButtonStyles, MessageComponentTypes, SelectMenuComponent } from "discordeno";
+import { ActionRow, ButtonComponent, ButtonStyles, MessageComponentTypes, SelectMenuComponent } from "@discordeno/bot";
 import { randomUUID } from "crypto";
 
 import { SettingsCategory, SettingsLocation, SettingsOption, SettingsOptionType } from "./types/settings.js";
@@ -16,6 +16,7 @@ import { IMAGE_MODELS } from "./image/models.js";
 import { IMAGE_STYLES } from "./image/styles.js";
 import { TONES } from "./chat/tones/mod.js";
 import { resetConversation } from "./chat/mod.js";
+import { CHAT_PLUGINS } from "./chat/plugins.js";
 
 export const SettingsCategories: SettingsCategory[] = [
 	{
@@ -97,6 +98,27 @@ export const SettingsCategories: SettingsCategory[] = [
 	},
 
 	{
+		name: "Plugins",
+		emoji: "🔧",
+
+		options: [
+			{
+				type: SettingsOptionType.MultipleChoices,
+				name: "Plugins",
+				description: "Which plugins to use for ChatGPT & GPT-4",
+				emoji: "🔧", default: [],
+				location: SettingsLocation.User,
+
+				min: 0, max: 3,
+
+				choices: CHAT_PLUGINS.map(p => ({
+					name: p.name, description: p.description, emoji: p.emoji, value: p.id
+				}))
+			}
+		]
+	},
+
+	{
 		name: "Image",
 		emoji: "🖼️",
 		
@@ -104,18 +126,18 @@ export const SettingsCategories: SettingsCategory[] = [
 			{
 				name: "Model", emoji: "🖼️",
 				description: "Which image generation model to use",
-				location: SettingsLocation.User, default: "kandinsky",
+				location: SettingsLocation.User, default: IMAGE_MODELS[0].id,
 				type: SettingsOptionType.Choices,
 
 				choices: IMAGE_MODELS.map(m => ({
-					name: m.name, value: m.id
+					name: m.name, description: m.description, value: m.id
 				}))
 			},
 
 			{
 				name: "Style", emoji: "🖌️",
 				description: "Which image style to use",
-				location: SettingsLocation.User, default: "none",
+				location: SettingsLocation.User, default: IMAGE_STYLES[0].id,
 				type: SettingsOptionType.Choices,
 
 				choices: IMAGE_STYLES.map(m => ({
@@ -239,7 +261,7 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 		const key = categoryOptionKey(category, option);
 
 		const currentValue = getSettingsValue(entry, key);
-		let newValue: string | number | boolean | null = null;
+		let newValue: string | number | boolean | string[] | null = null;
 
 		if (option.type === SettingsOptionType.Boolean) {
 			newValue = !currentValue;
@@ -259,6 +281,25 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 		
 					ephemeral: true
 				});
+			}
+		} else if (option.type === SettingsOptionType.MultipleChoices) {
+			newValue = interaction.data?.values ?? currentValue;
+
+			for (const val of newValue as string[]) {
+				const choice = option.choices.find(c => c.value === val)!;
+
+				if (choice.restrictions && !canUse(bot, env, choice.restrictions)) {
+					const allowed = restrictionTypes(choice.restrictions);
+	
+					return void await interaction.reply({
+						embeds: {
+							description: `The choice **${choice.name}** is ${allowed.map(a => `**${a.description}** ${a.emoji}`).join(", ")}.`,
+							color: EmbedColor.Orange
+						},
+			
+						ephemeral: true
+					});
+				}
 			}
 		}
 
@@ -328,10 +369,13 @@ function buildOption(
 			}
 		);
 
-	} else if (option.type === SettingsOptionType.Choices) {
+	} else if (option.type === SettingsOptionType.Choices || option.type === SettingsOptionType.MultipleChoices) {
 		components.push({
 			type: MessageComponentTypes.SelectMenu,
 			customId: `settings:change:${location}:${categoryOptionKey(category, option)}`,
+
+			maxValues: option.type === SettingsOptionType.MultipleChoices ? option.max : undefined,
+			minValues: option.type === SettingsOptionType.MultipleChoices ? option.min : undefined,
 
 			placeholder: `${option.name} ${option.emoji}`,
 
@@ -344,7 +388,7 @@ function buildOption(
 						? `${c.description ?? ""} (${restrictions.map(r => r.description).join(", ")})`
 						: c.description,
 					emoji: c.emoji ? typeof c.emoji === "string" ? { name: c.emoji } : c.emoji : undefined,
-					default: c.value === current
+					default: Array.isArray(current) ? current.includes(c.value) : c.value === current
 				});
 			})
 		});

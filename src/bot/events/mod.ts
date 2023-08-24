@@ -1,4 +1,4 @@
-import type { EventHandlers } from "discordeno";
+import type { EventHandlers } from "@discordeno/bot";
 
 import type { Args, ReplaceBot } from "../types/args.js";
 import { bot } from "../mod.js";
@@ -17,6 +17,8 @@ const EVENTS = [
 
 export function setupEvents() {
 	for (const event of EVENTS) {
-		bot.events[event.name] = event.handler as any;
+		bot.events[event.name] = async (...data: any[]) => {
+			await (event.handler as any)(bot, ...data);
+		};
 	}
 }

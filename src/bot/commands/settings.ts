@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionTypes, calculatePermissions } from "discordeno";
+import { ApplicationCommandOptionTypes } from "@discordeno/bot";
 
 import { SettingsCategories, buildSettingsPage, whichEntry } from "../settings.js";
 import { SettingsLocation } from "../types/settings.js";
@@ -28,11 +28,9 @@ export default createCommand({
 			message: "You can only view & change these settings on **servers**", emoji: "😔"
 		});
 
-		const permissions = interaction.member && interaction.member.permissions
-			? calculatePermissions(interaction.member.permissions)
-			: null;
+		const permissions = interaction.member?.permissions;
 
-		if (location === SettingsLocation.Guild && permissions && !permissions.includes("MANAGE_GUILD")) throw new ResponseError({
+		if (location === SettingsLocation.Guild && permissions && !permissions.has("MANAGE_GUILD")) throw new ResponseError({
 			message: "You must have the `Manage Server` permission to view & change these settings", emoji: "😔"
 		});
 

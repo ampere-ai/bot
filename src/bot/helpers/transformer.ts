@@ -1,12 +1,7 @@
-import type { Transformers } from "discordeno";
+import type { Transformer, TransformerName } from "../transformers/mod.js";
 
-import type { Transformer } from "../transformers/mod.js";
-import { DiscordBot } from "../mod.js";
-
-export function createTransformer<T extends keyof Transformers, Transformed, Raw>(
-	name: T, handler: (bot: DiscordBot, transformedPayload: Transformed, raw: Raw) => unknown
+export function createTransformer<T extends TransformerName, Transformed, Raw>(
+	transformer: Transformer<T, Transformed, Raw>
 ): Transformer<T, Transformed, Raw> {
-	return  {
-		name, handler
-	};
+	return transformer;
 }

@@ -1,27 +1,53 @@
-import type { Transformers } from "discordeno";
+import type { Transformers } from "@discordeno/bot";
+import type { Bot } from "@discordeno/bot";
 
-import { type DiscordBot, bot } from "../mod.js";
+import { bot } from "../mod.js";
 
 import Interaction from "./interaction.js";
 import Message from "./message.js";
+import User from "./user.js";
 
-export interface Transformer<T extends keyof Transformers, Transformed, Raw> {
+export type TransformerName = keyof Transformers & keyof Transformers["desiredProperties"]
+
+export interface Transformer<T extends TransformerName, Transformed, Raw> {
     name: T;
-    handler: (bot: DiscordBot, transformedPayload: Transformed, raw: Raw) => unknown;
+	properties: (keyof Transformers["desiredProperties"][T])[] | null;
+    handler?: (bot: Bot, transformedPayload: Transformed, raw: Raw) => unknown;
 }
 
-const TRANSFORMERS: Transformer<keyof Transformers, any, any>[] = [
-	Interaction, Message
+const TRANSFORMERS = [
+	Interaction, Message, User
 ];
 
 export function setupTransformers() {
 	for (const transformer of TRANSFORMERS) {
-		const oldTransformer = bot.transformers[transformer.name];
+		/* All properties should be enabled */
+		if (transformer.properties === null) {
+			for (const key of Object.keys(bot.transformers.desiredProperties[transformer.name])) {
+				Object.defineProperty(
+					bot.transformers.desiredProperties[transformer.name], key,
+					{ value: true }
+				);
+			}
 
-		bot.transformers[transformer.name] = ((bot: DiscordBot, payload: unknown) => {
-			const transformed = (oldTransformer as any)(bot, payload);
+		/* Only some properties should be enabled */
+		} else if (transformer.properties.length > 0) {
+			for (const key of transformer.properties) {
+				Object.defineProperty(
+					bot.transformers.desiredProperties[transformer.name], key,
+					{ value: true }
+				);
+			}
+		}
 
-			return transformer.handler(bot, transformed, payload);
-		}) as any;
+		/* Add custom properties & functions */
+		if (transformer.handler) {
+			const oldTransformer = bot.transformers[transformer.name];
+
+			bot.transformers[transformer.name] = ((bot: Bot, payload: unknown) => {
+				const transformed = (oldTransformer as any)(bot, payload);
+				return transformer.handler!(bot, transformed, payload as any);
+			}) as any;
+		}
 	}
 }

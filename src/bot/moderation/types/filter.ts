@@ -1,7 +1,8 @@
+import type { Bot } from "@discordeno/bot";
+
 import type { DBInfraction } from "../../../db/types/moderation.js";
 import type { DBEnvironment } from "../../../db/types/mod.js";
 import type { ModerationSource } from "./mod.js";
-import type { DiscordBot } from "../../mod.js";
 
 /* Which action to perform regarding the flagged content */
 export type ModerationFilterActionType = "ban" | "warn" | "block" | "flag"
@@ -18,10 +19,10 @@ export type ModerationFilterAction = Pick<DBInfraction, "reason"> & {
 }
 
 interface ModerationFilterHandlerOptions {
-	bot: DiscordBot;
+	bot: Bot;
 	content: string;
 	source: ModerationSource;
-	env: DBEnvironment
+	env: DBEnvironment;
 }
 
 export interface ModerationFilter {

@@ -1,17 +1,17 @@
+import type { Bot, Interaction } from "@discordeno/bot";
+
 import type { RestrictionName } from "../utils/restriction.js";
-import type { DBEnvironment } from "../../db/types/mod.js";
 import type { MessageResponse } from "../utils/response.js";
-import type { CustomInteraction } from "./discordeno.js";
+import type { DBEnvironment } from "../../db/types/mod.js";
 import type { CommandCooldown } from "./command.js";
-import type { DiscordBot } from "../mod.js";
 
 enum InteractionHandlerType {
 	Button
 }
 
 export interface InteractionHandlerOptions {
-	bot: DiscordBot;
-	interaction: CustomInteraction;
+	bot: Bot;
+	interaction: Interaction;
 	args: string[];
 	env: DBEnvironment;
 }

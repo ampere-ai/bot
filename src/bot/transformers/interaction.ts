@@ -1,12 +1,14 @@
-import { DiscordInteraction, Interaction, InteractionCallbackData, InteractionResponseTypes } from "discordeno";
+import { DiscordInteraction, Interaction, InteractionCallbackData, InteractionResponseTypes } from "@discordeno/bot";
 
 import { type MessageResponse, transformResponse } from "../utils/response.js";
 import { createTransformer } from "../helpers/transformer.js";
 
-export default createTransformer<"interaction", Interaction, DiscordInteraction>(
-	"interaction",
+export default createTransformer<"interaction", Interaction, DiscordInteraction>({
+	name: "interaction",
 
-	(bot, interaction) => {
+	properties: null,
+
+	handler: (bot, interaction) => {
 		Object.defineProperty(interaction, "reply", {
 			value: function(response: MessageResponse) {
 				return bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
@@ -55,4 +57,4 @@ export default createTransformer<"interaction", Interaction, DiscordInteraction>
 		
 		return interaction;
 	}
-);
+});

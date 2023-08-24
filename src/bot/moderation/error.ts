@@ -1,8 +1,8 @@
-// import { bold } from "colorette";
+import { Bot } from "@discordeno/bot";
+import { bold } from "colorette";
 
 import { EmbedColor, MessageResponse } from "../utils/response.js";
 import { SUPPORT_INVITE } from "../../config.js";
-import { DiscordBot } from "../mod.js";
 import { publisher } from "./mod.js";
 
 interface JSONError {
@@ -16,9 +16,9 @@ interface HandleErrorOptions {
     guild: bigint | undefined;
 }
 
-export async function handleError(bot: DiscordBot, { error, guild }: HandleErrorOptions): Promise<MessageResponse> {
+export async function handleError(bot: Bot, { error, guild }: HandleErrorOptions): Promise<MessageResponse> {
 	const data = errorToJSON(error as Error);
-	// bot.logger.error(bold("An error occurred"), "->", data);
+	bot.logger.error(bold("An error occurred"), "->", data);
 
 	await publisher.send("error", {
 		error: data, guild: guild?.toString() ?? null
@@ -28,7 +28,7 @@ export async function handleError(bot: DiscordBot, { error, guild }: HandleError
 		embeds: {
 			title: "Uh-oh... 😬",
 			description: "It seems like an error has occurred. *The developers have been notified.*",
-			footer: { text: SUPPORT_INVITE }, timestamp: Date.now(),
+			footer: { text: SUPPORT_INVITE },
 			color: EmbedColor.Red
 		},
 

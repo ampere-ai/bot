@@ -2,12 +2,12 @@ export type ManagerMessage = ManagerMessageRequestIdentify | ManagerMessageReady
 
 export interface ManagerMessageRequestIdentify {
 	type: "REQUEST_IDENTIFY";
-	shardID: number;
+	shardId: number;
 }
 
 export interface ManagerMessageReady {
 	type: "READY";
-	shardID: number;
+	shardId: number;
 }
 
 export interface ManagerMessageShardPayload {

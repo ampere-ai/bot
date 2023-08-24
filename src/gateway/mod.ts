@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { Collection, createBot, createGatewayManager, createRestManager } from "discordeno";
-import { createLogger } from "discordeno/logger";
+import { Collection, createBot, createGatewayManager, createRestManager } from "@discordeno/bot";
+import { createLogger } from "@discordeno/utils";
 import { Worker } from "worker_threads";
 import express from "express";
 
@@ -24,52 +24,52 @@ app.use(
 app.use(express.json());
 
 const bot = createBot({
-	token: BOT_TOKEN
+	token: BOT_TOKEN,
+	events: {}
 });
 
 bot.rest = createRestManager({
 	token: BOT_TOKEN,
-	secretKey: HTTP_AUTH,
-	customUrl: REST_URL
+
+	proxy: {
+		authorization: HTTP_AUTH,
+		baseUrl: REST_URL
+	}
 });
 
-const gatewayBot = await bot.helpers.getGatewayBot();
 
 const gateway = createGatewayManager({
-	gatewayBot,
-
-	gatewayConfig: {
-		token: BOT_TOKEN, intents: INTENTS
-	},
+	token: BOT_TOKEN, intents: INTENTS,
 
 	shardsPerWorker: SHARDS_PER_WORKER,
 	totalWorkers: TOTAL_WORKERS,
 
-	handleDiscordPayload: () => {},
-
-	tellWorkerToIdentify: async (_gateway, workerID, shardID) => {
-		let worker = workers.get(workerID);
-
-		if (!worker) {
-			worker = createWorker(workerID);
-			workers.set(workerID, worker);
-		}
-
-		worker.postMessage({
-			type: "IDENTIFY_SHARD",
-			shardID
-		});
-	}
+	connection: await bot.rest.getSessionInfo(),
+	events: {}
 });
 
+gateway.tellWorkerToIdentify = async (_, workerId, shardId) => {
+	let worker = workers.get(workerId);
+
+	if (!worker) {
+		worker = createWorker(workerId);
+		workers.set(workerId, worker);
+	}
+
+	worker.postMessage({
+		type: "IDENTIFY_SHARD",
+		shardId
+	});
+};
+
 function createWorker(id: number) {
-	if (id === 0) logger.info(`Identifying with ${gateway.manager.totalShards} total shards`);
+	if (id === 0) logger.info(`Identifying with ${gateway.totalShards} total shards`);
 	logger.info(`Tell to identify shard #${id}`);
 
 	const workerData: WorkerCreateData = {
-		token: BOT_TOKEN, intents: gateway.manager.gatewayConfig.intents ?? 0,
-		totalShards: gateway.manager.totalShards,
-		workerID: id, path: "./worker.ts"
+		token: BOT_TOKEN, intents: gateway.intents,
+		totalShards: gateway.totalShards,
+		workerId: id, path: "./worker.ts"
 	};
 
 	const worker = new Worker("./build/gateway/worker.js", {
@@ -79,19 +79,19 @@ function createWorker(id: number) {
 	worker.on("message", async (data: ManagerMessage) => {
 		switch (data.type) {
 			case "REQUEST_IDENTIFY": {
-				logger.info(`Requesting to identify shard #${data.shardID}`);
-				await gateway.manager.requestIdentify(data.shardID);
+				logger.info(`Requesting to identify shard #${data.shardId}`);
+				await gateway.requestIdentify(data.shardId);
 
 				worker.postMessage({
 					type: "ALLOW_IDENTIFY",
-					shardID: data.shardID
+					shardID: data.shardId
 				});
 
 				break;
 			}
 
 			case "READY": {
-				logger.info(`Shard #${data.shardID} is ready`);
+				logger.info(`Shard #${data.shardId} is ready`);
 				break;
 			}
 		}

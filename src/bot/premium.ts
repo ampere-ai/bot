@@ -1,18 +1,16 @@
-import { ButtonComponent, ButtonStyles, Embed, MessageComponentTypes, calculatePermissions } from "discordeno";
+import { type Embed, type Bot, type Interaction, type ButtonComponent, ButtonStyles, MessageComponentTypes } from "@discordeno/bot";
 
 import type { DBPlan, PlanExpense } from "../db/types/premium.js";
-import type { CustomInteraction } from "./types/discordeno.js";
 import type { DBEnvironment } from "../db/types/mod.js";
 import type { DBGuild } from "../db/types/guild.js";
 import type { DBUser } from "../db/types/user.js";
-import type { DiscordBot } from "./mod.js";
 
 import { EmbedColor, type MessageResponse } from "./utils/response.js";
 import { ResponseError } from "./error/response.js";
 import { titleCase } from "./utils/helpers.js";
 import { displayBar } from "./utils/bar.js";
 
-export function buildOverview(bot: DiscordBot, interaction: CustomInteraction, { user, guild }: DBEnvironment) {
+export function buildOverview(bot: Bot, interaction: Interaction, { user, guild }: DBEnvironment) {
 	/* Current subscription & plan */
 	const subscriptions = {
 		user: user.subscription, guild: guild ? guild.subscription : null
@@ -26,12 +24,11 @@ export function buildOverview(bot: DiscordBot, interaction: CustomInteraction, {
 	const type = bot.db.premium({ user, guild });
 
 	/* The user's permissions */
-	const permissions = interaction.member && interaction.member.permissions
-		? calculatePermissions(interaction.member.permissions)
-		: null;
+	const permissions = interaction.member?.permissions;
 
 	/* Whether the "Recharge" button should be shown, for server Premium */
-	const showShopButton: boolean = user.metadata.email != undefined && (type?.location === "guild" ? permissions !== null && permissions.includes("MANAGE_GUILD") : true);
+	const showShopButton: boolean = user.metadata.email != undefined
+		&& (type?.location === "guild" ? permissions != undefined && permissions.has("MANAGE_GUILD") : true);
 
 	const embed: Embed = {
 		color: EmbedColor.Orange
@@ -52,7 +49,7 @@ export function buildOverview(bot: DiscordBot, interaction: CustomInteraction, {
 	if (type !== null) {
 		if (type.type === "plan") {
 			if (type.location === "guild") {
-				if (permissions && !permissions.includes("MANAGE_GUILD")) throw new ResponseError({
+				if (permissions && !permissions.has("MANAGE_GUILD")) throw new ResponseError({
 					message: "You must have the `Manage Server` permission to view & manage the server's plan", emoji: "😔"
 				});
 			}
@@ -164,7 +161,7 @@ export function buildOverview(bot: DiscordBot, interaction: CustomInteraction, {
 }
 
 export async function charge<T extends PlanExpense>(
-	bot: DiscordBot, env: DBEnvironment, { type, used, data, bonus }: Pick<T, "type" | "used" | "data"> & { bonus?: number }
+	bot: Bot, env: DBEnvironment, { type, used, data, bonus }: Pick<T, "type" | "used" | "data"> & { bonus?: number }
 ): Promise<T | null> {
 	if (used === 0) return null;
 

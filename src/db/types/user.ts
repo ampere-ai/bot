@@ -1,9 +1,10 @@
+import type { ComponentEmoji } from "@discordeno/bot";
+
 import type { DBSettings } from "../../bot/types/settings.js";
 import type { DBPlan, DBSubscription } from "./premium.js";
 import type { DBInfraction } from "./moderation.js";
 
 import { getSettingsValue } from "../../bot/settings.js";
-import { DiscordComponentEmoji } from "../../bot/types/discordeno.js";
 
 export interface DBUser {
 	/** ID of the user */
@@ -137,7 +138,7 @@ export interface LoadingIndicator {
     name: string;
 
     /* Discord emoji */
-    emoji: Required<DiscordComponentEmoji>;
+    emoji: Required<ComponentEmoji>;
 }
 
 export const LOADING_INDICATORS: LoadingIndicator[] = [

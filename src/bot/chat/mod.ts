@@ -1,11 +1,11 @@
-import { type ButtonComponent, MessageComponentTypes, ButtonStyles, Embed } from "discordeno";
+import type { Bot, Message } from "@discordeno/bot";
+
+import { type ButtonComponent, MessageComponentTypes, ButtonStyles, Embed } from "@discordeno/bot";
 import { setTimeout as delay } from "timers/promises";
 import { randomUUID } from "crypto";
 
 import type { Conversation, ConversationResult, ConversationUserMessage } from "../types/conversation.js";
-import type { CustomMessage } from "../types/discordeno.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
-import type { DiscordBot } from "../mod.js";
 
 import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/user.js";
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../utils/cooldown.js";
@@ -18,12 +18,13 @@ import { TONES, type ChatTone } from "./tones/mod.js";
 import { ResponseError } from "../error/response.js";
 import { handleError } from "../moderation/error.js";
 import { getSettingsValue } from "../settings.js";
+import { CHAT_PLUGINS } from "./plugins.js";
 import { buildHistory } from "./history.js";
 import { Emitter } from "../utils/event.js";
 import { charge } from "../premium.js";
 
 interface ExecuteOptions {
-	bot: DiscordBot;
+	bot: Bot;
 	conversation: Conversation;
 	input: ConversationUserMessage;
 	model: ChatModel;
@@ -35,17 +36,17 @@ interface ExecuteOptions {
 /** Set of currently running generations */
 export const runningGenerations = new Set<bigint>();
 
-export async function handleMessage(bot: DiscordBot, message: CustomMessage) {
-	if (message.isFromBot || message.content.length === 0) return;
+export async function handleMessage(bot: Bot, message: Message) {
+	if (message.author.id === bot.id || message.content.length === 0) return;
 	if (!mentions(bot, message)) return;
 
-	if (runningGenerations.has(message.authorId)) throw new ResponseError({
+	if (runningGenerations.has(message.author.id)) throw new ResponseError({
 		message: "You already have a request running; *wait for it to finish*", emoji: "😔"
 	});
 
-	const conversation: Conversation = await bot.db.fetch("conversations", message.authorId);
+	const conversation: Conversation = await bot.db.fetch("conversations", message.author.id);
 
-	const env = await bot.db.env(message.authorId, message.guildId);
+	const env = await bot.db.env(message.author.id, message.guildId);
 	const type = bot.db.type(env);
 
 	if (hasCooldown(conversation)) {
@@ -121,10 +122,10 @@ export async function handleMessage(bot: DiscordBot, message: CustomMessage) {
 
 	/* Start the generation process. */
 	try {
-		runningGenerations.add(message.authorId);
+		runningGenerations.add(message.author.id);
 
 		await Promise.all([
-			bot.helpers.startTyping(message.channelId),
+			bot.helpers.triggerTypingIndicator(message.channelId),
 
 			bot.helpers.addReaction(
 				message.channelId, message.id, `${indicator.emoji.name}:${indicator.emoji.id}`
@@ -165,7 +166,7 @@ export async function handleMessage(bot: DiscordBot, message: CustomMessage) {
 			message.channelId, message.id, `${indicator.emoji.name}:${indicator.emoji.id}`
 		);
 
-		runningGenerations.delete(message.authorId);
+		runningGenerations.delete(message.author.id);
 	}
 
 	/* Apply the model's specific cool-down to the user. */ 
@@ -230,14 +231,14 @@ function formatResult(result: ChatModelResult, id: string): ConversationResult {
 	return {
 		id, done: result.done,
 		message: { role: "assistant", content: result.content },
-		cost: result.cost, finishReason: result.finishReason
+		tool: result.tool, cost: result.cost, finishReason: result.finishReason
 	};
 }
 
 /** Format the chat model's response to be displayed on Discord. */
 function format(
 	{ bot, message, env, result, model, tone }: Pick<ExecuteOptions, "bot" | "env" | "model" | "tone"> & {
-		message: CustomMessage, result: ConversationResult
+		message: Message, result: ConversationResult
 	}
 ): MessageResponse {
 	const indicator = getLoadingIndicatorFromUser(env.user);
@@ -248,6 +249,26 @@ function format(
 
 	const components: ButtonComponent[] = [];
 	const embeds: Embed[] = [];
+
+	/** Which plugin was used, if applicable */
+	const plugin = result.tool && result.tool.name !== null
+		? CHAT_PLUGINS.find(p => p.id === result.tool!.name) ?? null : null;
+
+	console.log(plugin);
+
+	if (result.message.content.length === 0 && plugin) {
+		embeds.push({
+			description: `Executing plugin <:${plugin.emoji.name}:${plugin.emoji.id}> **...** ${emoji}`,
+			color: EmbedColor.Orange
+		});
+	} else if (result.message.content.length > 0 && plugin && result.done) {
+		components.push({
+			label: plugin.name, emoji: plugin.emoji,
+			type: MessageComponentTypes.Button,
+			style: ButtonStyles.Secondary,
+			customId: "settings:view:plugins"
+		});
+	} 
 
 	if (result.done) {
 		components.push({
@@ -308,7 +329,7 @@ function format(
 }
 
 /** Reset the user's conversation. */
-export async function resetConversation(bot: DiscordBot, env: DBEnvironment) {
+export async function resetConversation(bot: Bot, env: DBEnvironment) {
 	const conversation = await bot.db.fetch<Conversation>("conversations", env.user.id);
 	if (conversation.history.length === 0) return;
 
@@ -328,12 +349,12 @@ function getTone(env: DBEnvironment) {
 }
 
 /** Check whether the specified message pinged the bot. */
-function mentions(bot: DiscordBot, message: CustomMessage) {
+function mentions(bot: Bot, message: Message) {
 	return message.mentionedUserIds.includes(bot.id) || !message.guildId;
 }
 
 /** Remove all bot & user mentions from the specified message. */
-function clean(message: CustomMessage) {
+function clean(message: Message) {
 	for (const id of message.mentionedUserIds) {
 		message.content = message.content.replaceAll(`<@${id}>`, "").trim();
 	}

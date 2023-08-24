@@ -1,17 +1,18 @@
-import { DiscordMessage, Message, transformUser } from "discordeno";
+import type { DiscordMessage, Message } from "@discordeno/bot";
 
 import { transformResponse, type MessageResponse } from "../utils/response.js";
 import { createTransformer } from "../helpers/transformer.js";
-import type { CustomMessage } from "../types/discordeno.js";
 
-export default createTransformer<"message", Message, DiscordMessage>(
-	"message",
+export default createTransformer<"message", Message, DiscordMessage>({
+	name: "message",
+
+	properties: [ "content", "mentions", "author", "channelId", "id" ],
 	
-	(bot, message, raw) => {
+	handler: (bot, message) => {
 		Object.defineProperty(message, "reply", {
 			value: function(response: Omit<MessageResponse, "reference">) {
 				return bot.helpers.sendMessage(message.channelId, transformResponse({
-					...response, reference: message as CustomMessage
+					...response, reference: message
 				}));
 			}
 		});
@@ -28,20 +29,6 @@ export default createTransformer<"message", Message, DiscordMessage>(
 			}
 		});
 
-		Object.defineProperty(message, "author", {
-			value: transformUser(bot, raw.author),
-			enumerable: true
-		});
-
-		delete message.activity;
-		delete message.application;
-		delete message.applicationId;
-		delete message.components;
-		delete message.stickerItems;
-		delete message.reactions;
-		delete message.nonce;
-		delete message.interaction;
-
 		return message;
 	}
-);
+});
