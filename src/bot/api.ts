@@ -21,7 +21,7 @@ class BaseAPI {
 	}
 
 	public async fetch<T extends EmitterData>(path: string, options: object & { stream: true }): Promise<Emitter<T>>;
-	public async fetch<T extends EmitterData>(path: string, options: object & { stream?: false }): Promise<T>;
+	public async fetch<T extends EmitterData>(path: string, options: object & { stream?: boolean }): Promise<T>;
 
 	public async fetch<T extends EmitterData>(
 		path: string, options: object & { stream?: boolean }
@@ -89,6 +89,19 @@ class ImageAPI extends BaseAPI {
 
 }
 
+class OtherAPI extends BaseAPI {
+	public async pay(options: {
+		user: {
+			name: string, id: string
+		},
+		guild?: string,
+		type: string,
+		credits?: number
+	}): Promise<{ url: string }> {
+		return this.fetch<any>("pay", options);
+	}
+}
+
 export function createAPI() {
 	return {
 		text: new TextAPI({
@@ -97,6 +110,11 @@ export function createAPI() {
 		}),
 
 		image: new ImageAPI({
+			key: API_KEY,
+			host: API_HOST
+		}),
+
+		other: new OtherAPI({
 			key: API_KEY,
 			host: API_HOST
 		})

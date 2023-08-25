@@ -1,4 +1,4 @@
-import { DiscordInteraction, Interaction, InteractionCallbackData, InteractionResponseTypes } from "@discordeno/bot";
+import { DiscordInteraction, Interaction, InteractionCallbackData, InteractionResponseTypes, MessageFlags } from "@discordeno/bot";
 
 import { type MessageResponse, transformResponse } from "../utils/response.js";
 import { createTransformer } from "../helpers/transformer.js";
@@ -39,9 +39,12 @@ export default createTransformer<"interaction", Interaction, DiscordInteraction>
 		});
 
 		Object.defineProperty(interaction, "deferReply", {
-			value: function() {
+			value: function(ephemeral?: boolean) {
 				return bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
-					type: InteractionResponseTypes.DeferredChannelMessageWithSource
+					type: InteractionResponseTypes.DeferredChannelMessageWithSource,
+					data: ephemeral ? {
+						flags: MessageFlags.Ephemeral
+					} : undefined
 				});
 			}
 		});

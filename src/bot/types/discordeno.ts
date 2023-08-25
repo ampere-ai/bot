@@ -22,7 +22,7 @@ declare module "@discordeno/bot" {
 
 	interface Interaction {
 		/** Defer the interaction, to be edited at a future point. */
-		deferReply: () => Promise<void>;
+		deferReply: (ephemeral?: boolean) => Promise<void>;
 	
 		/** Defer an update, meaning that the interaction is silently acknowledged. */
 		deferUpdate: () => Promise<void>;
