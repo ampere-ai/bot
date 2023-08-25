@@ -11,9 +11,9 @@ export default createInteractionHandler({
 
 		if (action === "link") {
 			const campaign = getCampaign(args[1]);
-			if (!campaign) return;
+			if (!campaign || !campaign.link) return;
 
-			const url = trackingURL(campaign, env);
+			const url = trackingURL(campaign, env)!;
 			const domain = new URL(campaign.link).hostname;
 
 			return {

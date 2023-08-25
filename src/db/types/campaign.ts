@@ -73,7 +73,7 @@ export interface DBCampaign {
     members: string[];
 
     /** Link to the the campaign's target site */
-    link: string;
+    link: string | null;
 
     /** Settings of the campaign, used for storing title, description, etc. */
     settings: DBCampaignSettings;

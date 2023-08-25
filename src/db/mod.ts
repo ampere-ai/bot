@@ -12,18 +12,6 @@ import type { DBUser } from "./types/user.js";
 
 const logger = createLogger({ name: "[DB]" });
 
-/**
- * Collection name -> actual DB name map
- * TODO: Clean up DB & fix names
- */
-const CollectionNameMap: Record<CollectionName, string> = {
-	guilds: "guilds_new",
-	users: "users_new",
-	conversations: "convos",
-	images: "images_new",
-	campaigns: "campaigns_new"
-};
-
 /** Collection templates */
 const CollectionTemplates: Partial<Record<CollectionName, (id: string) => DBObject>> = {
 	guilds: id => (({
@@ -90,7 +78,7 @@ async function setCache<T>(key: string, data: T) {
 }
 
 function collectionKey(collection: CollectionName, id: string) {
-	return `${collection}::${id}`;
+	return `${collection}:::${id}`;
 }
 
 async function update<T extends DBObject = DBObject>(
@@ -121,7 +109,7 @@ async function get<T extends DBObject = DBObject>(collection: CollectionName, id
 	if (existing !== null) return existing;
 
 	const { data } = await db
-		.from(CollectionNameMap[collection]).select("*")
+		.from(collection).select("*")
 		.eq("id", id);
 
 	if (data === null || data.length === 0) return null;
@@ -147,7 +135,7 @@ async function fetch<T extends DBObject = DBObject>(collection: CollectionName, 
 }
 
 async function all<T extends DBObject = DBObject>(collection: CollectionName): Promise<T[]> {
-	const { data } = await db.from(CollectionNameMap[collection])
+	const { data } = await db.from(collection)
 		.select("*");
 
 	return data as T[];
@@ -196,7 +184,7 @@ async function workOnQueue() {
 			const id: string = entries[index][0];
 
 			const { error } = await db
-				.from(CollectionNameMap[type])
+				.from(type)
 				.upsert(entry, { onConflict: "id" });
 
 			if (error !== null) {
