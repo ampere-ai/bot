@@ -48,7 +48,7 @@ const gateway = createGatewayManager({
 	events: {}
 });
 
-gateway.tellWorkerToIdentify = async (_, workerId, shardId) => {
+gateway.tellWorkerToIdentify = async (workerId, shardId) => {
 	let worker = workers.get(workerId);
 
 	if (!worker) {
