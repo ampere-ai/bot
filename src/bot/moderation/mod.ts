@@ -87,7 +87,7 @@ export function giveInfraction<T extends DBGuild | DBUser>(bot: Bot, entry: T, {
 	if (reference) data.reference = reference;
 	if (until) data.until = until;
 
-	return bot.db.update<T>((entry as any).interactions ? "users" : "guilds", entry, {
+	return bot.db.update<T>((entry as DBUser).voted ? "users" : "guilds", entry, {
 		infractions: [
 			...entry.infractions, data
 		]
@@ -115,7 +115,7 @@ export function isBanned(entry: DBGuild | DBUser) {
 }
 
 export function banNotice(entry: DBGuild | DBUser, infraction: DBInfraction): MessageResponse {
-	const location = (entry as any).interactions ? "user" : "guild";
+	const location = (entry as DBUser).voted ? "user" : "guild";
 	const fields: DiscordEmbedField[] = [];
 
 	if (infraction.reason) fields.push({

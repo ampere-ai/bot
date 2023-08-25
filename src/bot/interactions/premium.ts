@@ -11,19 +11,7 @@ export default createInteractionHandler({
 
 		if (action === "purchase") {
 			return {
-				components: [ {
-					type: MessageComponentTypes.ActionRow,
-
-					components: [
-						{
-							type: MessageComponentTypes.Button,
-							label: "Visit our shop", emoji: { name: "💸" },
-							url: "https://app.turing.sh/pay",
-							style: ButtonStyles.Link
-						}
-					]
-				} ],
-
+				content: "TODO",
 				ephemeral: true
 			};
 
@@ -41,9 +29,9 @@ export default createInteractionHandler({
 					components: [
 						{
 							type: MessageComponentTypes.Button,
-							label: "Visit our shop", emoji: { name: "💸" },
-							url: "https://app.turing.sh/pay",
-							style: ButtonStyles.Link
+							label: "Purchase", emoji: { name: "💸" },
+							customId: "premium:purchase",
+							style: ButtonStyles.Success
 						}
 					]
 				} ],

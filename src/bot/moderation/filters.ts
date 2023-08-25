@@ -8,24 +8,6 @@ import { DBRole } from "../../db/types/user.js";
 
 const MODERATION_FILTERS: ModerationFilter[] = [
 	{
-		name: "Turing filter",
-
-		handler: async ({ bot, content, source }) => {
-			if (source !== "image") return null;
-
-			const data = await bot.api.text.filter({
-				text: content, filters: [ "nsfw", "cp", "toxicity" ]
-			}) as Record<"nsfw" | "youth" | "cp" | "toxic", boolean>;
-	
-			if (data.nsfw || data.toxic) return { type: "block", reason: "Not safe for work" };
-			if (data.youth) return { type: "block", reason: "Content possibly involving children" };
-			if (data.cp) return { type: "ban", reason: "Sexual content involving children" };
-	
-			return null;
-		}
-	},
-
-	{
 		name: "Development filter",
 
 		handler: async ({ env, content }) => {

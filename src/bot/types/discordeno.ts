@@ -1,5 +1,5 @@
 import type { createLogger } from "@discordeno/bot";
-import type { createClient } from "redis";
+import type RabbitMQ from "rabbitmq-client";
 
 import type { MessageResponse } from "../utils/response.js";
 import type { createAPI } from "../api.js";
@@ -10,14 +10,14 @@ declare module "@discordeno/bot" {
         /** Bot logger */
         logger: ReturnType<typeof createLogger>;
 
-        /** Redis connection */
-        redis: ReturnType<typeof createClient>;
-
         /** Database manager */
         db: Awaited<ReturnType<typeof createDB>>;
 
-        /** Turing API */
+        /** API */
         api: ReturnType<typeof createAPI>;
+
+		/** RabbitMQ connection */
+		rabbitmq: RabbitMQ.Connection;
     }
 
 	interface Interaction {
@@ -49,6 +49,11 @@ declare module "@discordeno/bot" {
 	
 		/** Delete the message. */
 		delete: () => Promise<void>;
+	}
+
+	interface Channel {
+		/** Send a message in the channel. */
+		send: (response: MessageResponse) => Promise<Message>;
 	}
 
 	interface ComponentEmoji {

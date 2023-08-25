@@ -20,8 +20,9 @@ export function getCampaign(id: string) {
 	return campaigns.find(c => c.id === id) ?? null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function trackingURL(campaign: DBCampaign, env: DBEnvironment) {
-	return `https://l.turing.sh/${campaign.id}/${env.user.id}`;
+	return campaign.link;
 }
 
 /** Pick a random campaign to display, increment its views & format it accordingly.1 */

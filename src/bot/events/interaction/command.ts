@@ -2,7 +2,7 @@ import type { Bot, Interaction } from "@discordeno/bot";
 import type { CommandOptionValue } from "../../types/command.js";
 
 import { handleError } from "../../moderation/error.js";
-import { ResponseError } from "../../error/response.js";
+import { ResponseError } from "../../errors/response.js";
 import { EmbedColor } from "../../utils/response.js";
 
 import { canUse, restrictionTypes } from "../../utils/restriction.js";
@@ -74,7 +74,7 @@ export async function executeCommand(bot: Bot, interaction: Interaction) {
 
 		await interaction.reply(
 			await handleError(bot, { error, guild: interaction.guildId })
-		);
+		).catch(() => {});
 	}
 }
 

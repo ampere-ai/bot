@@ -5,7 +5,6 @@ import { createTransformer } from "../helpers/transformer.js";
 
 export default createTransformer<"interaction", Interaction, DiscordInteraction>({
 	name: "interaction",
-
 	properties: null,
 
 	handler: (bot, interaction) => {

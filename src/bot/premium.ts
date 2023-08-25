@@ -1,14 +1,49 @@
 import { type Embed, type Bot, type Interaction, type ButtonComponent, ButtonStyles, MessageComponentTypes } from "@discordeno/bot";
+import { bold } from "colorette";
 
 import type { DBPlan, PlanExpense } from "../db/types/premium.js";
 import type { DBEnvironment } from "../db/types/mod.js";
+import type { PaymentData } from "./types/premium.js";
 import type { DBGuild } from "../db/types/guild.js";
 import type { DBUser } from "../db/types/user.js";
 
 import { EmbedColor, type MessageResponse } from "./utils/response.js";
-import { ResponseError } from "./error/response.js";
+import { ResponseError } from "./errors/response.js";
 import { titleCase } from "./utils/helpers.js";
 import { displayBar } from "./utils/bar.js";
+
+async function handlePayment(bot: Bot, data: PaymentData) {
+	try {
+		/* Get the DM channel with the user. */
+		const channel = await bot.helpers.getDmChannel(data.userId);
+
+		/* Fetch the guild that Premium was purchased for, if applicable. */
+		const guild = data.guildId
+			? await bot.helpers.getGuild(data.guildId)
+			: null;
+
+		const embed: Embed = {
+			title: `Thank you for purchasing ${data.type === "subscription" ? "Premium" : "Premium credits"} 🎉`,
+			description: `You purchased ${data.type === "subscription" ? "a Premium subscription" : `**${data.credits}$** worth of credits`} ${data.location === "user" ? "for yourself" : `for the server **${guild?.name}**`}.`,
+			color: EmbedColor.Orange
+		};
+
+		await channel.send({
+			embeds: embed
+		});
+
+	} catch (error) {
+		bot.logger.warn(`Couldn't DM user ${bold(data.userId)} about Premium upgrade ->`, error);
+	}
+}
+
+export function setupPaymentHandler(bot: Bot) {
+	bot.rabbitmq.createConsumer({
+		queue: "payment"
+	}, async message => {
+		await handlePayment(bot, message.body);
+	});
+}
 
 export function buildOverview(bot: Bot, interaction: Interaction, { user, guild }: DBEnvironment) {
 	/* Current subscription & plan */
@@ -26,10 +61,6 @@ export function buildOverview(bot: Bot, interaction: Interaction, { user, guild 
 	/* The user's permissions */
 	const permissions = interaction.member?.permissions;
 
-	/* Whether the "Recharge" button should be shown, for server Premium */
-	const showShopButton: boolean = user.metadata.email != undefined
-		&& (type?.location === "guild" ? permissions != undefined && permissions.has("MANAGE_GUILD") : true);
-
 	const embed: Embed = {
 		color: EmbedColor.Orange
 	};
@@ -37,8 +68,9 @@ export function buildOverview(bot: Bot, interaction: Interaction, { user, guild 
 	const buttons: ButtonComponent[] = [
 		{
 			type: MessageComponentTypes.Button,
-			label: "Visit the shop", emoji: { name: "💸" },
-			url: "https://app.turing.sh/pay", style: ButtonStyles.Link
+			label: "Purchase", emoji: { name: "💸" },
+			customId: "premium:purchase",
+			style: ButtonStyles.Success
 		}
 	];
 
@@ -92,7 +124,7 @@ export function buildOverview(bot: Bot, interaction: Interaction, { user, guild 
 			/* Final, formatted diplay message */
 			const displayMessage: string = !exceededLimit
 				? `**$${plan.used.toFixed(2)}** \`${displayBar({ percentage, total: size })}\` **$${plan.total.toFixed(2)}**`
-				: `_You ran out of credits for the **Pay-as-you-go** plan; re-charge credits ${showShopButton ? "using the **Purchase credits** button below" : "in **[our shop](https://app.turing.sh/pay)**"}_.`;
+				: "_You ran out of credits for the **Pay-as-you-go** plan; re-charge credits using the button below_.";
 
 			embed.title = `${type.location === "guild" ? "The server's" : "Your"} pay-as-you-go plan 📊`;
 			embed.description = displayMessage;
@@ -114,41 +146,16 @@ export function buildOverview(bot: Bot, interaction: Interaction, { user, guild 
 			];
 		}
 
-		buttons.unshift({
+		buttons.push({
 			type: MessageComponentTypes.Button,
 			label: "Settings", emoji: { name: "⚙️" },
 			customId: `settings:view:${type.location}:premium`,
 			style: ButtonStyles.Secondary
 		});
 
-		if (showShopButton) buttons.unshift({
-			type: MessageComponentTypes.Button,
-			label: type.type === "subscription" ? "Extend your subscription" : "Purchase credits",
-			emoji: { name: "🛍️" }, customId: `premium:purchase:${type.type}`,
-			style: ButtonStyles.Secondary
-		});
-
 	} else {
 		embed.description = "You can buy a **Premium** subscription or **Premium** credits for the plan below.";
-
-		if (showShopButton) buttons.unshift(
-			{
-				type: MessageComponentTypes.Button,
-				label: "Purchase credits", emoji: { name: "🛍️" },
-				customId: "premium:purchase:plan",
-				style: ButtonStyles.Success
-			},
-
-			{
-				type: MessageComponentTypes.Button,
-				label: "Subscribe", emoji: { name: "🛍️" },
-				customId: "premium:purchase:subscription",
-				style: ButtonStyles.Success
-			}
-		);
 	}
-
-	response.embeds.push(embed);
 
 	response.components = [
 		{
@@ -157,6 +164,7 @@ export function buildOverview(bot: Bot, interaction: Interaction, { user, guild 
 		}
 	];
 
+	response.embeds.push(embed);
 	return response;
 }
 
@@ -199,5 +207,5 @@ function isPlanRunning(entry: DBGuild | DBUser): entry is DBGuild & { plan: DBPl
 }
 
 function location(entry: DBGuild | DBUser) {
-	return (entry as DBUser).interactions ? "users" : "guilds";
+	return (entry as DBUser).voted ? "users" : "guilds";
 }

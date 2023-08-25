@@ -4,9 +4,11 @@ import type { ConversationResult } from "../types/conversation.js";
 import type { ImageGenerationResult } from "../types/image.js";
 import type { ChatModelResult } from "../chat/models/mod.js";
 
-import { ChatError, ChatErrorType } from "../error/chat.js";
+import { ChatError, ChatErrorType } from "../errors/chat.js";
 
-export class Emitter<T extends ConversationResult | ChatModelResult | ImageGenerationResult> {
+export type EmitterData = ConversationResult | ChatModelResult | ImageGenerationResult
+
+export class Emitter<T extends EmitterData> {
 	private readonly emitter: EventEmitter;
 
 	constructor() {

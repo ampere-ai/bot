@@ -16,7 +16,6 @@ const rest = createRestManager({
 interface RESTError {
 	ok: boolean;
 	status: number;
-	error: string;
 	body: string;
 }
 
@@ -61,7 +60,7 @@ app.all("/*", async (req, res) => {
 	} catch (err) {
 		const error = err as RESTError;
 
-		logger.error(req.method, req.url, `status code ${error.status} ->`, error.error);
+		logger.error(req.method, req.url, `status code ${error.status} ->`, error.body);
 		res.status(error.status).json(error);
 	}
 });

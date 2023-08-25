@@ -9,7 +9,7 @@ import type { DBEnvironment } from "../../db/types/mod.js";
 import { EmbedColor, MessageResponse } from "../utils/response.js";
 import { moderate, moderationNotice } from "../moderation/mod.js";
 import { ModerationSource } from "../moderation/types/mod.js";
-import { ResponseError } from "../error/response.js";
+import { ResponseError } from "../errors/response.js";
 import { getSettingsValue } from "../settings.js";
 
 import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/user.js";
@@ -187,7 +187,7 @@ export default createCommand({
 				await handleError(bot, {
 					error, guild: interaction.guildId
 				})
-			);
+			).catch(() => {});
 		}
 	}
 });

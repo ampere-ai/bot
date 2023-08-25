@@ -1,5 +1,5 @@
 import { handleMessage, runningGenerations } from "../../chat/mod.js";
-import { ResponseError } from "../../error/response.js";
+import { ResponseError } from "../../errors/response.js";
 import { createEvent } from "../../helpers/event.js";
 
 export default createEvent("messageCreate", async (bot, message) => {

@@ -5,7 +5,6 @@ import { createTransformer } from "../helpers/transformer.js";
 
 export default createTransformer<"message", Message, DiscordMessage>({
 	name: "message",
-
 	properties: [ "content", "mentions", "author", "channelId", "id" ],
 	
 	handler: (bot, message) => {

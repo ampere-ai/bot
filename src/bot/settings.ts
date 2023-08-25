@@ -12,11 +12,10 @@ import { LOADING_INDICATORS, USER_LANGUAGES } from "../db/types/user.js";
 import { EmbedColor, type MessageResponse } from "./utils/response.js";
 import { canUse, restrictionTypes } from "./utils/restriction.js";
 import { CHAT_MODELS } from "./chat/models/mod.js";
+import { resetConversation } from "./chat/mod.js";
 import { IMAGE_MODELS } from "./image/models.js";
 import { IMAGE_STYLES } from "./image/styles.js";
 import { TONES } from "./chat/tones/mod.js";
-import { resetConversation } from "./chat/mod.js";
-import { CHAT_PLUGINS } from "./chat/plugins.js";
 
 export const SettingsCategories: SettingsCategory[] = [
 	{
@@ -93,27 +92,6 @@ export const SettingsCategories: SettingsCategory[] = [
 				emoji: "⏳", default: true,
 				type: SettingsOptionType.Boolean,
 				location: SettingsLocation.User
-			}
-		]
-	},
-
-	{
-		name: "Plugins",
-		emoji: "🔧",
-
-		options: [
-			{
-				type: SettingsOptionType.MultipleChoices,
-				name: "Plugins",
-				description: "Which plugins to use for ChatGPT & GPT-4",
-				emoji: "🔧", default: [],
-				location: SettingsLocation.User,
-
-				min: 0, max: 3,
-
-				choices: CHAT_PLUGINS.map(p => ({
-					name: p.name, description: p.description, emoji: p.emoji, value: p.id
-				}))
 			}
 		]
 	},

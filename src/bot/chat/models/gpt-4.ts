@@ -1,5 +1,3 @@
-import type EventEmitter from "events";
-
 import { RestrictionName } from "../../utils/restriction.js";
 import { createChatModel } from "../../helpers/chat.js";
 
@@ -20,15 +18,15 @@ export default createChatModel({
 	},
 
 	handler: async ({ bot, emitter, history }) => {
-		const event: EventEmitter = await bot.api.text.gpt({
+		const event = await bot.api.text.gpt({
 			messages: history.messages,
-			max_tokens: history.maxTokens,
+			maxTokens: history.maxTokens,
 			model: "gpt-4"
-		}) as EventEmitter;
+		});
 
-		event.on("data", data => {
+		event.on(data => {
 			emitter.emit({
-				content: data.result,
+				content: data.content,
 				finishReason: data.finishReason,
 				cost: data.cost,
 				done: data.done

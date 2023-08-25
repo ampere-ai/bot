@@ -13,9 +13,6 @@ export interface DBUser {
 	/** When the user first interacted with the bot */
 	created: string;
 
-	/** How many interactions the user has with the bot */
-	interactions: DBInteractions;
-
 	/** Moderation history of the user */
 	infractions: DBInfraction[];
 
@@ -53,8 +50,6 @@ export enum DBRole {
 	API = "api",
 	Tester = "tester"
 }
-
-export type DBInteractions = Record<string, number>;
 
 export interface UserLanguage {
 	/** Name ofthe language */
@@ -141,102 +136,12 @@ export interface LoadingIndicator {
     emoji: Required<ComponentEmoji>;
 }
 
+
 export const LOADING_INDICATORS: LoadingIndicator[] = [
-	{
-		name: "Discord Loading #1",
-		emoji: {
-			name: "loading", id: 1051419341914132554n, animated: true
-		}
-	},
-
-	{
-		name: "Discord Loading #2",
-		emoji: {
-			name: "discord_loading", id: 1103039423806976021n, animated: true
-		}
-	},
-
 	{
 		name: "Orb",
 		emoji: {
-			name: "orb", id: 1102556034276528238n, animated: true
-		}
-	},
-
-	{
-		name: "Turing Spin",
-		emoji: {
-			name: "turing_spin", id: 1104867917436289065n, animated: true
-		}
-	},
-
-	{
-		name: "Discord Typing",
-		emoji: {
-			name: "discord_typing", id: 1103039408728445071n, animated: true
-		}
-	},
-
-	{
-		name: "Loading Bars",
-		emoji: {
-			name: "loading2", id: 1104458865224990780n, animated: true
-		}
-	},
-
-	{
-		name: "Vibe Rabbit",
-		emoji: {
-			name: "rabbit", id: 1078943805316812850n, animated: true
-		}
-	},
-
-	{
-		name: "Spinning Skull",
-		emoji: {
-			name: "spinning_skull", id: 1102635532258906224n, animated: true
-		}
-	}, 
-
-	{
-		name: "Spinning Tux",
-		emoji: {
-			name: "tux_spin", id: 1103014814135099573n, animated: true
-		}
-	},
-
-	{
-		name: "LEGO",
-		emoji: {
-			name: "lego", id: 1105171703170076744n, animated: true
-		}
-	},
-
-	{
-		name: "Spinning Cat #1",
-		emoji: {
-			name: "spinning_maxwell", id: 1104458871642259506n, animated: true
-		}
-	},
-
-	{
-		name: "Spinning Cat #2",
-		emoji: {
-			name: "spinning_cat", id: 1104458868546867424n, animated: true
-		}
-	},
-
-	{
-		name: "SpongeBob",
-		emoji: {
-			name: "spunchbob", id: 1104869247290716201n, animated: true
-		}
-	},
-
-	{
-		name: "Spinning Cat Cube",
-		emoji: {
-			name: "spinning_cat_cube", id: 1105185931209756693n, animated: true
+			name: "orb", id: 1088545392351793232n, animated: true
 		}
 	}
 ];

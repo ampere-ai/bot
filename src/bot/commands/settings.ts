@@ -2,7 +2,7 @@ import { ApplicationCommandOptionTypes } from "@discordeno/bot";
 
 import { SettingsCategories, buildSettingsPage, whichEntry } from "../settings.js";
 import { SettingsLocation } from "../types/settings.js";
-import { ResponseError } from "../error/response.js";
+import { ResponseError } from "../errors/response.js";
 import { createCommand } from "../helpers/command.js";
 
 export default createCommand({

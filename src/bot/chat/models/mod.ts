@@ -4,14 +4,10 @@ import type { ConversationMessage, ConversationUserMessage } from "../../types/c
 import type { RestrictionName } from "../../utils/restriction.js";
 import type { CommandCooldown } from "../../types/command.js";
 import type { DBEnvironment } from "../../../db/types/mod.js";
-import type { ToolData } from "../../types/plugin.js";
 import type { Emitter } from "../../utils/event.js";
 import type { HistoryData } from "../history.js";
 
-import OpenChat from "./openchat.js";
-import Claude2 from "./claude-2.js";
 import ChatGPT from "./chatgpt.js";
-import Claude from "./claude.js";
 import GPT4 from "./gpt-4.js";
 
 export interface ChatModel {
@@ -62,14 +58,11 @@ export interface ChatModelResult {
 
 	/** Why the generation stopped */
 	finishReason?: ChatModelFinishReason;
-
-	/** Tool execution results */
-	tool?: ToolData;
 	
 	/** Whether the generation is done */
 	done: boolean;
 }
 
 export const CHAT_MODELS: ChatModel[] = [
-	ChatGPT, GPT4, Claude, Claude2, OpenChat
+	ChatGPT, GPT4
 ];

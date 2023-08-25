@@ -1,16 +1,14 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import type { WorkerCreateData, WorkerMessage } from "./types/worker.js";
-
-
 import { ActivityTypes, DiscordGatewayPayload, DiscordGuild, DiscordMessage, DiscordReady, DiscordUnavailableGuild } from "@discordeno/types";
 import { Collection, createLogger, snakelize } from "@discordeno/utils";
 import { parentPort, workerData } from "worker_threads";
 import { DiscordenoShard } from "@discordeno/gateway";
 import RabbitMQ from "rabbitmq-client";
 
-import { BOT_TOKEN, INTENTS, RABBITMQ_URI } from "../config.js";
+import type { WorkerCreateData, WorkerMessage } from "./types/worker.js";
+import { RABBITMQ_URI } from "../config.js";
 
 if (!parentPort) throw new Error("Parent port is null");
 
@@ -84,29 +82,29 @@ const manage = async (shard: DiscordenoShard, payload: DiscordGatewayPayload) =>
 	}
 };
 
-parent.on("message", async (data: WorkerMessage) => {
-	switch (data.type) {
+parent.on("message", async (message: WorkerMessage) => {
+	switch (message.type) {
 		case "IDENTIFY_SHARD": {
-			logger.info(`Identifying ${shards.has(data.shardId) ? "existing" : "new"} shard #${data.shardId}`);
+			logger.info(`Identifying ${shards.has(message.shardId) ? "existing" : "new"} shard #${message.shardId}`);
 
 			const shard =
-				shards.get(data.shardId) ??
+				shards.get(message.shardId) ??
 
 				new DiscordenoShard({
-					id: data.shardId,
+					id: message.shardId,
 
 					connection: {
 						compress: false,
-						intents: INTENTS,
+						intents: data.intents,
 						properties: {
 							os: "linux",
 							device: "Discordeno",
 							browser: "Discordeno"
 						},
-						token: BOT_TOKEN,
-						totalShards: 1,
+						token: data.token,
+						totalShards: data.totalShards,
 						url: "wss://gateway.discord.gg",
-						version: 10,
+						version: 10
 					},
 
 					events: {
@@ -123,7 +121,7 @@ parent.on("message", async (data: WorkerMessage) => {
 				activities: [
 					{
 						type: ActivityTypes.Game,
-						name: ".gg/turing » @ChatGPT"
+						name: "with AI » @Ampere"
 					}
 				]
 			});
@@ -135,8 +133,8 @@ parent.on("message", async (data: WorkerMessage) => {
 		}
 
 		case "ALLOW_IDENTIFY": {
-			identifyPromises.get(data.shardId)?.();
-			identifyPromises.delete(data.shardId);
+			identifyPromises.get(message.shardId)?.();
+			identifyPromises.delete(message.shardId);
 
 			break;
 		}

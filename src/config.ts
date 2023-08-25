@@ -35,11 +35,9 @@ export const REDIS_PORT = process.env.REDIS_PORT ? Number(process.env.REDIS_PORT
 export const DB_URL = process.env.DB_URL!;
 export const DB_KEY = process.env.DB_KEY!;
 
-/** Turing API keys */
-export const TURING_API_KEY = process.env.TURING_API_KEY!;
-export const TURING_CAPTCHA_KEY = process.env.TURING_CAPTCHA_KEY!;
-export const TURING_SUPER_KEY = process.env.TURING_SUPER_KEY!;
-export const TURING_HOST = process.env.TURING_HOST;
+/** Ampere API keys */
+export const API_KEY = process.env.API_KEY!;
+export const API_HOST = process.env.API_HOST!;
 
 /** How often to save database changes, in seconds */
 export const DB_QUEUE_INTERVAL = Number(process.env.DB_QUEUE_INTERVAL!);

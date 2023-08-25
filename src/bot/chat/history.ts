@@ -8,7 +8,7 @@ import type { DBEnvironment } from "../../db/types/mod.js";
 import type { ChatModel } from "./models/mod.js";
 import type { ChatTone } from "./tones/mod.js";
 
-import { ChatError, ChatErrorType } from "../error/chat.js";
+import { ChatError, ChatErrorType } from "../errors/chat.js";
 
 interface BuildHistoryOptions {
 	bot: Bot;
@@ -31,14 +31,14 @@ export interface HistoryData {
 }
 
 const MAX_LENGTH = {
-	Context: {
+	input: {
 		user: 700,
 		voter: 750,
 		subscription: 900,
 		plan: 1000
 	},
 
-	Generation: {
+	output: {
 		user: 350,
 		voter: 400,
 		subscription: 650,
@@ -53,8 +53,8 @@ export function buildHistory({ bot, env, model, tone, conversation, input }: Bui
 	const type = bot.db.type(env);
 	
 	/** TODO: Limits for pay-as-you-go members */
-	let maxGenerationLength = Math.min(MAX_LENGTH.Generation[type], model.maxTokens);
-	const maxContextLength = Math.min(MAX_LENGTH.Context[type], model.maxTokens);
+	let maxGenerationLength = Math.min(MAX_LENGTH.output[type], model.maxTokens);
+	const maxContextLength = Math.min(MAX_LENGTH.input[type], model.maxTokens);
 
 	if (getChatMessageLength(input) > maxContextLength) throw new ChatError(
 		ChatErrorType.Length
@@ -103,7 +103,7 @@ export function buildHistory({ bot, env, model, tone, conversation, input }: Bui
 	};
 }
 
-/* Count together all tokens contained in a list of conversation messages. */
+/** Count together all tokens contained in a list of conversation messages. */
 function getChatMessageLength(...messages: ConversationMessage[]) {
 	/* Total tokens used for the messages */
 	let total: number = 0;

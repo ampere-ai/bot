@@ -1,7 +1,7 @@
 import type { Conversation } from "../types/conversation.js";
 
 import { createCommand } from "../helpers/command.js";
-import { ResponseError } from "../error/response.js";
+import { ResponseError } from "../errors/response.js";
 import { resetConversation, runningGenerations } from "../chat/mod.js";
 import { EmbedColor } from "../utils/response.js";
 

@@ -37,7 +37,7 @@ const CollectionTemplates: Partial<Record<CollectionName, (id: string) => DBObje
 	users: id => (({
 		id,
 		created: new Date().toISOString(),
-		interactions: {}, voted: null,
+		voted: null,
 		subscription: null, plan: null,
 		settings: {}, metadata: {},
 		infractions: [], roles: []

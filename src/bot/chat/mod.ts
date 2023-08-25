@@ -15,10 +15,9 @@ import { CHAT_MODELS, type ChatModel, type ChatModelResult } from "./models/mod.
 import { ModerationSource } from "../moderation/types/mod.js";
 import { SettingsLocation } from "../types/settings.js";
 import { TONES, type ChatTone } from "./tones/mod.js";
-import { ResponseError } from "../error/response.js";
+import { ResponseError } from "../errors/response.js";
 import { handleError } from "../moderation/error.js";
 import { getSettingsValue } from "../settings.js";
-import { CHAT_PLUGINS } from "./plugins.js";
 import { buildHistory } from "./history.js";
 import { Emitter } from "../utils/event.js";
 import { charge } from "../premium.js";
@@ -160,7 +159,8 @@ export async function handleMessage(bot: Bot, message: Message) {
 			await handleError(bot, {
 				error: error as Error, guild: message.guildId
 			})
-		);
+		).catch(() => {});
+		
 	} finally {
 		await bot.helpers.deleteOwnReaction(
 			message.channelId, message.id, `${indicator.emoji.name}:${indicator.emoji.id}`
@@ -231,7 +231,7 @@ function formatResult(result: ChatModelResult, id: string): ConversationResult {
 	return {
 		id, done: result.done,
 		message: { role: "assistant", content: result.content },
-		tool: result.tool, cost: result.cost, finishReason: result.finishReason
+		cost: result.cost, finishReason: result.finishReason
 	};
 }
 
@@ -249,26 +249,6 @@ function format(
 
 	const components: ButtonComponent[] = [];
 	const embeds: Embed[] = [];
-
-	/** Which plugin was used, if applicable */
-	const plugin = result.tool && result.tool.name !== null
-		? CHAT_PLUGINS.find(p => p.id === result.tool!.name) ?? null : null;
-
-	console.log(plugin);
-
-	if (result.message.content.length === 0 && plugin) {
-		embeds.push({
-			description: `Executing plugin <:${plugin.emoji.name}:${plugin.emoji.id}> **...** ${emoji}`,
-			color: EmbedColor.Orange
-		});
-	} else if (result.message.content.length > 0 && plugin && result.done) {
-		components.push({
-			label: plugin.name, emoji: plugin.emoji,
-			type: MessageComponentTypes.Button,
-			style: ButtonStyles.Secondary,
-			customId: "settings:view:plugins"
-		});
-	} 
 
 	if (result.done) {
 		components.push({

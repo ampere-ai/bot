@@ -47,6 +47,6 @@ export async function handleInteraction(bot: Bot, interaction: Interaction) {
 	} catch (error) {
 		await interaction.reply(
 			await handleError(bot, { error, guild: interaction.guildId })
-		);
+		).catch(() => {});
 	}
 }

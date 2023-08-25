@@ -4,6 +4,7 @@ import type { Bot } from "@discordeno/bot";
 import { bot } from "../mod.js";
 
 import Interaction from "./interaction.js";
+import Channel from "./channel.js";
 import Message from "./message.js";
 import User from "./user.js";
 
@@ -16,7 +17,7 @@ export interface Transformer<T extends TransformerName, Transformed, Raw> {
 }
 
 const TRANSFORMERS = [
-	Interaction, Message, User
+	Interaction, Message, User, Channel
 ];
 
 export function setupTransformers() {
