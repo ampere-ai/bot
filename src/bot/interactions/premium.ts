@@ -20,7 +20,7 @@ enum PremiumPurchaseStep {
 
 /* Which credit options to display */
 const PREMIUM_CREDITS = [
-	5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100
+	2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100
 ];
 
 export default createInteractionHandler({
