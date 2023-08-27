@@ -61,8 +61,8 @@ export enum EmbedColor {
 }
 
 export function transformResponse<T extends (CreateMessageOptions | EditMessage | InteractionCallbackData) & {
-    messageReference?: CreateMessageOptions["messageReference"],
-    ephemeral?: boolean
+    messageReference?: CreateMessageOptions["messageReference"];
+    ephemeral?: boolean;
 } = CreateMessageOptions>(
 	response: MessageResponse
 ): T {
@@ -77,7 +77,13 @@ export function transformResponse<T extends (CreateMessageOptions | EditMessage 
 
 		flags: response.ephemeral ? MessageFlags.Ephemeral : undefined,
 		components: response.components,
-		file: response.file,
+		
+		files: response.file ? [
+			{
+				name: response.file.name,
+				blob: new Blob([ Buffer.from(response.file.blob, "base64") ])
+			}
+		] : undefined,
 
 		messageReference: response.reference ? {
 			failIfNotExists: false,
@@ -85,5 +91,5 @@ export function transformResponse<T extends (CreateMessageOptions | EditMessage 
 			guildId: response.reference.guildId,
 			messageId: response.reference.id
 		} : undefined
-	} as unknown as T;
+	} as T;
 }

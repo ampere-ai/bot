@@ -9,8 +9,11 @@ import express from "express";
 import { BOT_TOKEN, INTENTS, HTTP_AUTH, REST_URL, SHARDS_PER_WORKER, TOTAL_WORKERS, GATEWAY_PORT } from "../config.js";
 import { ManagerHTTPRequest, ManagerMessage } from "./types/manager.js";
 import type { WorkerCreateData } from "./types/worker.js";
+import { setTimeout } from "timers/promises";
 
 const logger = createLogger({ name: "[MANAGER]" });
+
+const identifyPromises = new Map<number, () => void>();
 const workers = new Collection<number, Worker>();
 
 const app = express();
@@ -37,12 +40,13 @@ bot.rest = createRestManager({
 	}
 });
 
-
 const gateway = createGatewayManager({
 	token: BOT_TOKEN, intents: INTENTS,
 
 	shardsPerWorker: SHARDS_PER_WORKER,
 	totalWorkers: TOTAL_WORKERS,
+
+	preferSnakeCase: true,
 
 	connection: await bot.rest.getSessionInfo(),
 	events: {}
@@ -60,11 +64,17 @@ gateway.tellWorkerToIdentify = async (workerId, shardId) => {
 		type: "IDENTIFY_SHARD",
 		shardId
 	});
+
+	await new Promise<void>(resolve => {
+		identifyPromises.set(shardId, resolve);
+	});
+
+	await setTimeout(gateway.spawnShardDelay);
 };
 
 function createWorker(id: number) {
 	if (id === 0) logger.info(`Identifying with ${gateway.totalShards} total shards`);
-	logger.info(`Tell to identify shard #${id}`);
+	logger.info(`Created worker #${id}`);
 
 	const workerData: WorkerCreateData = {
 		token: BOT_TOKEN, intents: gateway.intents,
@@ -78,20 +88,10 @@ function createWorker(id: number) {
 
 	worker.on("message", async (data: ManagerMessage) => {
 		switch (data.type) {
-			case "REQUEST_IDENTIFY": {
-				logger.info(`Requesting to identify shard #${data.shardId}`);
-				await gateway.requestIdentify(data.shardId);
-
-				worker.postMessage({
-					type: "ALLOW_IDENTIFY",
-					shardID: data.shardId
-				});
-
-				break;
-			}
-
 			case "READY": {
+				identifyPromises.get(data.shardId)?.();
 				logger.info(`Shard #${data.shardId} is ready`);
+
 				break;
 			}
 		}

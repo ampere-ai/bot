@@ -47,7 +47,6 @@ export enum DBRole {
 	Moderator = "moderator",
 	Investor = "investor",
 	Advertiser = "advertiser",
-	API = "api",
 	Tester = "tester"
 }
 

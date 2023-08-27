@@ -2,6 +2,7 @@ import { ButtonStyles, MessageComponentTypes } from "@discordeno/bot";
 
 import { createInteractionHandler } from "../helpers/interaction.js";
 import { EmbedColor } from "../utils/response.js";
+import { SUPPORT_INVITE } from "../../config.js";
 
 enum PremiumPurchaseStep {
 	/** The user chooses whether they want a Premium subscription or plan */
@@ -74,7 +75,7 @@ export default createInteractionHandler({
 				};
 
 			} else if (step === PremiumPurchaseStep.ChooseCredits) {
-				return {
+				interaction.update({
 					embeds: {
 						title: "How much credit do you want to charge up? 💰",
 						color: EmbedColor.Orange
@@ -95,7 +96,7 @@ export default createInteractionHandler({
 					} ],
 
 					ephemeral: true
-				};
+				});
 
 			} else if (step === PremiumPurchaseStep.ChooseLocation) {
 				/* Which Premium type was selected */
@@ -105,7 +106,7 @@ export default createInteractionHandler({
 				const credits = interaction.data && interaction.data.values
 					? parseInt(interaction.data.values[0]) : 0;
 
-				return {
+				await interaction.update({
 					embeds: {
 						title: "Do you want Premium for yourself or this server? 🫂",
 						color: EmbedColor.Orange
@@ -132,7 +133,7 @@ export default createInteractionHandler({
 					} ],
 
 					ephemeral: true
-				};
+				});
 
 			} else if (step === PremiumPurchaseStep.Done) {
 				/* Which Premium type was selected */
@@ -144,10 +145,8 @@ export default createInteractionHandler({
 				/* Location of the Premium subscription or plan */
 				const location = args[2];
 
-				await interaction.deferReply(true);
-
 				/* Create the payment invoice using the API. */
-				const { url } = await bot.api.other.pay({
+				const { url, id } = await bot.api.other.pay({
 					type, credits,
 					guild: location === "guild" ? interaction.guildId?.toString() : undefined,
 					user: {
@@ -156,11 +155,22 @@ export default createInteractionHandler({
 					}
 				});
 
-				await interaction.editReply({
+				await interaction.update({
 					embeds: {
-						title: "You can now continue the purchase in your browser.",
-						description: "Once you're done, you will receive a DM from the bot.",
-						color: EmbedColor.Orange
+						title: "Great choice! 👏",
+						description: "You may now finish the purchase in your browser. Once done, you'll receive a DM from the bot.",
+						color: EmbedColor.Orange,
+
+						fields: [
+							{
+								name: "Did something go wrong with your Premium purchase?",
+								value: `If so, we would be glad to help you out on our **[support server](https://${SUPPORT_INVITE})**.`
+							}
+						],
+
+						footer: {
+							text: id
+						}
 					},
 
 					components: [ {

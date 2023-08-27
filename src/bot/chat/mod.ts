@@ -171,7 +171,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 
 	/* Apply the model's specific cool-down to the user. */ 
 	if (model.cooldown && model.cooldown[type]) {
-		setCooldown(conversation, model.cooldown[type]!);
+		setCooldown(env, conversation, model.cooldown[type]!);
 	}
 }
 
@@ -199,13 +199,10 @@ async function execute(options: ExecuteOptions): Promise<ConversationResult> {
 	});
 
 	/* Execute the model generation handler. */
-	options.model.handler({
-		bot, env, input, history, emitter
-	});
-
-	/* Wait for the generation to finish, or throw an error when it times out. */
 	const result = formatResult(
-		await emitter.wait(), id
+		await options.model.handler({
+			bot, env, input, history, emitter
+		}), id
 	);
 
 	/* Add the generated response to the user's history. */

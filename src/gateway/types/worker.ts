@@ -1,14 +1,9 @@
 import type { DiscordGatewayPayload } from "@discordeno/bot";
 
-export type WorkerMessage = WorkerIdentifyShard | WorkerAllowIdentify
+export type WorkerMessage = WorkerIdentifyShard
 
 export interface WorkerIdentifyShard {
 	type: "IDENTIFY_SHARD";
-	shardId: number;
-}
-
-export interface WorkerAllowIdentify {
-	type: "ALLOW_IDENTIFY";
 	shardId: number;
 }
 

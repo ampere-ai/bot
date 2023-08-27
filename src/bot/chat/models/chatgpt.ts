@@ -18,19 +18,10 @@ export default createChatModel({
 	},
 
 	handler: async ({ bot, emitter, history }) => {
-		const event = await bot.api.text.gpt({
+		return await bot.api.text.gpt({
 			messages: history.messages,
 			maxTokens: history.maxTokens,
 			model: "gpt-4"
-		});
-
-		event.on(data => {
-			emitter.emit({
-				content: data.content,
-				finishReason: data.finishReason,
-				cost: data.cost,
-				done: data.done
-			});
-		});
+		}, emitter);
 	}
 });

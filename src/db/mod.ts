@@ -4,11 +4,12 @@ import { createLogger } from "@discordeno/utils";
 import RabbitMQ from "rabbitmq-client";
 import { bold } from "colorette";
 
-import { DB_KEY, DB_QUEUE_INTERVAL, DB_URL, RABBITMQ_URI, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USER } from "../config.js";
-import { type CollectionName, CollectionNames, type DBObject, type DBRequestData } from "./types/mod.js";
 import type { Conversation } from "../bot/types/conversation.js";
 import type { DBGuild } from "./types/guild.js";
 import type { DBUser } from "./types/user.js";
+
+import { DB_KEY, DB_QUEUE_INTERVAL, DB_URL, RABBITMQ_URI, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USER } from "../config.js";
+import { CollectionNames, type CollectionName, type DBObject, type DBRequestData } from "./types/mod.js";
 
 const logger = createLogger({ name: "[DB]" });
 
@@ -78,7 +79,7 @@ async function setCache<T>(key: string, data: T) {
 }
 
 function collectionKey(collection: CollectionName, id: string) {
-	return `${collection}:::${id}`;
+	return `${collection}:-:${id}`;
 }
 
 async function update<T extends DBObject = DBObject>(
@@ -100,6 +101,8 @@ async function update<T extends DBObject = DBObject>(
 		id, ...updates
 	} as DBObject;
 
+	console.log(queue[collection][id]);
+
 	await setCache(collectionKey(collection, id), updated);
 	return updated;
 }
@@ -115,7 +118,6 @@ async function get<T extends DBObject = DBObject>(collection: CollectionName, id
 	if (data === null || data.length === 0) return null;
 	const entry = data[0];
 
-
 	await setCache(collectionKey(collection, id), entry);
 	return entry as T;
 }
@@ -129,7 +131,7 @@ async function fetch<T extends DBObject = DBObject>(collection: CollectionName, 
 	}
 
 	const template = CollectionTemplates[collection]!(id) as T;
-	await setCache(collectionKey(collection, id), template);
+	await update(collection, id, template);
 
 	return template;
 }

@@ -33,7 +33,7 @@ export async function executeCommand(bot: Bot, interaction: Interaction) {
 				interaction.deleteReply().catch(() => {});
 			}, remaining);
 		} else {
-			if (command.cooldown[type]) setCooldown(interaction, command.cooldown[type]!);
+			if (command.cooldown[type]) setCooldown(env, interaction, command.cooldown[type]!);
 		}
 	}
 

@@ -25,7 +25,7 @@ export interface ImageModel {
 	id: string;
 
 	/** Which path is used */
-	path: "anything" | "kandinsky" | "sh";
+	path: "sh";
 
     /** Various settings for the model */
     settings?: ImageConfigModelSettings;
@@ -79,18 +79,14 @@ export interface ImageUpscaleOptions {
 
 export interface ImageGenerationBody {
     prompt: string;
-    negative_prompt?: string;
-    image?: string;
+    negativePrompt?: string;
     width: number;
     height: number;
     steps: number;
-    number: number;
+    amount: number;
     sampler?: ImageSampler;
-    cfg_scale?: number;
-    seed?: number;
-    style?: string;
+    guidance?: number;
     model?: string;
-    strength?: number;
     ratio: ImageGenerationRatio;
 }
 
@@ -101,7 +97,7 @@ export interface ImageResult {
 }
 
 export type ImageRawResult = ImageResult & {
-    base64: string;
+    data: string;
 }
 
 export type ImageGenerationAction = "generate" | "upscale"
@@ -112,11 +108,9 @@ export type ImageGenerationStatus = "queued" | "generating" | "done" | "failed"
 export interface ImageGenerationResult {
     id: string;
 	done: boolean;
-    status: ImageGenerationStatus;
     results: ImageRawResult[];
-	progress: number | null;
-    error: string | null;
-    cost: number | null;
+	progress: number;
+    cost: number;
 }
 
 export interface ImagePrompt {

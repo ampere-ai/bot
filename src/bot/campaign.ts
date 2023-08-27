@@ -25,7 +25,7 @@ export function trackingURL(campaign: DBCampaign, env: DBEnvironment) {
 	return campaign.link;
 }
 
-/** Pick a random campaign to display, increment its views & format it accordingly.1 */
+/** Pick a random campaign to display, increment its views & format it accordingly. */
 export function advertisement(env: DBEnvironment): CampaignDisplay | null {
 	/* Disable all ads for Premium users. */
 	const type = bot.db.premium(env);

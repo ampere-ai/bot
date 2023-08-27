@@ -33,7 +33,7 @@ export async function handleInteraction(bot: Bot, interaction: Interaction) {
 				interaction.deleteReply().catch(() => {});
 			}, remaining);
 		} else {
-			if (handler.cooldown[type]) setCooldown(interaction, handler.cooldown[type]!);
+			if (handler.cooldown[type]) setCooldown(env, interaction, handler.cooldown[type]!);
 		}
 	}
 

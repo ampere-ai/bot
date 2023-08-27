@@ -1,6 +1,6 @@
 interface APIErrorOptions {
 	/** Information about the error */
-	data: string | object;
+	data: string;
 	
 	/** Status code of the error */
 	code: number;
@@ -10,7 +10,8 @@ export class APIError extends Error {
 	public readonly options: APIErrorOptions;
 
 	constructor(response: Response, body: any) {
-		super();
+		super(body.error.toString());
+		this.name = "APIError";
 
 		this.options = {
 			code: response.status,

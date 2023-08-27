@@ -4,6 +4,7 @@ import type { Conversation } from "../types/conversation.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
 import { EmbedColor, type MessageResponse } from "./response.js";
+import { DBRole } from "../../db/types/user.js";
 import { advertisement } from "../campaign.js";
 
 type CooldownTarget = Conversation | Interaction
@@ -49,7 +50,8 @@ export function hasCooldown(target: CooldownTarget) {
 	return getCooldown(target) !== null;
 }
 
-export function setCooldown(target: CooldownTarget, duration: number) {
+export function setCooldown(env: DBEnvironment, target: CooldownTarget, duration: number) {
+	if (env.user.roles.includes(DBRole.Owner)) return;
 	cooldowns.set(cooldownKey(target), Date.now() + duration);
 }
 

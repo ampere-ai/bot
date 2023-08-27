@@ -36,7 +36,7 @@ export interface ChatModel {
 	maxTokens: number;
 
 	/** Handler for the chat model */
-	handler: (options: ChatModelHandlerOptions) => Promise<void> | void;
+	handler: (options: ChatModelHandlerOptions) => Promise<ChatModelResult> | ChatModelResult;
 }
 
 interface ChatModelHandlerOptions {

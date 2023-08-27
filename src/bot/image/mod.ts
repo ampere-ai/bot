@@ -3,17 +3,9 @@ import { randomUUID } from "crypto";
 import type { ImageGenerationOptions, ImageGenerationRatio, ImageGenerationResult, ImageGenerationSize, ImageModel, ImageUpscaleOptions } from "../types/image.js";
 
 export async function generate({ bot, model, emitter, body }: ImageGenerationOptions) {
-	const request = await bot.api.image[model.path]({
-		...body, ...model.body ?? {}
-	} as any);
-
-	request.on("data", (data: ImageGenerationResult) => {
-		emitter.emit({
-			...data, done: data.status === "done"
-		});
-	});
-
-	return await emitter.wait(3 * 60 * 1000);
+	return await bot.api.image[model.path]({
+		...body, ...model.body ?? {}, stream: true
+	} as any, emitter);
 }
 
 export async function upscale({ bot, url }: ImageUpscaleOptions): Promise<ImageGenerationResult> {
@@ -27,11 +19,10 @@ export async function upscale({ bot, url }: ImageUpscaleOptions): Promise<ImageG
 	return {
 		results: [ {
 			id: randomUUID(), seed: -1, status: "success",
-			base64: response.result
+			data: response.result
 		} ],
 		
-		cost: response.cost, id: randomUUID(), progress: null,
-		status: "done", error: null, done: true
+		cost: response.cost, id: randomUUID(), progress: 1, done: true
 	};
 }
 
@@ -39,9 +30,7 @@ export function validRatio(ratio: string, max: number = 3): ImageGenerationRatio
 	const [ a, b ] = ratio.split(":").map(Number);
 	if (!a || !b || isNaN(a) || isNaN(b)) return null;
 
-	/* Make sure that the ratio is in the valid range. */
 	if (a <= 0 || b <= 0 || a / b > max || b / a > max) return null;
-
 	return { a, b };
 }
 

@@ -3,9 +3,13 @@ dotenv.config();
 
 import { RequestMethods, createRestManager } from "@discordeno/bot";
 import { createLogger } from "@discordeno/utils";
+
+import formData from "express-form-data";
 import express from "express";
 
 import { BOT_TOKEN, REST_PORT, HTTP_AUTH } from "../config.js";
+import { readFile } from "fs/promises";
+import { bold } from "colorette";
 
 const logger = createLogger({ name: "[REST]" });
 
@@ -33,6 +37,12 @@ app.use(
 	})
 );
 
+app.use(formData.parse({
+	autoClean: true
+}));
+
+app.use(formData.format());
+
 app.use(express.json({
 	limit: "50mb"
 }));
@@ -43,25 +53,50 @@ app.all("/*", async (req, res) => {
 	}
 
 	try {
-		if (req.body.file) {
-			req.body.file.blob = new Blob([ Buffer.from(req.body.file.blob, "base64") ]);
+		req.body.files = [];
+
+		/* Add all files to the request. */
+		for (const file of Object.values((req as any).files) as {
+			name: string;
+			path: string;
+		}[]) {
+			req.body.files.push({
+				name: file.name, blob: new Blob([ await readFile(file.path) ])
+			});
+		}
+
+		/* If files were uploaded, parse the original payload again. */
+		if (req.body.payload_json) {
+			req.body = { ...req.body, ...JSON.parse(req.body.payload_json) };
+			delete req.body.payload_json;
 		}
 
 		const result = await rest.makeRequest(
 			req.method as RequestMethods, req.url.substring(4),
-			{ body: req.method !== "DELETE" && req.method !== "GET" ? req.body : undefined }
-		);
 
-		logger.debug(req.method, req.url);
+			{
+				body: req.method !== "DELETE" && req.method !== "GET" ? req.body : undefined,
+				files: req.body.files.length > 0 ? req.body.files : undefined
+			}
+		);
 
 		if (result) res.status(200).json(result);
 		else res.status(204).json();
 
 	} catch (err) {
+		if (err instanceof Error) {
+			logger.error(bold("An error occurred"), "->", err);
+
+			return res.status(500).json({
+				error: err.toString(),
+				success: false
+			});
+		}
+
 		const error = err as RESTError;
 
 		logger.error(req.method, req.url, `status code ${error.status} ->`, error.body);
-		res.status(error.status).json(error);
+		res.status(error.status ?? 500).json(error);
 	}
 });
 

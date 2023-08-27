@@ -20,7 +20,6 @@ import { IMAGE_MODELS } from "../image/models.js";
 import { IMAGE_STYLES } from "../image/styles.js";
 import { BRANDING_COLOR } from "../../config.js";
 import { mergeImages } from "../utils/merge.js";
-import { titleCase } from "../utils/helpers.js";
 import { Emitter } from "../utils/event.js";
 import { charge } from "../premium.js";
 
@@ -216,7 +215,7 @@ async function start(options: ImageStartOptions): Promise<MessageResponse> {
 	/* Just why... */
 	await interaction.reply(
 		await formatResult({ ...options, size, result: {
-			cost: 0, done: false, error: null, id: "", progress: null, results: [], status: "generating"
+			cost: 0, done: false, id: "", progress: 0, results: []
 		}})
 	);
 
@@ -240,10 +239,10 @@ async function start(options: ImageStartOptions): Promise<MessageResponse> {
 	const body: ImageGenerationOptions = {
 		body: {
 			prompt: formattedPrompt,
-			negative_prompt: prompt.negative ? prompt.negative : undefined,
+			negativePrompt: prompt.negative ? prompt.negative : undefined,
 
 			sampler, steps, width: size.width, height: size.height, ratio,
-			number: count, cfg_scale: guidance
+			amount: count, guidance
 		},
 
 		bot, model, emitter
@@ -255,11 +254,6 @@ async function start(options: ImageStartOptions): Promise<MessageResponse> {
 
 	/* Whether the generated images are still usable */
 	const usable: boolean = result.results.filter(i => i.status === "success").length > 0;
-	const failed: boolean = result.status === "failed";
-
-	if (failed) throw new ResponseError({
-		message: `**${result.error ?? "The images failed to generate"}**; *please try your request again later*.`
-	});
 
 	if (!usable) throw new ResponseError({
 		message: "All of the generated images were deemed as **not safe for work**", emoji: "🔞"
@@ -286,10 +280,14 @@ async function formatResult(options: ImageFormatOptions & ImageStartOptions): Pr
 
 		return { embeds: {
 			title: displayPrompt({ action, interaction, prompt }),
-			description: `**${result.progress && result.progress <= 1 ? `${Math.floor(result.progress * 100)}%` : titleCase(result.status)}** ... ${emoji}`,
+			description: `**${result.progress && result.progress < 1 ? `${Math.floor(result.progress * 100)}%` : "Generating"}** ... ${emoji}`,
 			color: EmbedColor.Orange
 		} };
 	}
+
+	const grid = (
+		await mergeImages({ result, size })
+	).toString("base64");
 
 	return {
 		embeds: {
@@ -301,7 +299,7 @@ async function formatResult(options: ImageFormatOptions & ImageStartOptions): Pr
 
 		file: {
 			name: `${result.id}.png`,
-			blob: (await mergeImages({ result, size })).toString("base64")
+			blob: grid
 		}
 	};
 }

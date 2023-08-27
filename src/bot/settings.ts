@@ -286,7 +286,7 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 
 			entry = await bot.db.update<DBGuild | DBUser>(
 				location === SettingsLocation.Guild ? "guilds" : "users", entry,
-				{ settings: { ...settings,[key]: newValue } }
+				{ settings: { ...settings, [key]: newValue } }
 			);
 
 			if (option.handler) await option.handler(

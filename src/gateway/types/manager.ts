@@ -1,9 +1,4 @@
-export type ManagerMessage = ManagerMessageRequestIdentify | ManagerMessageReady | ManagerMessageShardPayload
-
-export interface ManagerMessageRequestIdentify {
-	type: "REQUEST_IDENTIFY";
-	shardId: number;
-}
+export type ManagerMessage = ManagerMessageReady | ManagerMessageShardPayload
 
 export interface ManagerMessageReady {
 	type: "READY";

@@ -16,7 +16,6 @@ const parent = parentPort!;
 const data: WorkerCreateData = workerData;
 
 const logger = createLogger({ name: `[WORKER #${data.workerId}]` });
-const identifyPromises = new Map<number, () => void>();
 
 const connection = new RabbitMQ.Connection(RABBITMQ_URI);
 const publisher = connection.createPublisher();
@@ -48,7 +47,7 @@ const manage = async (shard: DiscordenoShard, payload: DiscordGatewayPayload) =>
 			if (existing) return;
 
 			if (loadingGuilds.has(id)) {
-				payload.t = "GUILD_CREATE";
+				payload.t = "GUILD_LOADED_DD" as any;
 				loadingGuilds.delete(id);
 			}
 
@@ -128,13 +127,6 @@ parent.on("message", async (message: WorkerMessage) => {
 
 			shards.set(shard.id, shard);
 			await shard.identify();
-
-			break;
-		}
-
-		case "ALLOW_IDENTIFY": {
-			identifyPromises.get(message.shardId)?.();
-			identifyPromises.delete(message.shardId);
 
 			break;
 		}

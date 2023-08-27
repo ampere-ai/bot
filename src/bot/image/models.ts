@@ -1,7 +1,7 @@
 import type { ImageModel } from "../types/image.js";
 
 export const IMAGE_MODELS: ImageModel[] = [
-	{
+	/*{
 		name: "Kandinsky",
 		description: "Multi-lingual latent diffusion model",
 		id: "kandinsky",
@@ -10,7 +10,7 @@ export const IMAGE_MODELS: ImageModel[] = [
 		settings: {
 			baseSize: { width: 768, height: 768 }
 		}
-	},
+	},*/
 
 	{
 		name: "SDXL",
@@ -23,7 +23,7 @@ export const IMAGE_MODELS: ImageModel[] = [
 		},
 
 		body: {
-			model: "SDXL_beta::stability.ai#6901", number: 2
+			model: "SDXL_beta::stability.ai#6901", amount: 2
 		}
 	},
 
@@ -60,10 +60,10 @@ export const IMAGE_MODELS: ImageModel[] = [
 		}
 	},
 
-	{
+	/*{
 		name: "Anything Diffusion",
 		description: "Stable Diffusion-based model for generating anime",
 		id: "anything-diffusion",
 		path: "anything"
-	}
+	}*/
 ];
