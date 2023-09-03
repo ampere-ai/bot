@@ -26,8 +26,8 @@ export function setupTransformers() {
 		if (transformer.properties === null) {
 			for (const key of Object.keys(bot.transformers.desiredProperties[transformer.name])) {
 				Object.defineProperty(
-					bot.transformers.desiredProperties[transformer.name], key,
-					{ value: true }
+					bot.transformers.desiredProperties[transformer.name],
+					key, { value: true }
 				);
 			}
 
@@ -35,8 +35,8 @@ export function setupTransformers() {
 		} else if (transformer.properties.length > 0) {
 			for (const key of transformer.properties) {
 				Object.defineProperty(
-					bot.transformers.desiredProperties[transformer.name], key,
-					{ value: true }
+					bot.transformers.desiredProperties[transformer.name],
+					key, { value: true }
 				);
 			}
 		}

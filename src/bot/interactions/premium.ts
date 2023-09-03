@@ -35,7 +35,9 @@ export default createInteractionHandler({
 			if (step === PremiumPurchaseStep.ChooseType) {
 				return {
 					embeds: {
-						title: "Select which kind of Premium suits you best ✨",
+						title: "Purchase Premium ✨",
+						description: "*Select which kind of Premium suits you best.*",
+
 						color: EmbedColor.Orange,
 
 						fields: [

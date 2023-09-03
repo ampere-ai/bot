@@ -1,20 +1,20 @@
-import { Collection, type Interaction, type Embed } from "@discordeno/bot";
+import { Collection, type Interaction, type Embed, type Bot } from "@discordeno/bot";
 
 import type { Conversation } from "../types/conversation.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
 import { EmbedColor, type MessageResponse } from "./response.js";
 import { DBRole } from "../../db/types/user.js";
-import { advertisement } from "../campaign.js";
+import { pickAdvertisement } from "../campaign.js";
 
 type CooldownTarget = Conversation | Interaction
 
 /** Global command cool-downs */
 const cooldowns: Collection<string, number> = new Collection();
 
-export function cooldownNotice(target: CooldownTarget, env: DBEnvironment): MessageResponse {
+export async function cooldownNotice(target: CooldownTarget, env: DBEnvironment): Promise<MessageResponse> {
 	const cooldown = getCooldown(target);
-	const ad = advertisement(env);
+	const ad = await pickAdvertisement(env);
 
 	const response: MessageResponse = {
 		ephemeral: true
@@ -50,8 +50,12 @@ export function hasCooldown(target: CooldownTarget) {
 	return getCooldown(target) !== null;
 }
 
-export function setCooldown(env: DBEnvironment, target: CooldownTarget, duration: number) {
+export function setCooldown(bot: Bot, env: DBEnvironment, target: CooldownTarget, duration: number) {
 	if (env.user.roles.includes(DBRole.Owner)) return;
+	
+	const premium = bot.db.premium(env);
+	if (premium && premium.type === "plan") return;
+
 	cooldowns.set(cooldownKey(target), Date.now() + duration);
 }
 

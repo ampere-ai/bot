@@ -4,4 +4,5 @@ export interface PaymentData {
 	credits: number | null;
 	type: "subscription" | "plan";
 	location: "guild" | "user";
+	extended: boolean;
 }

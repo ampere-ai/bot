@@ -1,6 +1,6 @@
 interface APIErrorOptions {
 	/** Information about the error */
-	data: string;
+	data: string | null;
 	
 	/** Status code of the error */
 	code: number;
@@ -9,13 +9,13 @@ interface APIErrorOptions {
 export class APIError extends Error {
 	public readonly options: APIErrorOptions;
 
-	constructor(response: Response, body: any) {
+	constructor(response: Response, body: any | null) {
 		super(body.error.toString());
 		this.name = "APIError";
 
 		this.options = {
 			code: response.status,
-			data: body.error
+			data: body?.error ?? null
 		};
 	}
 }

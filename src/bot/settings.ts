@@ -1,4 +1,4 @@
-import { ActionRow, ButtonComponent, ButtonStyles, MessageComponentTypes, SelectMenuComponent } from "@discordeno/bot";
+import { ActionRow, ButtonComponent, ButtonStyles, MessageComponentTypes, SelectMenuComponent, SelectOption } from "@discordeno/bot";
 import { randomUUID } from "crypto";
 
 import { SettingsCategory, SettingsLocation, SettingsOption, SettingsOptionType } from "./types/settings.js";
@@ -115,8 +115,9 @@ export const SettingsCategories: SettingsCategory[] = [
 			{
 				name: "Style", emoji: "🖌️",
 				description: "Which image style to use",
-				location: SettingsLocation.User, default: IMAGE_STYLES[0].id,
+				location: SettingsLocation.User,
 				type: SettingsOptionType.Choices,
+				optional: true, default: null,
 
 				choices: IMAGE_STYLES.map(m => ({
 					name: m.name, emoji: m.emoji, value: m.id
@@ -198,8 +199,15 @@ function getOption(key: string): SettingsOption {
 }
 
 export function getSettingsValue<T = string | number | boolean>(entry: DBGuild | DBUser, key: string): T {
+	const value = entry.settings[key] as T;
 	const option = getOption(key);
-	return entry.settings[key] as T ?? option.default;
+
+	/* If no option is selected & it's is optional, return null. */
+	if (option.type === SettingsOptionType.Choices) {
+		if (value === "none") return null as T;
+	}
+	
+	return value ?? option.default;
 }
 
 export async function handleSettingsInteraction({ bot, args, env, interaction }: InteractionHandlerOptions) {
@@ -245,10 +253,10 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 			newValue = !currentValue;
 
 		} else if (option.type === SettingsOptionType.Choices) {
+			const choice = option.choices.find(c => c.value === newValue) ?? null;
 			newValue = interaction.data?.values?.[0] ?? currentValue;
-			const choice = option.choices.find(c => c.value === newValue)!;
 
-			if (choice.restrictions && !canUse(bot, env, choice.restrictions)) {
+			if (choice && choice.restrictions && !canUse(bot, env, choice.restrictions)) {
 				const allowed = restrictionTypes(choice.restrictions);
 
 				return void await interaction.reply({
@@ -348,6 +356,24 @@ function buildOption(
 		);
 
 	} else if (option.type === SettingsOptionType.Choices || option.type === SettingsOptionType.MultipleChoices) {
+		const choices: SelectOption[] = option.choices.map(c => {
+			const restrictions = c.restrictions ? restrictionTypes(c.restrictions) : [];
+
+			return {
+				label: `${c.name} ${restrictions.map(r => r.emoji).join(" ")}`, value: c.value,
+				description: c.restrictions
+					? `${c.description ?? ""} (${restrictions.map(r => r.description).join(", ")})`
+					: c.description,
+				emoji: c.emoji ? typeof c.emoji === "string" ? { name: c.emoji } : c.emoji : undefined,
+				default: Array.isArray(current) ? current.includes(c.value) : c.value === current
+			};
+		});
+
+		if (option.type === SettingsOptionType.Choices && option.optional) choices.unshift({
+			label: "None", emoji: { name: "❌" },
+			default: current === null, value: "none"
+		});
+
 		components.push({
 			type: MessageComponentTypes.SelectMenu,
 			customId: `settings:change:${location}:${categoryOptionKey(category, option)}`,
@@ -356,19 +382,7 @@ function buildOption(
 			minValues: option.type === SettingsOptionType.MultipleChoices ? option.min : undefined,
 
 			placeholder: `${option.name} ${option.emoji}`,
-
-			options: option.choices.map(c => {
-				const restrictions = c.restrictions ? restrictionTypes(c.restrictions) : [];
-
-				return ({
-					label: `${c.name} ${restrictions.map(r => r.emoji).join(" ")}`, value: c.value,
-					description: c.restrictions
-						? `${c.description ?? ""} (${restrictions.map(r => r.description).join(", ")})`
-						: c.description,
-					emoji: c.emoji ? typeof c.emoji === "string" ? { name: c.emoji } : c.emoji : undefined,
-					default: Array.isArray(current) ? current.includes(c.value) : c.value === current
-				});
-			})
+			options: choices
 		});
 	}
 	return {

@@ -72,9 +72,11 @@ export interface ImageGenerationOptions {
 	body: ImageGenerationBody;
 }
 
-export interface ImageUpscaleOptions {
+export interface ImageInterrogateOptions {
 	bot: Bot;
+	emitter: Emitter<ImageGenerationResult>;
 	url: string;
+	model?: string;
 }
 
 export interface ImageGenerationBody {
@@ -82,7 +84,7 @@ export interface ImageGenerationBody {
     negativePrompt?: string;
     width: number;
     height: number;
-    steps: number;
+    steps?: number;
     amount: number;
     sampler?: ImageSampler;
     guidance?: number;
@@ -92,7 +94,6 @@ export interface ImageGenerationBody {
 
 export interface ImageResult {
     id: string;
-    seed: number;
     status: ImageStatus;
 }
 
@@ -100,10 +101,10 @@ export type ImageRawResult = ImageResult & {
     data: string;
 }
 
-export type ImageGenerationAction = "generate" | "upscale"
+export type ImageGenerationAction = "generate" | "upscale";
 
-export type ImageStatus = "success" | "filtered" | "failed"
-export type ImageGenerationStatus = "queued" | "generating" | "done" | "failed"
+export type ImageStatus = "success" | "filtered" | "failed";
+export type ImageGenerationStatus = "queued" | "generating" | "done" | "failed";
 
 export interface ImageGenerationResult {
     id: string;
@@ -111,6 +112,13 @@ export interface ImageGenerationResult {
     results: ImageRawResult[];
 	progress: number;
     cost: number;
+}
+
+export interface ImageInterrogateResult {
+	id: string;
+	done: boolean;
+	result: string | null;
+	cost: number;
 }
 
 export interface ImagePrompt {
@@ -121,5 +129,5 @@ export interface ImagePrompt {
     negative?: string;
 
     /** Which filter was used */
-    style: string;
+    style?: string;
 }

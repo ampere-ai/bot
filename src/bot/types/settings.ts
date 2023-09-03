@@ -68,8 +68,11 @@ type BooleanSettingsOption = BaseSettingsOption<boolean> & {
 	type: SettingsOptionType.Boolean;
 }
 
-type ChoiceSettingsOption<T> = BaseSettingsOption<T> & {
+type ChoiceSettingsOption<T> = BaseSettingsOption<T | null> & {
 	type: SettingsOptionType.Choices;
+
+	/** Whether this choice is optional */
+	optional?: boolean;
 
 	/** Choices for the option */
 	choices: SettingsOptionChoice<T>[];

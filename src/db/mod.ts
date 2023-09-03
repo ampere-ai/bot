@@ -101,8 +101,6 @@ async function update<T extends DBObject = DBObject>(
 		id, ...updates
 	} as DBObject;
 
-	console.log(queue[collection][id]);
-
 	await setCache(collectionKey(collection, id), updated);
 	return updated;
 }
@@ -162,7 +160,7 @@ connection.createConsumer({
 }, async (message, reply) => {
 	try {
 		const result = await handleMessage(message.body);
-		if (result) await reply({ success: true, data: result });
+		if (typeof result !== "undefined") await reply({ success: true, data: result });
 	} catch (error) {
 		logger.error(error);
 

@@ -2,10 +2,6 @@ import type { ImageStyle } from "../types/image.js";
 
 export const IMAGE_STYLES: ImageStyle[] = [
 	{
-		name: "None", emoji: "❌", id: "none"
-	},
-
-	{
 		name: "Cinematic", emoji: "🎥",
 		tags: [ "cinematic shot", "dramatic lighting", "vignette", "4k rtx" ],
 		id: "cinematic"

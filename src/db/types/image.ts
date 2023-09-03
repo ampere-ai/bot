@@ -1,14 +1,8 @@
 import type { ImageGenerationBody, ImageGenerationAction, ImagePrompt, ImageResult } from "../../bot/types/image.js";
 
 export interface DBImage {
-    /* Unique identifier of the generation request */
-    id: string;
-
     /* Which model was used */
     model: string;
-
-    /* When the generation was completed */
-    created: string;
 
     /* Which action was performed */
     action: ImageGenerationAction;

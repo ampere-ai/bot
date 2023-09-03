@@ -1,17 +1,34 @@
 import { fetchEventSource } from "@waylaidwanderer/fetch-event-source";
 
+import type { ImageGenerationResult, ImageInterrogateResult } from "./types/image.js";
 import type { ConversationMessage } from "./types/conversation.js";
+import type { Emitter, EmitterData } from "./utils/event.js";
 import type { ChatModelResult } from "./chat/models/mod.js";
+import type { DatasetType } from "../db/types/dataset.js";
 
-import { Emitter, EmitterData } from "./utils/event.js";
 import { API_KEY, API_HOST } from "../config.js";
 import { APIError } from "./errors/api.js";
-import { ImageGenerationResult } from "./types/image.js";
-
 
 interface BaseAPIOptions {
 	key: string;
 	host: string;
+}
+
+interface APIFetchOptions {
+	/** Which path to request */
+	path: string;
+
+	/** JSON body to pass to the API */
+	options?: object;
+
+	/** Raw binary data to pass to the API */
+	data?: Buffer;
+
+	/** Whether the response should be streaming */
+	stream?: boolean;
+
+	/** Emitter to stream the response to, if applicable */
+	emitter?: Emitter<EmitterData>;
 }
 
 class BaseAPI {
@@ -21,23 +38,35 @@ class BaseAPI {
 		this.options = options;
 	}
 
-	public async fetch<T extends EmitterData>(path: string, options: object, emitter?: Emitter<T>): Promise<T>;
+	protected async fetchBinary(
+		{ path }: Pick<APIFetchOptions, "path">
+	): Promise<Buffer> {
+		const url = `${this.options.host}/${path}`;
+		const headers = this.headers();
 
-	public async fetch<T extends EmitterData>(
-		path: string, options: object & { stream?: boolean }, emitter?: Emitter<T>
+		const response = await fetch(url, {
+			method: "GET", headers
+		});
+
+		if (!response.ok) throw new APIError(response, null);
+		return Buffer.from(await response.arrayBuffer());
+	}
+
+	protected async fetch<T = any>(
+		{ path, emitter, options, data: binary, stream }: APIFetchOptions
 	): Promise<T> {
 		const url = `${this.options.host}/${path}`;
+		const headers = this.headers();
 
-		const headers = {
-			"Content-Type": "application/json",
-			Authorization: this.options.key
-		};
-
-		if (options.stream && emitter) {
-			return new Promise<T>((resolve, reject) => {
-				fetchEventSource(url, {
+		if (stream && emitter) {
+			// eslint-disable-next-line no-async-promise-executor
+			return new Promise<T>(async (resolve, reject) => {
+				await fetchEventSource(url, {
 					method: "POST", headers,
-					body: JSON.stringify(options),
+
+					body: JSON.stringify({
+						...options, stream: true
+					}),
 	
 					onopen: async response => {
 						if (!response.ok) {
@@ -46,18 +75,22 @@ class BaseAPI {
 					},
 	
 					onmessage: ({ data: raw }) => {
-						const data: T = JSON.parse(raw);
+						const data = JSON.parse(raw);
 						emitter.emit(data);
 
 						if (data.done) resolve(data);
 					}
-				}).catch(() => {});
+				}).catch(reject);
 			});
 
 		} else {
+			if (binary) headers["Content-Type"] = "image/png";
+
 			const response = await fetch(url, {
-				method: "POST", headers,
-				body: JSON.stringify(options)
+				method: options || binary ? "POST" : "GET",
+				
+				body: binary ? binary :  options ? JSON.stringify(options) : undefined,
+				headers
 			});
 
 			const data = await response.json();
@@ -65,6 +98,13 @@ class BaseAPI {
 
 			return data;
 		}
+	}
+
+	private headers() {
+		return {
+			"Content-Type": "application/json",
+			Authorization: this.options.key
+		};
 	}
 }
 
@@ -75,9 +115,9 @@ class TextAPI extends BaseAPI {
 		temperature?: number,
 		model?: string
 	}, emitter: Emitter<ChatModelResult>): Promise<ChatModelResult> {
-		return this.fetch("text/gpt", {
-			...options, stream: true
-		}, emitter);
+		return this.fetch({
+			path: "text/gpt", emitter, options, stream: true
+		});
 	}
 }
 
@@ -92,10 +132,47 @@ class ImageAPI extends BaseAPI {
 		sampler?: string;
 		amount?: number;
 		model?: string;
-	}, emitter: Emitter<ImageGenerationResult>): Promise<ImageGenerationResult> {
-		return this.fetch("image/sh", {
-			...options, stream: true
-		}, emitter);
+	}, emitter?: Emitter<ImageGenerationResult>): Promise<ImageGenerationResult> {
+		return this.fetch({
+			path: "image/sh", emitter, options, stream: true
+		});
+	}
+
+	public async interrogate(options: {
+		url: string;
+		model?: string;
+	}, emitter?: Emitter<ImageInterrogateResult>): Promise<ImageInterrogateResult> {
+		return this.fetch({
+			path: "image/interrogate", emitter, options, stream: false
+		});
+	}
+}
+
+class DatasetAPI extends BaseAPI {
+	public async get<T>(type: DatasetType, id: string): Promise<T> {
+		return (await this.fetch({
+			path: `dataset/${type}/${id}`
+		})).data;
+	}
+
+	public async add<T>(type: DatasetType, id: string, data: T): Promise<T> {
+		return await this.fetch({
+			path: `dataset/${type}/${id}`, options: data as object
+		});
+	}
+}
+
+class StorageAPI extends BaseAPI {
+	public async get(type: string, path: string): Promise<Buffer> {
+		return this.fetchBinary({
+			path: `storage/${type}/${path}`
+		});
+	}
+
+	public async upload(type: string, path: string, data: Buffer): Promise<void> {
+		await this.fetch({
+			path: `storage/${type}/${path}`, data
+		});
 	}
 }
 
@@ -112,25 +189,22 @@ class OtherAPI extends BaseAPI {
 		url: string;
 		id: string;
 	}> {
-		return this.fetch<any>("pay", options);
+		return this.fetch({
+			path: "pay", options
+		});
 	}
 }
 
+const options = {
+	key: API_KEY, host: API_HOST
+};
+
 export function createAPI() {
 	return {
-		text: new TextAPI({
-			key: API_KEY,
-			host: API_HOST
-		}),
-
-		image: new ImageAPI({
-			key: API_KEY,
-			host: API_HOST
-		}),
-
-		other: new OtherAPI({
-			key: API_KEY,
-			host: API_HOST
-		})
+		text: new TextAPI(options),
+		image: new ImageAPI(options),
+		dataset: new DatasetAPI(options),
+		storage: new StorageAPI(options),
+		other: new OtherAPI(options)
 	};
 }

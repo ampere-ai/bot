@@ -1,20 +1,21 @@
-import type { Bot, Interaction } from "@discordeno/bot";
-
-import { ApplicationCommandOptionTypes, DiscordEmbedField } from "@discordeno/bot";
-import { createCommand } from "../helpers/command.js";
+import { ApplicationCommandOptionTypes, DiscordEmbedField, MessageComponentTypes, MessageComponents } from "@discordeno/bot";
+import { ActionRow, Bot, ButtonStyles, Interaction } from "@discordeno/bot";
 
 import type { ImageGenerationAction, ImageModel, ImagePrompt, ImageSampler, ImageGenerationOptions, ImageGenerationSize } from "../types/image.js";
+import type { InteractionHandlerOptions } from "../types/interaction.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
+import type { DBImage } from "../../db/types/image.js";
 
 import { EmbedColor, MessageResponse } from "../utils/response.js";
 import { moderate, moderationNotice } from "../moderation/mod.js";
 import { ModerationSource } from "../moderation/types/mod.js";
 import { ResponseError } from "../errors/response.js";
+import { createCommand } from "../helpers/command.js";
 import { getSettingsValue } from "../settings.js";
 
 import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/user.js";
+import { findBestSize, generate, interrogate, validRatio } from "../image/mod.js";
 import { IMAGE_SAMPLERS, type ImageGenerationResult } from "../types/image.js";
-import { findBestSize, generate, upscale, validRatio } from "../image/mod.js";
 import { handleError } from "../moderation/error.js";
 import { IMAGE_MODELS } from "../image/models.js";
 import { IMAGE_STYLES } from "../image/styles.js";
@@ -27,15 +28,20 @@ interface ImageStartOptions {
 	bot: Bot;
 	interaction: Interaction;
 	env: DBEnvironment;
-	guidance: number;
-	sampler: ImageSampler;
+	guidance?: number;
+	sampler?: ImageSampler;
 	ratio: string;
 	model: ImageModel;
-	steps: number;
+	steps?: number;
 	count: number;
 	prompt: ImagePrompt;
 	action: ImageGenerationAction;
 	source?: string;
+}
+
+interface ImageToolbarOptions {
+	action: ImageGenerationAction;
+	result: ImageGenerationResult;
 }
 
 export interface ImageFormatOptions {
@@ -146,8 +152,8 @@ export default createCommand({
 		const model = IMAGE_MODELS.find(m => m.id === modelID)!;
 	
 		/* Which style to apply additionally */
-		const styleID = options.style?.value as string ?? getSettingsValue(env.user, "image:style");
-		const style = IMAGE_STYLES.find(s => s.id === styleID)!;
+		const styleID: string | null = options.style?.value as string ?? getSettingsValue(env.user, "image:style");
+		const style = styleID !== null ? IMAGE_STYLES.find(s => s.id === styleID)! : null;
 
 		/* Ratio that the images should have */
 		const ratio: string = options.ratio?.value as string ?? "1:1";
@@ -168,7 +174,8 @@ export default createCommand({
 				ratio, count, env, guidance, interaction, model, sampler, steps,
 
 				prompt: {
-					prompt: prompt, negative: negativePrompt, style: style.id
+					prompt: prompt, negative: negativePrompt,
+					style: style ? style.id : undefined
 				}
 			});
 
@@ -191,6 +198,81 @@ export default createCommand({
 	}
 });
 
+export async function handleImagineInteraction({ bot, interaction, env, args }: InteractionHandlerOptions) {
+	const action = args.shift()!;
+
+	/* Fetch the image. */
+	const image = await bot.api.dataset.get<DBImage>("image", args.shift()!);
+	if (!image) return;
+
+	const { prompt, model, options: { ratio, amount, guidance, sampler, steps } } = image;
+
+	/* Which individual result was selected */
+	const imageResult = args.length > 0 ? image.results.at(Number(args[0])) : null;
+	if (action === "upscale" && !imageResult) return;
+
+	/* Original message corresponding to the button */
+	const original = interaction.message;
+	if (!original || original.components.length === 0) return;
+
+	/* Which button was pressed */
+	const pressed = original.components[0].components!
+		.find(c => c.customId === interaction.data!.customId)!;
+
+	pressed.style = ButtonStyles.Primary;
+	pressed.disabled = true;
+
+	/* Disable the button that was pressed, so it can only be used once. */
+	await bot.helpers.editMessage(original.channelId, original.id, {
+		components: original.components as MessageComponents
+	});
+
+	try {
+		if (action === "upscale") {
+			const buffer = await bot.api.storage.get("images", `${imageResult!.id}.png`);
+	
+			const result = await start({
+				bot, interaction, action,
+	
+				ratio: `${ratio.a}:${ratio.b}`,
+				count: amount, env, guidance,
+				model: IMAGE_MODELS.find(m => m.id === model)!,
+				source: buffer.toString("base64"),
+	
+				sampler, steps, prompt
+			});
+	
+			const message = await bot.helpers.getOriginalInteractionResponse(interaction.token);
+			return void await message.edit(result);
+	
+		} else if (action === "redo") {
+			const result = await start({
+				bot, interaction,
+				
+				action: "generate",
+				ratio: `${ratio.a}:${ratio.b}`,
+				count: amount, env, guidance,
+				model: IMAGE_MODELS.find(m => m.id === model)!,
+	
+				sampler, steps, prompt
+			});
+	
+			const message = await bot.helpers.getOriginalInteractionResponse(interaction.token);
+			return void await message.edit(result);
+		}
+	} catch (error) {
+		pressed.style = ButtonStyles.Danger;
+		pressed.disabled = false;
+	
+		/* Enable the pressed button again, because the action failed. */
+		await bot.helpers.editMessage(original.channelId, original.id, {
+			components: original.components as MessageComponents
+		});
+
+		throw error;
+	}
+}
+
 async function start(options: ImageStartOptions): Promise<MessageResponse> {
 	const { bot, ratio: rawRatio, model, prompt, action, source, sampler, steps, guidance, count, interaction, env } = options;
 
@@ -206,11 +288,11 @@ async function start(options: ImageStartOptions): Promise<MessageResponse> {
 		? findBestSize(ratio, model) : model.settings.forcedSize;
 
 	/* The image generation style to apply additionally */
-	const style = IMAGE_STYLES.find(s => s.id === prompt.style)!;
+	const style = IMAGE_STYLES.find(s => s.id === prompt.style) ?? null;
 
 	/* The formatted prompt, to pass to the API */
 	let formattedPrompt = prompt.prompt;
-	if (style.tags) formattedPrompt += `, ${style.tags.join(", ")}`;
+	if (style && style.tags) formattedPrompt += `, ${style.tags.join(", ")}`;
 
 	/* Just why... */
 	await interaction.reply(
@@ -225,11 +307,9 @@ async function start(options: ImageStartOptions): Promise<MessageResponse> {
 	const handler = async (data: ImageGenerationResult) => {
 		if (data.done) return;
 
-		try {
-			await message.edit(
-				await formatResult({ ...options, result: data, size })
-			);
-		} catch { /* Stub */ }
+		await message.edit(
+			await formatResult({ ...options, result: data, size })
+		).catch(() => {});
 	};
 
 	const emitter = new Emitter<ImageGenerationResult>();
@@ -248,8 +328,8 @@ async function start(options: ImageStartOptions): Promise<MessageResponse> {
 		bot, model, emitter
 	};
 
-	const result = action === "upscale" && source
-		? await upscale({ bot, url: source })
+	const result = action === "upscale" && source !== undefined
+		? await interrogate({ bot, url: source, emitter })
 		: await generate(body);
 
 	/* Whether the generated images are still usable */
@@ -264,6 +344,23 @@ async function start(options: ImageStartOptions): Promise<MessageResponse> {
 			model: model.id
 		}
 	});
+
+	/* Add the image request to the dataset. */
+	await bot.api.dataset.add<DBImage>("image", result.id, {
+		cost: result.cost, model: model.id,
+		action, prompt, options: body.body,
+
+		results: result.results.map(({ id, status }) => ({
+			id, status
+		}))
+	});
+
+	/* Upload all of the generation results. */
+	await Promise.all(result.results.map(r => {
+		return bot.api.storage.upload(
+			"images", `${r.id}.png`, Buffer.from(r.data, "base64")
+		);
+	}));
 
 	return await formatResult({
 		...options, result, size
@@ -280,7 +377,7 @@ async function formatResult(options: ImageFormatOptions & ImageStartOptions): Pr
 
 		return { embeds: {
 			title: displayPrompt({ action, interaction, prompt }),
-			description: `**${result.progress && result.progress < 1 ? `${Math.floor(result.progress * 100)}%` : "Generating"}** ... ${emoji}`,
+			description: `**${result.progress && (result.progress < 1 && result.progress > 0) ? `${Math.floor(result.progress * 100)}%` : "Generating"}** ... ${emoji}`,
 			color: EmbedColor.Orange
 		} };
 	}
@@ -297,11 +394,68 @@ async function formatResult(options: ImageFormatOptions & ImageStartOptions): Pr
 			color: BRANDING_COLOR
 		},
 
+		components: buildToolbar({
+			action, result
+		}),
+
 		file: {
 			name: `${result.id}.png`,
 			blob: grid
 		}
 	};
+}
+
+function buildToolbar(options: ImageToolbarOptions): ActionRow[] | undefined {
+	const rows: ActionRow[] = [];
+
+	if (options.action === "generate") {
+		rows.push(...buildActionButtons({
+			...options, action: "upscale"
+		}));
+	}
+
+	if (rows[0] && options.action === "generate") {
+		rows[0].components.push({
+			type: MessageComponentTypes.Button,
+			customId: `i:redo:${options.result.id}`,
+			style: ButtonStyles.Secondary,
+			emoji: { name: "🔄" }
+		});
+	}
+
+	return rows.length > 0 ? rows : undefined;
+}
+
+function buildActionButtons({ action, result: { id, results } }: ImageToolbarOptions): ActionRow[] {
+	const rows: ActionRow[] = [];
+
+	/* How many images to display per row */
+	const perRow: number = 4;
+
+	/* How many rows to display */
+	const rowCount: number = Math.ceil(results.length / perRow);
+	
+	for (let i = 0; i < rowCount; i++) {
+		rows.push({
+			type: MessageComponentTypes.ActionRow,
+			components: [] as any,
+		});
+	}
+
+	results.forEach((image, index) => {
+		const which: number = Math.ceil((index + 1) / perRow) - 1;
+		const row = rows[which];
+
+		row.components.push({
+			type: MessageComponentTypes.Button,
+			style: image.status === "success" ? ButtonStyles.Secondary : ButtonStyles.Danger,
+			label: `${action.charAt(0).toUpperCase()}${index + 1}`,
+			customId: `i:${action}:${id}:${index}`,
+			disabled: image.status !== "success"
+		});
+	});
+
+	return rows;
 }
 
 function displayFields(options: ImageStartOptions): DiscordEmbedField[] {
@@ -327,7 +481,7 @@ function displayFields(options: ImageStartOptions): DiscordEmbedField[] {
 		name: "Guidance", value: `${options.guidance}`
 	});
 
-	if (options.prompt.style !== "none") {
+	if (options.prompt.style) {
 		const style = IMAGE_STYLES.find(s => s.id === options.prompt.style)!;
 		fields.push({ name: "Style", value: `${style.name} ${style.emoji}` });
 	}

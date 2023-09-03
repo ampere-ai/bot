@@ -75,7 +75,6 @@ export function moderationNotice({ result }: ModerationNoticeOptions): MessageRe
 export function giveInfraction<T extends DBGuild | DBUser>(bot: Bot, entry: T, {
 	by, reason, type, moderation, reference, until, seen
 }: GiveInfractionOptions): Promise<T> {
-	/* Raw infraction data */
 	const data: DBInfraction = {
 		by, reason, type, moderation,
 
@@ -87,7 +86,7 @@ export function giveInfraction<T extends DBGuild | DBUser>(bot: Bot, entry: T, {
 	if (reference) data.reference = reference;
 	if (until) data.until = until;
 
-	return bot.db.update<T>((entry as DBUser).voted ? "users" : "guilds", entry, {
+	return bot.db.update<T>((entry as DBUser).voted !== undefined ? "users" : "guilds", entry, {
 		infractions: [
 			...entry.infractions, data
 		]
@@ -115,7 +114,7 @@ export function isBanned(entry: DBGuild | DBUser) {
 }
 
 export function banNotice(entry: DBGuild | DBUser, infraction: DBInfraction): MessageResponse {
-	const location = (entry as DBUser).voted ? "user" : "guild";
+	const location = (entry as DBUser).voted !== undefined ? "user" : "guild";
 	const fields: DiscordEmbedField[] = [];
 
 	if (infraction.reason) fields.push({
@@ -137,7 +136,7 @@ export function banNotice(entry: DBGuild | DBUser, infraction: DBInfraction): Me
 
 /** Send the flag through RabbitMQ, to be handled by a separate management bot. */
 async function sendModerationData(env: DBEnvironment, result: ModerationResult) {
-	publisher.send("moderation", {
+	await publisher.send("moderation", {
 		env, result
 	});
 }

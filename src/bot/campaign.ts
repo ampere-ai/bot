@@ -26,7 +26,7 @@ export function trackingURL(campaign: DBCampaign, env: DBEnvironment) {
 }
 
 /** Pick a random campaign to display, increment its views & format it accordingly. */
-export function advertisement(env: DBEnvironment): CampaignDisplay | null {
+export async function pickAdvertisement(env: DBEnvironment): Promise<CampaignDisplay | null> {
 	/* Disable all ads for Premium users. */
 	const type = bot.db.premium(env);
 	if (type !== null) return null;

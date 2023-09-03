@@ -50,7 +50,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 
 	if (hasCooldown(conversation)) {
 		const { remaining } = getCooldown(conversation)!;
-		const reply = await message.reply(cooldownNotice(conversation, env));
+		const reply = await message.reply(await cooldownNotice(conversation, env));
 
 		return void setTimeout(() => {
 			reply.delete().catch(() => {});
@@ -164,14 +164,16 @@ export async function handleMessage(bot: Bot, message: Message) {
 	} finally {
 		await bot.helpers.deleteOwnReaction(
 			message.channelId, message.id, `${indicator.emoji.name}:${indicator.emoji.id}`
-		);
+		).catch(() => {});
 
 		runningGenerations.delete(message.author.id);
 	}
 
 	/* Apply the model's specific cool-down to the user. */ 
 	if (model.cooldown && model.cooldown[type]) {
-		setCooldown(env, conversation, model.cooldown[type]!);
+		setCooldown(
+			bot, env, conversation, model.cooldown[type]!
+		);
 	}
 }
 

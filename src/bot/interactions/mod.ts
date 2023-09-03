@@ -7,9 +7,10 @@ import { handleError } from "../moderation/error.js";
 import Settings from "./settings.js";
 import Campaign from "./campaign.js";
 import Premium from "./premium.js";
+import Imagine from "./imagine.js";
 
 export const HANDLERS: InteractionHandler[] = [
-	Settings, Premium, Campaign
+	Settings, Premium, Campaign, Imagine
 ];
 
 export async function handleInteraction(bot: Bot, interaction: Interaction) {
@@ -27,13 +28,13 @@ export async function handleInteraction(bot: Bot, interaction: Interaction) {
 	if (handler.cooldown) {
 		if (hasCooldown(interaction)) {
 			const { remaining } = getCooldown(interaction)!;
-			await interaction.reply(cooldownNotice(interaction, env));
+			await interaction.reply(await cooldownNotice(interaction, env));
 
 			return void setTimeout(() => {
 				interaction.deleteReply().catch(() => {});
 			}, remaining);
 		} else {
-			if (handler.cooldown[type]) setCooldown(env, interaction, handler.cooldown[type]!);
+			if (handler.cooldown[type]) setCooldown(bot, env, interaction, handler.cooldown[type]!);
 		}
 	}
 

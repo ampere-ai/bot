@@ -24,7 +24,7 @@ async function handlePayment(bot: Bot, data: PaymentData) {
 
 		const embed: Embed = {
 			title: `Thank you for purchasing ${data.type === "subscription" ? "Premium" : "Premium credits"} 🎉`,
-			description: `You purchased ${data.type === "subscription" ? "a Premium subscription" : `**${data.credits}$** worth of credits`} ${data.location === "user" ? "for yourself" : `for the server **${guild?.name}**`}.`,
+			description: `You ${data.extended ? "extended" : "purchased"} ${data.type === "subscription" ? "a Premium subscription" : `**${data.credits}$** worth of credits`} ${data.location === "user" ? "for yourself" : `for the server **${guild?.name}**`}.`,
 			color: EmbedColor.Orange
 		};
 
@@ -207,5 +207,5 @@ function isPlanRunning(entry: DBGuild | DBUser): entry is DBGuild & { plan: DBPl
 }
 
 function location(entry: DBGuild | DBUser) {
-	return (entry as DBUser).voted ? "users" : "guilds";
+	return (entry as DBUser).voted !== undefined ? "users" : "guilds";
 }

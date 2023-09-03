@@ -1,28 +1,41 @@
-import { randomUUID } from "crypto";
-
-import type { ImageGenerationOptions, ImageGenerationRatio, ImageGenerationResult, ImageGenerationSize, ImageModel, ImageUpscaleOptions } from "../types/image.js";
+import type {
+	ImageGenerationOptions, ImageGenerationRatio, ImageGenerationResult, ImageGenerationSize, ImageModel, ImageInterrogateOptions, ImageInterrogateResult
+} from "../types/image.js";
+import { Emitter } from "../utils/event.js";
 
 export async function generate({ bot, model, emitter, body }: ImageGenerationOptions) {
-	return await bot.api.image[model.path]({
+	return bot.api.image[model.path]({
 		...body, ...model.body ?? {}, stream: true
 	} as any, emitter);
 }
 
-export async function upscale({ bot, url }: ImageUpscaleOptions): Promise<ImageGenerationResult> {
-	const response = await bot.api.image.upscale({
-		upscaler: "RealESRGAN_x2plus", image: url, stream: false
-	} as any) as {
-		cost: number;
-		result: string;
-	};
+export async function interrogate({ bot, emitter: target, url }: ImageInterrogateOptions): Promise<ImageGenerationResult> {
+	const emitter = new Emitter<ImageInterrogateResult>();
+
+	emitter.on(data => {
+		target.emit({
+			results: response.result ? [ {
+				id: response.id, status: "success",
+				data: response.result
+			} ] : [],
+			
+			cost: response.cost, id: response.id,
+			progress: 0, done: data.done
+		});
+	});
+
+	const response = await bot.api.image.interrogate({
+		url, model: "RealESRGAN_x2plus"
+	}, emitter);
 
 	return {
-		results: [ {
-			id: randomUUID(), seed: -1, status: "success",
+		results: response.result ? [ {
+			id: response.id, status: "success",
 			data: response.result
-		} ],
+		} ] : [],
 		
-		cost: response.cost, id: randomUUID(), progress: 1, done: true
+		cost: response.cost, id: response.id,
+		progress: 0, done: response.done
 	};
 }
 

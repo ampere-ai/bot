@@ -1,9 +1,9 @@
 import RabbitMQ from "rabbitmq-client";
 
 import type { CollectionName, DBEnvironment, DBObject, DBRequestAll, DBRequestData, DBRequestFetch, DBRequestGet, DBRequestType, DBRequestUpdate, DBResponse, DBType } from "../db/types/mod.js";
-import { DBRole, type DBUser, DBUserType } from "../db/types/user.js";
 import type { DBGuild } from "../db/types/guild.js";
 
+import { DBRole, DBUserType, type DBUser } from "../db/types/user.js";
 import { getSettingsValue } from "./settings.js";
 import { RABBITMQ_URI } from "../config.js";
 

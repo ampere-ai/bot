@@ -1,13 +1,14 @@
 import type { Conversation } from "../../bot/types/conversation.js";
+import type { DBDatasetEntry } from "./dataset.js";
 import type { DBCampaign } from "./campaign.js";
 import type { DBGuild } from "./guild.js";
 import type { DBImage } from "./image.js";
 import type { DBUser } from "./user.js";
 
-export type CollectionName = "users" | "guilds" | "conversations" | "images" | "campaigns";
-export const CollectionNames: CollectionName[] = [ "users", "guilds", "conversations", "images", "campaigns" ];
+export type CollectionName = "users" | "guilds" | "conversations" | "campaigns" | "datasets";
+export const CollectionNames: CollectionName[] = [ "users", "guilds", "conversations", "campaigns", "datasets" ];
 
-export type DBType = DBUser | DBGuild | Conversation | DBImage | DBCampaign;
+export type DBType = DBUser | DBGuild | Conversation | DBImage | DBCampaign | DBDatasetEntry;
 
 export type DBObject = {
 	id: string;

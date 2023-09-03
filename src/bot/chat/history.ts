@@ -56,9 +56,9 @@ export function buildHistory({ bot, env, model, tone, conversation, input }: Bui
 	let maxGenerationLength = Math.min(MAX_LENGTH.output[type], model.maxTokens);
 	const maxContextLength = Math.min(MAX_LENGTH.input[type], model.maxTokens);
 
-	if (getChatMessageLength(input) > maxContextLength) throw new ChatError(
-		ChatErrorType.Length
-	);
+	if (getChatMessageLength(input) > maxContextLength) {
+		throw new ChatError(ChatErrorType.Length);
+	}
 
 	do {
 		if (messages.length > 0) messages = [];

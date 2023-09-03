@@ -10,10 +10,10 @@ export const ProgressBlocks: Record<number, string> = {
 };
 
 export interface BarDisplayOptions {
-    /* Total amount of characters to display */
+    /** Total amount of characters to display */
     total?: number;
 
-    /* Percentage to display the bar for */
+    /** Percentage to display the bar for */
     percentage: number;
 }
 

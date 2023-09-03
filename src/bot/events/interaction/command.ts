@@ -27,13 +27,15 @@ export async function executeCommand(bot: Bot, interaction: Interaction) {
 	if (command.cooldown) {
 		if (hasCooldown(interaction)) {
 			const { remaining } = getCooldown(interaction)!;
-			await interaction.reply(cooldownNotice(interaction, env));
+			await interaction.reply(await cooldownNotice(interaction, env));
 
 			return void setTimeout(() => {
 				interaction.deleteReply().catch(() => {});
 			}, remaining);
 		} else {
-			if (command.cooldown[type]) setCooldown(env, interaction, command.cooldown[type]!);
+			if (command.cooldown[type]) setCooldown(
+				bot, env, interaction, command.cooldown[type]!
+			);
 		}
 	}
 
