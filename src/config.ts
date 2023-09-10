@@ -8,7 +8,12 @@ export const BOT_TOKEN = process.env.BOT_TOKEN!;
 
 /** ID of the moderation guild & channel */
 export const MOD_GUILD_ID = BigInt(process.env.MOD_GUILD_ID!);
-export const MOD_CHANNEL_ID = BigInt(process.env.MOD_CHANNEL_ID!);
+
+/** Various moderation log channels */
+export const MOD_CHANNELS = {
+	ERRORS: BigInt(process.env.MOD_CHANNEL_ERRORS_ID!),
+	LOGS: BigInt(process.env.MOD_CHANNEL_LOGS_ID!)
+};
 
 /** Load distribution */
 export const TOTAL_WORKERS = Number(process.env.TOTAL_WORKERS!);

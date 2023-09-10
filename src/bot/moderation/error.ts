@@ -1,8 +1,8 @@
 import { Bot } from "@discordeno/bot";
 import { bold } from "colorette";
 
-import { EmbedColor, MessageResponse } from "../utils/response.js";
-import { SUPPORT_INVITE } from "../../config.js";
+import { EmbedColor, MessageResponse, transformResponse } from "../utils/response.js";
+import { MOD_CHANNELS, SUPPORT_INVITE } from "../../config.js";
 
 interface JSONError {
 	name: string;
@@ -19,6 +19,12 @@ export async function handleError(bot: Bot, { error }: HandleErrorOptions): Prom
 	const data = errorToJSON(error as Error);
 	bot.logger.error(bold("An error occurred"), "->", data);
 
+	try {
+		await bot.helpers.sendMessage(MOD_CHANNELS.ERRORS, transformResponse(
+			buildErrorLogs(data)
+		));
+	} catch { /* Stub */ }
+
 	return {
 		embeds: {
 			title: "Uh-oh... 😬",
@@ -31,10 +37,23 @@ export async function handleError(bot: Bot, { error }: HandleErrorOptions): Prom
 	};
 }
 
+function buildErrorLogs(error: JSONError): MessageResponse {
+	return {
+		embeds: {
+			title: "An error occured ⚠️",
+			description: `\`\`\`${error.name} -> ${error.message}\`\`\`\n\`\`\`${error.stack}\`\`\``,
+			color: EmbedColor.Red
+		}
+	};
+}
+
 function errorToJSON(error: Error): JSONError {
 	return {
 		name: error.name,
 		message: error.message,
-		stack: error.stack ?? null
+
+		stack: error.stack
+			? error.stack.split("\n").slice(1).map(l => l.trim()).join("\n")
+			: null
 	};
 }

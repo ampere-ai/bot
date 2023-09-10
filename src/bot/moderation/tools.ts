@@ -27,7 +27,7 @@ interface ModerationTarget {
 	id: bigint;
 }
 
-export async function sendModerationLogs(bot: Bot, options: ModerationOptions, result: ModerationResult): Promise<MessageResponse> {
+export async function buildModerationLogs(options: ModerationOptions, result: ModerationResult): Promise<MessageResponse> {
 	const user = toModerationTarget(options.user);
 
 	const fields: DiscordEmbedField[] = [];

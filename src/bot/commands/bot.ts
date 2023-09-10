@@ -3,7 +3,7 @@ import { memoryUsage } from "process";
 
 import type { ManagerHTTPWorkerInfoResponse } from "../../gateway/types/manager.js";
 
-import { BRANDING_COLOR, GATEWAY_URL, HTTP_AUTH, SUPPORT_INVITE } from "../../config.js";
+import { BRANDING_COLOR, GATEWAY_URL, HTTP_AUTH, SHARDS_PER_WORKER, SUPPORT_INVITE } from "../../config.js";
 import { createCommand } from "../helpers/command.js";
 
 export default createCommand({
@@ -30,7 +30,7 @@ export default createCommand({
 			? bot.gateway.calculateShardId(interaction.guildId, info.shards.length)
 			: 0;
 
-		const workerId = bot.gateway.calculateWorkerId(shardId);
+		const workerId = shardId % SHARDS_PER_WORKER;
 		const shard = info.shards[shardId];
 
 		const mem = memoryUsage();

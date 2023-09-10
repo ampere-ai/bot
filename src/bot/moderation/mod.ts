@@ -7,8 +7,8 @@ import type { DBGuild } from "../../db/types/guild.js";
 import type { DBUser } from "../../db/types/user.js";
 
 import { EmbedColor, transformResponse, type MessageResponse } from "../utils/response.js";
-import { buildInfractionInfo, sendModerationLogs } from "./tools.js";
-import { MOD_CHANNEL_ID, SUPPORT_INVITE } from "../../config.js";
+import { buildInfractionInfo, buildModerationLogs } from "./tools.js";
+import { MOD_CHANNELS, SUPPORT_INVITE } from "../../config.js";
 import { applyFilters, executeFilters } from "./filters.js";
 
 /** Moderate the given prompt. */
@@ -38,8 +38,8 @@ export async function moderate(options: ModerationOptions) {
 		});
 
 		try {
-			const response = await sendModerationLogs(bot, options, data);
-			await bot.helpers.sendMessage(MOD_CHANNEL_ID, transformResponse(response));
+			const response = await buildModerationLogs(options, data);
+			await bot.helpers.sendMessage(MOD_CHANNELS.LOGS, transformResponse(response));
 		} catch { /* Stub */ }
 	}
 
