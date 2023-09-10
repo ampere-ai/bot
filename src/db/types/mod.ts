@@ -19,9 +19,9 @@ export interface DBEnvironment {
 	guild: DBGuild | null;
 }
 
-export type DBRequestType = "get" | "fetch" | "update" | "delete" | "all";
+export type DBRequestType = "get" | "fetch" | "update" | "delete" | "all" | "clearCache";
 
-export type DBRequestData = DBRequestGet | DBRequestFetch | DBRequestUpdate | DBRequestDelete | DBRequestAll;
+export type DBRequestData = DBRequestGet | DBRequestFetch | DBRequestUpdate | DBRequestDelete | DBRequestAll | DBRequestClearCache;
 
 export interface DBRequestGet {
 	type: "get";
@@ -55,6 +55,10 @@ export interface DBRequestDelete {
 export interface DBRequestAll {
 	type: "all";
 	collection: CollectionName;
+}
+
+export interface DBRequestClearCache {
+	type: "clearCache";
 }
 
 export type DBResponse = {

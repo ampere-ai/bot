@@ -12,8 +12,6 @@ import { warnEntry } from "../../moderation/mod.js";
 
 export default createCommand({
 	name: "warn",
-	description: "...",
-
 	restrictions: [ RestrictionName.Moderator ],
 
 	sub: {
@@ -63,7 +61,7 @@ export default createCommand({
 
 			return {
 				embeds: {
-					title: "Warning given ✉️",
+					title: "Warning given ⚠️",
 					author: { name: target.name, iconUrl: target.icon },
 					fields: buildInfractionInfo(infraction).fields,
 					color: EmbedColor.Yellow

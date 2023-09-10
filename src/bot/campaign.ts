@@ -7,13 +7,11 @@ import { EmbedColor } from "./utils/response.js";
 import { bot } from "./mod.js";
 
 /** List of all database campaigns */
-const campaigns: DBCampaign[] = [];
+let campaigns: DBCampaign[] = [];
 
 /** Fetch all campaigns from the database. */
 export async function fetchCampaigns() {
-	campaigns.push(
-		...await bot.db.all<DBCampaign>("campaigns")
-	);
+	campaigns = await bot.db.all<DBCampaign>("campaigns");
 }
 
 export function getCampaign(id: string) {

@@ -72,7 +72,7 @@ export interface Command<
     name: string;
 
     /** Description of the command */
-    description: string;
+    description?: string;
 
 	/** Restrictions of the command */
 	restrictions?: RestrictionName[];

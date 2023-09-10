@@ -31,8 +31,6 @@ const DURATION_CHOICES = [
 
 export default createCommand({
 	name: "ban",
-	description: "...",
-
 	restrictions: [ RestrictionName.Moderator ],
 
 	sub: {

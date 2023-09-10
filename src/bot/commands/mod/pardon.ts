@@ -12,8 +12,6 @@ import { EmbedColor } from "../../utils/response.js";
 
 export default createCommand({
 	name: "pardon",
-	description: "...",
-
 	restrictions: [ RestrictionName.Moderator ],
 
 	sub: {

@@ -150,6 +150,8 @@ async function handleMessage(data: DBRequestData): Promise<any> {
 		return await update(data.collection, data.id, data.updates);
 	} else if (data.type === "all") {
 		return await all(data.collection);
+	} else if (data.type === "clearCache") {
+		return await redis.flushAll();
 	}
 
 	throw new Error("Not implemented");

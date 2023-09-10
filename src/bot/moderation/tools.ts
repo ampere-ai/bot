@@ -33,13 +33,8 @@ export async function buildModerationLogs(options: ModerationOptions, result: Mo
 	const fields: DiscordEmbedField[] = [];
 
 	if (result.auto) fields.push(
-		{
-			name: "Filter 🚩", value: `\`${result.auto!.reason}\``, inline: true
-		},
-
-		{
-			name: "Action ⚠️", value: `\`${result.auto!.type}\``, inline: true
-		}
+		{ name: "Filter 🚩", value: `\`${result.auto!.reason}\``, inline: true },
+		{ name: "Action ⚠️", value: `\`${result.auto!.type}\``, inline: true }
 	);
 
 	if (!result.auto) fields.push({
@@ -64,13 +59,11 @@ export async function handleModerationInteraction({ bot, interaction, args }: In
 	const location: "user" | "guild" = args.shift()! as any;
 
 	const id = BigInt(args.shift()!);
+	let db = await bot.db.fetch<DBUser | DBGuild>(`${location}s`, id);
 
 	const discordEntry = location === "guild"
 		? await bot.helpers.getGuild(id)
 		: await bot.helpers.getUser(id);
-
-	let db = await bot.db.fetch<DBUser | DBGuild>(`${location}s`, id);
-	const target = toModerationTarget(discordEntry);
 
 	if (action === "view") {
 		return buildModerationOverview(bot, location, discordEntry);
@@ -79,6 +72,9 @@ export async function handleModerationInteraction({ bot, interaction, args }: In
 		/* The user selected an option from the list */
 		if (interaction.data?.componentType === MessageComponentTypes.SelectMenu) {
 			const quick = QUICK_ACTIONS.find(q => q.reason === interaction.data!.values![0])!;
+
+			const messageId = BigInt(args.shift()!);
+			const original = await bot.helpers.getMessage(interaction.channelId!, messageId);
 
 			if (action === "ban" || action === "unban") {
 				db = await banEntry(bot, db, {
@@ -96,16 +92,22 @@ export async function handleModerationInteraction({ bot, interaction, args }: In
 
 			const infraction = db.infractions[db.infractions.length - 1];
 
-			await interaction.update({
-				embeds: {
-					title: `${action === "warn" ? "Warning given" : action === "unban" ? "Ban revoked" : "Banned"} ${InfractionTypeToEmoji[action]}`,
-					author: { name: target.name, iconUrl: target.icon },
-					fields: buildInfractionInfo(infraction).fields,
-					color: EmbedColor.Yellow
-				},
+			const embed: Embed = {
+				title: `${action === "warn" ? "Warning given" : action === "unban" ? "Ban revoked" : "Banned"} ${InfractionTypeToEmoji[action]}`,
+				author: { name: interaction.user.username, iconUrl: avatarUrl(interaction.user.id, interaction.user.discriminator, { avatar: interaction.user.avatar, format: "png" }) },
+				fields: buildInfractionInfo(infraction).fields,
+				color: EmbedColor.Yellow
+			};
 
-				components: []
-			});
+			await Promise.all([
+				bot.helpers.editMessage(interaction.channelId!, messageId, {
+					embeds: [ ...original.embeds!, embed ] as any, components: []
+				}),
+
+				interaction.update({
+					embeds: embed, components: []
+				})
+			]);
 
 		/** The user pressed either the `Ban` or `Warning` button */
 		} else {
@@ -114,7 +116,7 @@ export async function handleModerationInteraction({ bot, interaction, args }: In
 
 				components: [ {
 					type: MessageComponentTypes.SelectMenu,
-					customId: `mod:${action}:${location}:${id}`,
+					customId: `mod:${action}:${location}:${id}:${interaction.message!.id}`,
 					placeholder: `Select ${action === "unban" ? "an" : "a"} ${action === "warn" ? "warning" : action === "unban" ? "un-ban" : "ban"} reason ${InfractionTypeToEmoji[action]}`,
 	
 					options: QUICK_ACTIONS

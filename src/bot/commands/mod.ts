@@ -11,12 +11,13 @@ import info from "./mod/info.js";
 import warn from "./mod/warn.js";
 import reset from "./reset.js";
 import ban from "./mod/ban.js";
+import dev from "./dev/dev.js";
 import bot from "./bot.js";
 
 import { RestrictionName } from "../utils/restriction.js";
 
 export const COMMANDS: Command<any, any>[] = [
-	settings, reset, imagine, premium, info, bot, ban, pardon, warn
+	settings, reset, imagine, premium, info, bot, ban, pardon, warn, dev
 ];
 
 function transformCommand(command: Command): CreateApplicationCommand {
@@ -47,7 +48,7 @@ function transformCommand(command: Command): CreateApplicationCommand {
 
 	return {
 		name: command.name,
-		description: command.description,
+		description: command.description ?? "...",
 		type: command.type,
 
 		options: command.sub

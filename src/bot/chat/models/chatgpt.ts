@@ -7,8 +7,8 @@ export default createChatModel({
 	maxTokens: 8191,
 	
 	cooldown: {
-		user: 70 * 1000,
-		voter: 65 * 1000,
+		user: 140 * 1000,
+		voter: 120 * 1000,
 		subscription: 15 * 1000
 	},
 
@@ -18,7 +18,7 @@ export default createChatModel({
 	},
 
 	handler: async ({ bot, emitter, history }) => {
-		return await bot.api.text.gpt({
+		return bot.api.text.gpt({
 			messages: history.messages,
 			maxTokens: history.maxTokens
 		}, emitter);

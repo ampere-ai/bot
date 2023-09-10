@@ -5,7 +5,6 @@ import { createCommand } from "../helpers/command.js";
 
 export default createCommand({
 	name: "settings",
-	description: "...",
 
 	sub: {
 		me: {

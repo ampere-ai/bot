@@ -18,7 +18,7 @@ export default createChatModel({
 	},
 
 	handler: async ({ bot, emitter, history }) => {
-		return await bot.api.text.gpt({
+		return bot.api.text.gpt({
 			messages: history.messages,
 			maxTokens: history.maxTokens,
 			model: "gpt-4"

@@ -19,7 +19,7 @@ export async function createDB() {
 		connection.on("connection", () => resolve())
 	);
 
-	const execute = async <T>(type: DBRequestType, body: Omit<DBRequestData, "type">): Promise<T> => {
+	const execute = async <T>(type: DBRequestType, body: Omit<DBRequestData, "type"> = {}): Promise<T> => {
 		const data = await rpc.send("db", {
 			type, ...body
 		});
@@ -52,6 +52,10 @@ export async function createDB() {
 		return await execute("all", {
 			collection
 		} as DBRequestAll);
+	};
+
+	const clearCache = async (): Promise<void> => {
+		await execute("clearCache");
 	};
 
 	const premium = (env: DBEnvironment): { type: "subscription" | "plan", location: "guild" | "user" } | null => {
@@ -109,7 +113,7 @@ export async function createDB() {
 	};
 
 	return { 
-		rpc, execute, get, fetch, update, premium, voted, types, all,
+		rpc, execute, get, fetch, update, premium, voted, types, all, clearCache,
 
 		env: async (user: bigint, guild?: bigint): Promise<DBEnvironment> => {
 			const data: Partial<DBEnvironment> = {};

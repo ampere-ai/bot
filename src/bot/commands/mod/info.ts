@@ -7,8 +7,6 @@ import { ResponseError } from "../../errors/response.js";
 
 export default createCommand({
 	name: "info",
-	description: "...",
-
 	restrictions: [ RestrictionName.Moderator ],
 
 	sub: {
