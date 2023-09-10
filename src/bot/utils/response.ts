@@ -3,10 +3,10 @@ import {
 } from "@discordeno/bot";
 
 export interface MessageResponse {
-    /** Content of the response */
+    /** Content of the message */
     content?: string;
 
-    /** Embeds of the response */
+    /** Embeds of the message */
     embeds?: Embed | Embed[];
 
 	/** Components of the message */

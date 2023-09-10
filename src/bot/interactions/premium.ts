@@ -195,7 +195,8 @@ export default createInteractionHandler({
 			const perks = [
 				"Way lower cool-down for chatting & commands",
 				"Bigger character limit for chatting",
-				"Early access to new features"
+				"Early access to new features",
+				"More to come in the future..."
 			];
 
 			return {

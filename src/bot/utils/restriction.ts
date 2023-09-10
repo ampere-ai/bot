@@ -15,9 +15,6 @@ export interface RestrictionType {
 }
 
 export enum RestrictionName {
-	/** Testing restriction; not given to anyone */
-	Test = "test",
-
 	/** Restricted to bot developers & the development server */
 	Developer = "dev",
 
@@ -63,11 +60,6 @@ export function restrictionTypes(restrictions: RestrictionName[]) {
 
 	for (const r of restrictions) {
 		switch (r) {
-			case RestrictionName.Test: {
-				types.push({ name: r, description: "testing-only", emoji: "🤫" });
-				break;
-			}
-
 			case RestrictionName.Developer: {
 				types.push({ name: r, description: "developer-only", emoji: "🔧" });
 				break;

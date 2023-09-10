@@ -15,7 +15,7 @@ import { getSettingsValue } from "../settings.js";
 
 import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/user.js";
 import { findBestSize, generate, interrogate, validRatio } from "../image/mod.js";
-import { IMAGE_SAMPLERS, type ImageGenerationResult } from "../types/image.js";
+import { type ImageGenerationResult, IMAGE_SAMPLERS } from "../types/image.js";
 import { handleError } from "../moderation/error.js";
 import { IMAGE_MODELS } from "../image/models.js";
 import { IMAGE_STYLES } from "../image/styles.js";
@@ -54,7 +54,7 @@ export interface ImageFormatOptions {
 }
 
 const DEFAULT_GEN_OPTIONS = {
-	cfg_scale: 7, steps: 30, number: 2, sampler: "k_euler_a"
+	guidance: 7, steps: 30, count: 2, sampler: "k_euler_a"
 };
 
 export default createCommand({
@@ -100,29 +100,34 @@ export default createCommand({
 		count: {
 			type: ApplicationCommandOptionTypes.Integer,
 			description: "How many images to generate",
-			minValue: 1, maxValue: 4
+			default: DEFAULT_GEN_OPTIONS.count,
+			min: 1, max: 4
 		},
 
 		ratio: {
 			type: ApplicationCommandOptionTypes.String,
 			description: "Which aspect ratio the images should have, e.g. 16:9 or 1.5:1",
+			default: "1:1"
 		},
 
 		steps: {
 			type: ApplicationCommandOptionTypes.Integer,
 			description: "How many steps to generate the image for",
-			minValue: 15, maxValue: 50
+			default: DEFAULT_GEN_OPTIONS.steps,
+			min: 15, max: 50
 		},
 
 		guidance: {
 			type: ApplicationCommandOptionTypes.Integer,
 			description: "Higher values will make the AI prioritize your prompt; lower values make the AI more creative",
-			minValue: 1, maxValue: 24
+			default: DEFAULT_GEN_OPTIONS.guidance,
+			min: 1, max: 24
 		},
 
 		sampler: {
 			type: ApplicationCommandOptionTypes.String,
 			description: "The sampler responsible for carrying out the denoising steps",
+			default: DEFAULT_GEN_OPTIONS.sampler,
 
 			choices: IMAGE_SAMPLERS.map(s => ({
 				name: s.toUpperCase(), value: s
@@ -131,39 +136,25 @@ export default createCommand({
 	},
 
 	handler: async ({ bot, env, interaction, options }) => {
-		/* How many images to generate */
-		const count = options.count?.value as number ?? DEFAULT_GEN_OPTIONS.number;
-
-		/* How many steps to generate the images with */
-		const steps = options.steps?.value as number ?? DEFAULT_GEN_OPTIONS.steps;
-
-		/* To which scale the AI should follow the prompt; higher values mean that the AI will respect the prompt more */
-		const guidance = options.guidance?.value as number ?? DEFAULT_GEN_OPTIONS.cfg_scale;
+		const { count, steps, guidance, prompt, negative: negativePrompt, ratio } = options;
 
 		/* The sampler responsible for carrying out the denoising steps */
-		const sampler: ImageSampler = options.sampler?.value as string ?? DEFAULT_GEN_OPTIONS.sampler;
-
-		/* Which prompt to use for generation */
-		const prompt = options.prompt.value as string;
-		const negativePrompt = options.negative?.value as string ?? null;
+		const sampler: ImageSampler = options.sampler ?? DEFAULT_GEN_OPTIONS.sampler;
 
 		/* Which model to use */
-		const modelID = options.model?.value as string ?? getSettingsValue(env.user, "image:model");
+		const modelID = options.model ?? getSettingsValue(env.user, "image:model");
 		const model = IMAGE_MODELS.find(m => m.id === modelID)!;
 	
 		/* Which style to apply additionally */
-		const styleID: string | null = options.style?.value as string ?? getSettingsValue(env.user, "image:style");
+		const styleID: string | null = options.style ?? getSettingsValue(env.user, "image:style");
 		const style = styleID !== null ? IMAGE_STYLES.find(s => s.id === styleID)! : null;
-
-		/* Ratio that the images should have */
-		const ratio: string = options.ratio?.value as string ?? "1:1";
 
 		if (model.settings?.forcedSize && ratio !== "1:1") throw new ResponseError({
 			message: `**${model.name}** has a fixed resolution of \`${model.settings.forcedSize.width}×${model.settings.forcedSize.height}\`; *you cannot modify the aspect ratio*`
 		});
 
 		const moderation = await moderate({
-			bot, env, content: prompt, source: ModerationSource.ImagePrompt
+			bot, env, user: interaction.user, content: prompt, source: ModerationSource.ImagePrompt
 		});
 
 		if (moderation.blocked) return moderationNotice({ result: moderation });
@@ -394,14 +385,8 @@ async function formatResult(options: ImageFormatOptions & ImageStartOptions): Pr
 			color: BRANDING_COLOR
 		},
 
-		components: buildToolbar({
-			action, result
-		}),
-
-		file: {
-			name: `${result.id}.png`,
-			blob: grid
-		}
+		components: buildToolbar({ action, result }),
+		file: { name: `${result.id}.png`, blob: grid }
 	};
 }
 
@@ -477,7 +462,7 @@ function displayFields(options: ImageStartOptions): DiscordEmbedField[] {
 		name: "Steps", value: `${options.steps}`
 	});
 
-	if (options.guidance !== DEFAULT_GEN_OPTIONS.cfg_scale) fields.push({
+	if (options.guidance !== DEFAULT_GEN_OPTIONS.guidance) fields.push({
 		name: "Guidance", value: `${options.guidance}`
 	});
 

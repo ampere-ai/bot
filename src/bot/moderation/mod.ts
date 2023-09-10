@@ -1,28 +1,23 @@
-import type { DiscordEmbedField, Embed } from "@discordeno/bot";
-import type { Bot } from "@discordeno/bot";
-
-import RabbitMQ from "rabbitmq-client";
+import type { Embed, Bot } from "@discordeno/bot";
 import { randomUUID } from "crypto";
 
 import type { ModerationNoticeOptions, ModerationOptions, ModerationResult } from "./types/mod.js";
 import type { DBInfraction, GiveInfractionOptions } from "../../db/types/moderation.js";
-import type { DBEnvironment } from "../../db/types/mod.js";
 import type { DBGuild } from "../../db/types/guild.js";
 import type { DBUser } from "../../db/types/user.js";
 
-import { EmbedColor, type MessageResponse } from "../utils/response.js";
-import { RABBITMQ_URI, SUPPORT_INVITE } from "../../config.js";
+import { EmbedColor, transformResponse, type MessageResponse } from "../utils/response.js";
+import { buildInfractionInfo, sendModerationLogs } from "./tools.js";
+import { MOD_CHANNEL_ID, SUPPORT_INVITE } from "../../config.js";
 import { applyFilters, executeFilters } from "./filters.js";
 
-/* RabbitMQ publisher, used to send moderation flags to the management bot */
-const connection = new RabbitMQ.Connection(RABBITMQ_URI);
-export const publisher = connection.createPublisher();
-
 /** Moderate the given prompt. */
-export async function moderate({ bot, env, source, content }: ModerationOptions) {
+export async function moderate(options: ModerationOptions) {
+	const { bot, env, user, source, content } = options;
+
 	/* Run the moderation filters on the message. */
 	const auto = await executeFilters({
-		bot, env, source, content
+		bot, env, user, source, content
 	});
 
 	/* Whether the message should be completely blocked */
@@ -37,26 +32,29 @@ export async function moderate({ bot, env, source, content }: ModerationOptions)
 	};
 
 	if (flagged) {
-		env.user = await giveInfraction<DBUser>(bot, env.user, {
-			type: "moderation", moderation: data
+		env.user = await giveInfraction(bot, env.user, {
+			type: "moderation", moderation: data, reason: data.auto?.reason,
+			reference: { type: "infraction", data: content }
 		});
+
+		try {
+			const response = await sendModerationLogs(bot, options, data);
+			await bot.helpers.sendMessage(MOD_CHANNEL_ID, transformResponse(response));
+		} catch { /* Stub */ }
 	}
 
 	/* Which infraction to give to the user, if applicable */
 	const infraction = auto !== null && auto.type !== "flag"
 		? applyFilters({ auto }) : null;
 
-	/* Apply the given infraction. */
 	if (infraction) env.user = await giveInfraction(bot, env.user, infraction);
-
-	await sendModerationData(env, data);
 	return data;
 }
 
-export function moderationNotice({ result }: ModerationNoticeOptions): MessageResponse {
+export function moderationNotice({ result, small }: ModerationNoticeOptions): MessageResponse {
 	const embed: Embed = {
-		title: "What's this? 🤨",
-		footer: { text: `${SUPPORT_INVITE} • Support server` },
+		title: small ? undefined : "What's this? 🤨",
+		footer: small ? undefined : { text: `${SUPPORT_INVITE} • Support server` },
 		color: result.blocked ? EmbedColor.Red : EmbedColor.Orange 
 	};
 
@@ -90,7 +88,26 @@ export function giveInfraction<T extends DBGuild | DBUser>(bot: Bot, entry: T, {
 		infractions: [
 			...entry.infractions, data
 		]
-	} as any);
+	} as T);
+}
+
+export function banEntry<T extends DBGuild | DBUser>(bot: Bot, entry: T, {
+	by, reason, duration, status
+}: Pick<GiveInfractionOptions, "by" | "reason"> & { duration?: number; status: boolean; }) {
+	return giveInfraction(bot, entry, {
+		type: status ? "ban" : "unban",
+		
+		until: duration ? Date.now() + duration : undefined,
+		by, reason
+	});
+}
+
+export function warnEntry<T extends DBGuild | DBUser>(bot: Bot, entry: T, {
+	by, reason
+}: Pick<GiveInfractionOptions, "by" | "reason">) {
+	return giveInfraction(bot, entry, {
+		type: "warn", by, reason
+	});
 }
 
 /** Check whether a user or guild is banned. */
@@ -115,28 +132,13 @@ export function isBanned(entry: DBGuild | DBUser) {
 
 export function banNotice(entry: DBGuild | DBUser, infraction: DBInfraction): MessageResponse {
 	const location = (entry as DBUser).voted !== undefined ? "user" : "guild";
-	const fields: DiscordEmbedField[] = [];
-
-	if (infraction.reason) fields.push({
-		name: "Reason", value: infraction.reason, inline: true
-	});
-
-	if (infraction.until) fields.push({
-		name: "Until", value: `<t:${Math.floor(infraction.until / 1000)}:f>, <t:${Math.floor(infraction.until / 1000)}:R>`, inline: true
-	});
 
 	return {
 		embeds: {
 			title: `${location === "guild" ? "This server is" : "You are"} banned **${infraction.until ? "temporarily" : "permanently"}** from using the bot 😔`,
 			description: `_If you want to appeal or have questions about this ban, join the **[support server](https://${SUPPORT_INVITE})**_.`,
-			fields, color: EmbedColor.Red
+			fields: buildInfractionInfo(infraction).fields,
+			color: EmbedColor.Red
 		}
 	};
-}
-
-/** Send the flag through RabbitMQ, to be handled by a separate management bot. */
-async function sendModerationData(env: DBEnvironment, result: ModerationResult) {
-	await publisher.send("moderation", {
-		env, result
-	});
 }

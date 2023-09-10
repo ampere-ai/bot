@@ -29,6 +29,7 @@ export interface ModerationFilter {
 	/** Name of the filter */
 	name: string;
 
+	/** Handler of the filter */
 	handler: (
 		options: ModerationFilterHandlerOptions
 	) => Promise<Omit<ModerationFilterAction, "filter"> | null>;

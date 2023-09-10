@@ -1,6 +1,30 @@
 import type { ActionRow, Embed } from "@discordeno/bot";
-
 import type { EmbedColor } from "../../bot/utils/response.js";
+
+type DBCampaignButton = DBCampaignLinkButton | DBCampaignIDButton
+
+interface DBCampaignLinkButton {
+	type: "Link";
+
+	/** Link of the button */
+	url: string;
+
+	/** Label of the button */
+	label?: string;
+}
+
+interface DBCampaignIDButton {
+	type: "Primary" | "Secondary" | "Success" | "Danger";
+
+	/** Label of the button */
+	label: string;
+
+	/** Emoji of the button */
+	emoji?: string;
+
+	/** Custom ID of the button */
+	id?: string;
+}
 
 interface DBCampaignSettings {
     /** Title of the campaign, to display in the embed */
@@ -23,17 +47,11 @@ interface DBCampaignStatistics {
     clicks: {
         /** Total amount of clicks to this campaign */
         total: number;
-
-        /** Geo-specific clicks */
-        geo: Record<string, number>;
     };
 
     views: {
         /** Total amount of views to this campaign */
         total: number;
-
-        /** Geo-specific views */
-        geo: Record<string, number>;
     };
 }
 
@@ -73,7 +91,7 @@ export interface DBCampaign {
     members: string[];
 
     /** Link to the the campaign's target site */
-    link: string | null;
+    button: DBCampaignButton | null;
 
     /** Settings of the campaign, used for storing title, description, etc. */
     settings: DBCampaignSettings;

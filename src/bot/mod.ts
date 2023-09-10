@@ -12,6 +12,7 @@ import { fetchCampaigns } from "./campaign.js";
 import { setupEvents } from "./events/mod.js";
 import { createAPI } from "./api.js";
 import { createDB } from "./db.js";
+import { setupVoteHandler } from "./vote.js";
 
 async function customizeBot(bot: Bot) {
 	bot.logger = createLogger({ name: "[BOT]" });
@@ -45,10 +46,12 @@ async function handleGatewayMessage({ payload, shard }: GatewayMessage) {
 	}
 }
 
-await registerCommands();
+await registerCommands(bot);
 await fetchCampaigns();
 
 setupPaymentHandler(bot);
+setupVoteHandler(bot);
+
 setupTransformers();
 setupEvents();
 

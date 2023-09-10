@@ -9,7 +9,7 @@ import type { DBGuild } from "../db/types/guild.js";
 import type { DBUser } from "../db/types/user.js";
 
 import { LOADING_INDICATORS, USER_LANGUAGES } from "../db/types/user.js";
-import { EmbedColor, type MessageResponse } from "./utils/response.js";
+import { type MessageResponse, EmbedColor } from "./utils/response.js";
 import { canUse, restrictionTypes } from "./utils/restriction.js";
 import { CHAT_MODELS } from "./chat/models/mod.js";
 import { resetConversation } from "./chat/mod.js";
@@ -202,7 +202,7 @@ export function getSettingsValue<T = string | number | boolean>(entry: DBGuild |
 	const value = entry.settings[key] as T;
 	const option = getOption(key);
 
-	/* If no option is selected & it's is optional, return null. */
+	/* If no option is selected & it's optional, return null. */
 	if (option.type === SettingsOptionType.Choices) {
 		if (value === "none") return null as T;
 	}

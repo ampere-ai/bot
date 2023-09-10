@@ -13,7 +13,7 @@
 		"gateway": "node build/gateway/mod.js",
 		"db": "node build/db/mod.js",
 		"bot": "node build/bot/mod.js",
-		"lint": "npx eslint --fix"
+		"lint": "npx eslint --fix src/"
 	},
 	"repository": {
 		"type": "git",
@@ -34,9 +34,9 @@
 		"@dqbd/tiktoken": "^1.0.7",
 		"@napi-rs/canvas": "^0.1.44",
 		"@supabase/supabase-js": "^2.32.0",
-		"@types/express-form-data": "^2.0.2",
 		"@waylaidwanderer/fetch-event-source": "^3.0.1",
 		"colorette": "^2.0.20",
+		"dayjs": "^1.11.9",
 		"dotenv": "^16.0.3",
 		"express": "^4.18.2",
 		"express-form-data": "^2.0.22",
@@ -47,6 +47,7 @@
 	},
 	"devDependencies": {
 		"@types/express": "^4.17.17",
+		"@types/express-form-data": "^2.0.2",
 		"@types/node": "^17.0.23",
 		"@types/ws": "^8.5.3",
 		"@typescript-eslint/eslint-plugin": "^6.4.0",

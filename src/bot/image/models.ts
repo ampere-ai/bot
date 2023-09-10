@@ -60,10 +60,14 @@ export const IMAGE_MODELS: ImageModel[] = [
 		}
 	},
 
-	/*{
+	{
 		name: "Anything Diffusion",
 		description: "Stable Diffusion-based model for generating anime",
-		id: "anything-diffusion",
-		path: "anything"
-	}*/
+		id: "anything",
+		path: "sh",
+
+		body: {
+			model: "Anything Diffusion"
+		}
+	}
 ];

@@ -1,14 +1,14 @@
-import type { Bot, Interaction } from "@discordeno/bot";
-import type { CommandOptionValue } from "../../types/command.js";
+import { type Bot, type Interaction, ApplicationCommandOptionTypes, InteractionDataOption } from "@discordeno/bot";
 
 import { handleError } from "../../moderation/error.js";
 import { ResponseError } from "../../errors/response.js";
 import { EmbedColor } from "../../utils/response.js";
 
-import { canUse, restrictionTypes } from "../../utils/restriction.js";
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../../utils/cooldown.js";
+import { canUse, restrictionTypes } from "../../utils/restriction.js";
 import { banNotice, isBanned } from "../../moderation/mod.js";
 
+import type { Command } from "../../types/command.js";
 import { COMMANDS } from "../../commands/mod.js";
 
 export async function executeCommand(bot: Bot, interaction: Interaction) {
@@ -57,12 +57,12 @@ export async function executeCommand(bot: Bot, interaction: Interaction) {
 		});
 	}
 
-	const options: Record<string, CommandOptionValue> =
-        parseCommandOptions(interaction);
+	const options = parseCommandOptions(command, interaction.data!.options);
+	const sub = parseSubCommand(interaction.data!.options);
 
 	try {
 		const response = await command.handler({
-			bot, interaction, options, env
+			bot, interaction, options, sub, env
 		});
 
 		if (response) await interaction.reply(response);
@@ -74,18 +74,34 @@ export async function executeCommand(bot: Bot, interaction: Interaction) {
 			);
 		}
 
-		await interaction.reply(
-			await handleError(bot, { error, guild: interaction.guildId })
-		).catch(() => {});
+		try {
+			await interaction.reply(
+				await handleError(bot, { error, guild: interaction.guildId })
+			);
+		} catch {
+			await interaction.editReply(
+				await handleError(bot, { error, guild: interaction.guildId })
+			).catch(() => {});
+		}
 	}
 }
 
-function parseCommandOptions(interaction: Interaction) {
-	const args: Record<string, CommandOptionValue> = {};
+function parseSubCommand(options?: InteractionDataOption[]) {
+	return options && options[0].type === ApplicationCommandOptionTypes.SubCommand
+		? options[0].name : undefined;
+}
 
-	if (interaction.data!.options) for (const option of interaction.data!.options) {
-		const name = option.name;
-		args[name] = option as CommandOptionValue;
+function parseCommandOptions(command: Command, options?: InteractionDataOption[]) {
+	let args: Record<string, string | number | boolean | undefined> = {};
+
+	if (command.options && options) for (const [ name, settings ] of Object.entries(command.options)) {
+		const option = options.find(o => o.name === name) ?? null;
+		args[name] = option?.value ?? settings.default;
+	}
+
+	if (command.sub && options && options.some(o => o.type === ApplicationCommandOptionTypes.SubCommand)) {
+		const sub = options.find(o => o.type === ApplicationCommandOptionTypes.SubCommand)!;
+		args = { ...args, ...parseCommandOptions(command, sub.options) };
 	}
 
 	return args;

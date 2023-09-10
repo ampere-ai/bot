@@ -3,9 +3,12 @@ import { Intents } from "@discordeno/bot";
 import dotenv from "dotenv";
 dotenv.config();
 
-/** Token & ID of the bot */
+/** Token of the bot */
 export const BOT_TOKEN = process.env.BOT_TOKEN!;
-export const BOT_ID = process.env.BOT_ID!;
+
+/** ID of the moderation guild & channel */
+export const MOD_GUILD_ID = BigInt(process.env.MOD_GUILD_ID!);
+export const MOD_CHANNEL_ID = BigInt(process.env.MOD_CHANNEL_ID!);
 
 /** Load distribution */
 export const TOTAL_WORKERS = Number(process.env.TOTAL_WORKERS!);

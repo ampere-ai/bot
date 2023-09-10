@@ -7,7 +7,7 @@ import { parentPort, workerData } from "worker_threads";
 import { DiscordenoShard } from "@discordeno/gateway";
 import RabbitMQ from "rabbitmq-client";
 
-import type { WorkerCreateData, WorkerMessage } from "./types/worker.js";
+import type { WorkerCreateData, WorkerInfo, WorkerMessage, WorkerShardInfo } from "./types/worker.js";
 import { RABBITMQ_URI } from "../config.js";
 
 if (!parentPort) throw new Error("Parent port is null");
@@ -15,7 +15,7 @@ if (!parentPort) throw new Error("Parent port is null");
 const parent = parentPort!;
 const data: WorkerCreateData = workerData;
 
-const logger = createLogger({ name: `[WORKER #${data.workerId}]` });
+const logger = createLogger({ name: `[WORKER #${data.id}]` });
 
 const connection = new RabbitMQ.Connection(RABBITMQ_URI);
 const publisher = connection.createPublisher();
@@ -26,7 +26,7 @@ const shards = new Collection<number, DiscordenoShard>();
 const loadingGuilds: Set<bigint> = new Set();
 const guilds: Set<bigint> = new Set();
 
-const manage = async (shard: DiscordenoShard, payload: DiscordGatewayPayload) => {
+async function handleMessage(shard: DiscordenoShard, payload: DiscordGatewayPayload) {
 	switch (payload.t) {
 		case "READY": {
 			/* Marks which guilds the bot is in, when doing initial loading in cache. */
@@ -79,7 +79,20 @@ const manage = async (shard: DiscordenoShard, payload: DiscordGatewayPayload) =>
 		default:
 			break;
 	}
-};
+}
+
+function buildShardInfo(shard: DiscordenoShard): WorkerShardInfo {
+	return {
+		rtt: shard.heart.rtt ?? 0,
+		state: shard.state
+	};
+}
+
+function buildInfo(): WorkerInfo {
+	return {
+		shards: shards.map(buildShardInfo)
+	};
+}
 
 parent.on("message", async (message: WorkerMessage) => {
 	switch (message.type) {
@@ -108,7 +121,7 @@ parent.on("message", async (message: WorkerMessage) => {
 
 					events: {
 						message: async (shard, payload) => {
-							await manage(shard, snakelize(payload));
+							await handleMessage(shard, snakelize(payload));
 						}
 					}
 				});
@@ -129,6 +142,12 @@ parent.on("message", async (message: WorkerMessage) => {
 			await shard.identify();
 
 			break;
+		}
+
+		case "INFO": {
+			parent.postMessage({
+				type: "NONCE_REPLY", nonce: message.nonce, data: buildInfo()
+			});
 		}
 	}
 });

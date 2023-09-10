@@ -3,17 +3,21 @@ dotenv.config();
 
 import { Collection, createBot, createGatewayManager, createRestManager } from "@discordeno/bot";
 import { createLogger } from "@discordeno/utils";
+import { setTimeout } from "timers/promises";
 import { Worker } from "worker_threads";
+import { randomUUID } from "crypto";
 import express from "express";
 
+import { type WorkerCreateData, type WorkerMessage, type WorkerInfo, WorkerShardInfo } from "./types/worker.js";
+import type { ManagerHTTPRequest, ManagerMessage } from "./types/manager.js";
+
 import { BOT_TOKEN, INTENTS, HTTP_AUTH, REST_URL, SHARDS_PER_WORKER, TOTAL_WORKERS, GATEWAY_PORT } from "../config.js";
-import { ManagerHTTPRequest, ManagerMessage } from "./types/manager.js";
-import type { WorkerCreateData } from "./types/worker.js";
-import { setTimeout } from "timers/promises";
 
 const logger = createLogger({ name: "[MANAGER]" });
 
-const identifyPromises = new Map<number, () => void>();
+const nonces = new Collection<string, (data: any) => void>();
+const identifies = new Map<number, () => void>();
+
 const workers = new Collection<number, Worker>();
 
 const app = express();
@@ -66,7 +70,7 @@ gateway.tellWorkerToIdentify = async (workerId, shardId) => {
 	});
 
 	await new Promise<void>(resolve => {
-		identifyPromises.set(shardId, resolve);
+		identifies.set(shardId, resolve);
 	});
 
 	await setTimeout(gateway.spawnShardDelay);
@@ -79,7 +83,7 @@ function createWorker(id: number) {
 	const workerData: WorkerCreateData = {
 		token: BOT_TOKEN, intents: gateway.intents,
 		totalShards: gateway.totalShards,
-		workerId: id, path: "./worker.ts"
+		id
 	};
 
 	const worker = new Worker("./build/gateway/worker.js", {
@@ -89,9 +93,14 @@ function createWorker(id: number) {
 	worker.on("message", async (data: ManagerMessage) => {
 		switch (data.type) {
 			case "READY": {
-				identifyPromises.get(data.shardId)?.();
+				identifies.get(data.shardId)?.();
 				logger.info(`Shard #${data.shardId} is ready`);
 
+				break;
+			}
+
+			case "NONCE_REPLY": {
+				nonces.get(data.nonce)?.(data.data);
 				break;
 			}
 		}
@@ -100,7 +109,14 @@ function createWorker(id: number) {
 	return worker;
 }
 
-gateway.spawnShards();
+function sendWorkerMessage<T>(worker: Worker, data: Omit<WorkerMessage, "nonce">): Promise<T> {
+	const nonce = randomUUID();
+
+	return new Promise<T>(resolve => {
+		worker.postMessage({ ...data, nonce });
+		nonces.set(nonce, resolve);
+	});
+}
 
 app.all("/*", async (req, res) => {
 	if (HTTP_AUTH !== req.headers.authorization) {
@@ -118,6 +134,25 @@ app.all("/*", async (req, res) => {
 				
 				break;
 			}
+
+			case "WORKER_INFO": {
+				const infos = await Promise.all(
+					workers.map(worker => {
+						return sendWorkerMessage<WorkerInfo>(worker, {
+							type: "INFO"
+						});
+					})
+				);
+
+				return res.status(200).json({
+					workers: infos,
+
+					shards: infos.reduce<WorkerShardInfo[]>((acc, curr) => {
+						acc.push(...curr.shards);
+						return acc;
+					}, [])
+				});
+			}
 		}
 
 		return res.status(200).json({ processing: true });
@@ -131,3 +166,5 @@ app.all("/*", async (req, res) => {
 app.listen(GATEWAY_PORT, () => {
 	logger.info("Started HTTP server.");
 });
+
+gateway.spawnShards();

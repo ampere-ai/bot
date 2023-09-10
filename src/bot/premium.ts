@@ -22,14 +22,12 @@ async function handlePayment(bot: Bot, data: PaymentData) {
 			? await bot.helpers.getGuild(data.guildId)
 			: null;
 
-		const embed: Embed = {
-			title: `Thank you for purchasing ${data.type === "subscription" ? "Premium" : "Premium credits"} 🎉`,
-			description: `You ${data.extended ? "extended" : "purchased"} ${data.type === "subscription" ? "a Premium subscription" : `**${data.credits}$** worth of credits`} ${data.location === "user" ? "for yourself" : `for the server **${guild?.name}**`}.`,
-			color: EmbedColor.Orange
-		};
-
 		await channel.send({
-			embeds: embed
+			embeds: {
+				title: `Thank you for purchasing ${data.type === "subscription" ? "Premium" : "Premium credits"} 🎉`,
+				description: `You ${data.extended ? "extended" : "purchased"} ${data.type === "subscription" ? "a Premium subscription" : `**${data.credits}$** worth of credits`} ${data.location === "user" ? "for yourself" : `for the server **${guild?.name}**`}.`,
+				color: EmbedColor.Orange
+			}
 		});
 
 	} catch (error) {
@@ -45,7 +43,7 @@ export function setupPaymentHandler(bot: Bot) {
 	});
 }
 
-export function buildOverview(bot: Bot, interaction: Interaction, { user, guild }: DBEnvironment) {
+export function buildPremiumOverview(bot: Bot, interaction: Interaction, { user, guild }: DBEnvironment) {
 	/* Current subscription & plan */
 	const subscriptions = {
 		user: user.subscription, guild: guild ? guild.subscription : null

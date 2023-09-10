@@ -1,5 +1,3 @@
-import { ApplicationCommandOptionTypes } from "@discordeno/bot";
-
 import { SettingsCategories, buildSettingsPage, whichEntry } from "../settings.js";
 import { SettingsLocation } from "../types/settings.js";
 import { ResponseError } from "../errors/response.js";
@@ -9,20 +7,18 @@ export default createCommand({
 	name: "settings",
 	description: "...",
 
-	options: {
+	sub: {
 		me: {
-			type: ApplicationCommandOptionTypes.SubCommand,
 			description: "Customize the bot for yourself"
 		},
 
 		server: {
-			type: ApplicationCommandOptionTypes.SubCommand,
 			description: "Customize the bot for the entire server"
 		}
 	},
 
-	handler: async ({ interaction, options, env }) => {
-		const location = options.me ? SettingsLocation.User : SettingsLocation.Guild;
+	handler: async ({ interaction, sub, env }) => {
+		const location = sub === "me" ? SettingsLocation.User : SettingsLocation.Guild;
 
 		if (location === SettingsLocation.Guild && !env.guild) throw new ResponseError({
 			message: "You can only view & change these settings on **servers**", emoji: "😔"

@@ -3,6 +3,13 @@ import type { ModerationResult, ModerationSource } from "../../bot/moderation/ty
 export type DBInfractionType = "ban" | "unban" | "warn" | "moderation"
 export type DBInfractionReferenceType = "infraction" | ModerationSource
 
+export const InfractionTypeToEmoji: Record<DBInfractionType, string> = {
+	warn: "⚠️",
+	ban: "🔨",
+	unban: "🙌",
+	moderation: "🤨"
+};
+
 export interface DBInfractionReference {
     type: DBInfractionReferenceType;
     data: string;

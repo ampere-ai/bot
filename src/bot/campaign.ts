@@ -1,4 +1,4 @@
-import { MessageComponentTypes, ButtonStyles, type ActionRow, type Embed } from "@discordeno/bot";
+import { MessageComponentTypes, ButtonStyles, type ActionRow, type Embed, ButtonComponent } from "@discordeno/bot";
 
 import type { CampaignDisplay, CampaignRender, DBCampaign } from "../db/types/campaign.js";
 import type { DBEnvironment } from "../db/types/mod.js";
@@ -20,11 +20,6 @@ export function getCampaign(id: string) {
 	return campaigns.find(c => c.id === id) ?? null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function trackingURL(campaign: DBCampaign, env: DBEnvironment) {
-	return campaign.link;
-}
-
 /** Pick a random campaign to display, increment its views & format it accordingly. */
 export async function pickAdvertisement(env: DBEnvironment): Promise<CampaignDisplay | null> {
 	/* Disable all ads for Premium users. */
@@ -34,55 +29,11 @@ export async function pickAdvertisement(env: DBEnvironment): Promise<CampaignDis
 	const campaign = pick();
 	if (!campaign) return null;
 
-	/** TODO: Increment statistics */
+	/* TODO: Increment statistics */
 
 	return {
 		campaign, response: render(campaign)
 	};
-}
-
-/** Format a campaign into a nice-looking embed. */
-function render(campaign: DBCampaign): CampaignRender {
-	const embed: Embed = {
-		title: campaign.settings.title,
-		description: campaign.settings.description,
-
-		color: campaign.settings.color
-			? EmbedColor[campaign.settings.color] ?? EmbedColor.Orange
-			: undefined,
-
-		image: campaign.settings.image
-			? { url: campaign.settings.image }
-			: undefined,
-
-		thumbnail: campaign.settings.thumbnail
-			? { url: campaign.settings.thumbnail }
-			: undefined,
-
-		footer: { text: "This is a sponsored advertisement." }
-	};
-
-	const row: ActionRow = {
-		type: MessageComponentTypes.ActionRow,
-
-		components: [
-			{
-				type: MessageComponentTypes.Button,
-				label: "Visit", style: ButtonStyles.Primary,
-				emoji: { name: "share", id: 1122241895133884456n },
-				customId: `campaign:link:${campaign.id}`
-			},
-
-			{
-				type: MessageComponentTypes.Button,
-				label: "Remove ads", emoji: { name: "✨" },
-				style: ButtonStyles.Secondary,
-				customId: "premium:ads"
-			}
-		]
-	};
-
-	return { embed, row };
 }
 
 /** Choose a random campaign to display. */
@@ -119,4 +70,69 @@ function pick() {
 /** Figure out whether a campaign can run, making sure that its budget is still under the limit. */
 function available(campaign: DBCampaign) {
 	return campaign.budget.total >= campaign.budget.used;
+}
+
+/** Format a campaign into a nice-looking embed. */
+function render(campaign: DBCampaign): CampaignRender {
+	const embed: Embed = {
+		title: campaign.settings.title,
+		description: campaign.settings.description,
+
+		color: campaign.settings.color
+			? EmbedColor[campaign.settings.color] ?? EmbedColor.Orange
+			: undefined,
+
+		image: campaign.settings.image
+			? { url: campaign.settings.image }
+			: undefined,
+
+		thumbnail: campaign.settings.thumbnail
+			? { url: campaign.settings.thumbnail }
+			: undefined,
+
+		footer: { text: "This is a sponsored advertisement." }
+	};
+
+	const row: ActionRow = {
+		type: MessageComponentTypes.ActionRow,
+
+		components: [
+			{
+				type: MessageComponentTypes.Button,
+				label: "Remove ads", emoji: { name: "✨" },
+				style: ButtonStyles.Secondary,
+				customId: "premium:ads"
+			}
+		]
+	};
+
+	const button = buildCampaignButton(campaign);
+	if (button) row.components.unshift(button);
+
+	return { embed, row };
+}
+
+function buildCampaignButton(campaign: DBCampaign): ButtonComponent | null {
+	if (!campaign.button) return null;
+
+	if (campaign.button.type === "Link") {
+		return {
+			type: MessageComponentTypes.Button,
+			style: ButtonStyles.Primary,
+			label: campaign.button.label ?? "Visit",
+			emoji: { name: "share", id: 1122241895133884456n },
+			customId: `campaign:link:${campaign.id}`
+		};
+
+	} else {
+		return {
+			type: MessageComponentTypes.Button,
+			style: ButtonStyles[campaign.button.type],
+			label: campaign.button.label,
+			emoji: campaign.button.emoji ? {
+				name: campaign.button.emoji
+			} : undefined,
+			customId: campaign.button.id
+		};
+	}
 }

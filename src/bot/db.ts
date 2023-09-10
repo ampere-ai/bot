@@ -6,6 +6,7 @@ import type { DBGuild } from "../db/types/guild.js";
 import { DBRole, DBUserType, type DBUser } from "../db/types/user.js";
 import { getSettingsValue } from "./settings.js";
 import { RABBITMQ_URI } from "../config.js";
+import { VOTE_DURATION } from "./vote.js";
 
 export async function createDB() {
 	const connection = new RabbitMQ.Connection(RABBITMQ_URI);
@@ -150,7 +151,7 @@ export async function createDB() {
 			const votedAt = voted(env.user);
 
 			if (votedAt) {
-				if ((votedAt + 12.5 * 60 * 60 * 1000) - Date.now() < 30 * 60 * 1000) return "📩";
+				if ((votedAt + VOTE_DURATION.asMilliseconds()) - Date.now() < 30 * 60 * 1000) return "📩";
 				else return "✉️";
 			}
 

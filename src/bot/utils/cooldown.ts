@@ -4,10 +4,10 @@ import type { Conversation } from "../types/conversation.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
 import { EmbedColor, type MessageResponse } from "./response.js";
-import { DBRole } from "../../db/types/user.js";
 import { pickAdvertisement } from "../campaign.js";
+import { DBRole } from "../../db/types/user.js";
 
-type CooldownTarget = Conversation | Interaction
+type CooldownTarget = Conversation | Interaction;
 
 /** Global command cool-downs */
 const cooldowns: Collection<string, number> = new Collection();

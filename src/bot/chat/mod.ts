@@ -112,7 +112,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 	if (partial) emitter.on(handler);
 
 	const moderation = await moderate({
-		bot, env, content: input.content, source: ModerationSource.ChatFromUser
+		bot, env, user: message.author, content: input.content, source: ModerationSource.ChatFromUser
 	});
 
 	if (moderation.blocked) return void await message.reply(
@@ -157,7 +157,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 	} catch (error) {
 		await message.reply(
 			await handleError(bot, {
-				error: error as Error, guild: message.guildId
+				error, guild: message.guildId
 			})
 		).catch(() => {});
 		

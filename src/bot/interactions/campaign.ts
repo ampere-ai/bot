@@ -1,20 +1,20 @@
 import { ButtonStyles, MessageComponentTypes } from "@discordeno/bot";
 
 import { createInteractionHandler } from "../helpers/interaction.js";
-import { getCampaign, trackingURL } from "../campaign.js";
+import { getCampaign } from "../campaign.js";
 
 export default createInteractionHandler({
 	name: "campaign",
 
-	handler: ({ env, args }) => {
+	handler: ({ args }) => {
 		const action = args[0];
 
 		if (action === "link") {
 			const campaign = getCampaign(args[1]);
-			if (!campaign || !campaign.link) return;
+			if (!campaign || !campaign.button || campaign.button.type !== "Link") return;
 
-			const url = trackingURL(campaign, env)!;
-			const domain = new URL(campaign.link).hostname;
+			const url = campaign.button.url;
+			const domain = new URL(url).hostname;
 
 			return {
 				components: [ {
