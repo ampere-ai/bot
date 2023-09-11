@@ -45,10 +45,12 @@ export enum DBUserType {
 export enum DBRole {
 	Owner = "owner",
 	Moderator = "moderator",
-	Investor = "investor",
-	Advertiser = "advertiser",
 	Tester = "tester"
 }
+
+export const USER_ROLES = [
+	DBRole.Owner, DBRole.Moderator, DBRole.Tester 
+];
 
 export interface UserLanguage {
 	/** Name ofthe language */

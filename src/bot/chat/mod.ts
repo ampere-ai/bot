@@ -8,9 +8,9 @@ import type { Conversation, ConversationResult, ConversationUserMessage } from "
 import type { DBEnvironment } from "../../db/types/mod.js";
 
 import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/user.js";
+import { infractionNotice, isBanned, moderate, moderationNotice } from "../moderation/mod.js";
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../utils/cooldown.js";
 import { transformResponse, type MessageResponse, EmbedColor } from "../utils/response.js";
-import { infractionNotice, isBanned, moderate, moderationNotice } from "../moderation/mod.js";
 import { CHAT_MODELS, type ChatModel, type ChatModelResult } from "./models/mod.js";
 import { ModerationSource } from "../moderation/types/mod.js";
 import { SettingsLocation } from "../types/settings.js";
@@ -43,6 +43,16 @@ export async function handleMessage(bot: Bot, message: Message) {
 		message: "You already have a request running; *wait for it to finish*", emoji: "😔"
 	});
 
+	/* Input, to pass to the AI model */
+	const input: ConversationUserMessage = {
+		role: "user", content: clean(message)
+	};
+
+	if (input.content.length === 0) {
+		await bot.helpers.addReaction(message.channelId, message.id, "👋");
+		return;
+	}
+
 	const conversation: Conversation = await bot.db.fetch("conversations", message.author.id);
 
 	const env = await bot.db.env(message.author.id, message.guildId);
@@ -69,11 +79,6 @@ export async function handleMessage(bot: Bot, message: Message) {
 
 	/* Event emitter, to receive partial results */
 	const emitter = new Emitter<ConversationResult>();
-
-	/* Input, to pass to the AI model */
-	const input: ConversationUserMessage = {
-		role: "user", content: clean(message)
-	};
 
 	/* ID of the message to edit, if applicable */
 	let messageID: bigint | null = null;
@@ -234,7 +239,7 @@ function formatResult(result: ChatModelResult, id: string): ConversationResult {
 	};
 }
 
-/** Format the chat model's response to be displayed on Discord. */
+/** Format the chat model's response to be displayed nicely on Discord. */
 function format(
 	{ bot, message, env, result, model, tone }: Pick<ExecuteOptions, "bot" | "env" | "model" | "tone"> & {
 		message: Message, result: ConversationResult

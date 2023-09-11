@@ -85,7 +85,7 @@ export function buildHistory({ bot, env, model, tone, conversation, input }: Bui
 		/* Add the user's request. */
 		messages.push(input);
 
-		/* Tokens used for the initial prompt */
+		/* Tokens used for the entire history & prompt */
 		tokens = getChatMessageLength(...messages);
 
 		if (maxContextLength - tokens <= 0) conversation.history.shift();
@@ -106,7 +106,7 @@ export function buildHistory({ bot, env, model, tone, conversation, input }: Bui
 /** Count together all tokens contained in a list of conversation messages. */
 function getChatMessageLength(...messages: ConversationMessage[]) {
 	/* Total tokens used for the messages */
-	let total: number = 0;
+	let total = 0;
 
 	for (const message of messages) {
 		/* Map each property of the message to the number of tokens it contains. */

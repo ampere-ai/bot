@@ -10,9 +10,9 @@ import { registerCommands } from "./commands/mod.js";
 import { setupPaymentHandler } from "./premium.js";
 import { fetchCampaigns } from "./campaign.js";
 import { setupEvents } from "./events/mod.js";
+import { setupVoteHandler } from "./vote.js";
 import { createAPI } from "./api.js";
 import { createDB } from "./db.js";
-import { setupVoteHandler } from "./vote.js";
 
 async function customizeBot(bot: Bot) {
 	bot.logger = createLogger({ name: "[BOT]" });

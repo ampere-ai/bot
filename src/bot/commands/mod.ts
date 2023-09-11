@@ -1,4 +1,4 @@
-import { type Bot, type Camelize, type CreateApplicationCommand, type DiscordApplicationCommandOption, ApplicationCommandOptionTypes } from "@discordeno/bot";
+import { type Bot, type ApplicationCommandOption, ApplicationCommandOptionTypes } from "@discordeno/bot";
 import type { Command } from "../types/command.js";
 
 import { MOD_GUILD_ID } from "../../config.js";
@@ -7,6 +7,7 @@ import settings from "./settings.js";
 import pardon from "./mod/pardon.js";
 import imagine from "./imagine.js";
 import premium from "./premium.js";
+import roles from "./dev/roles.js";
 import info from "./mod/info.js";
 import warn from "./mod/warn.js";
 import reset from "./reset.js";
@@ -14,15 +15,16 @@ import ban from "./mod/ban.js";
 import dev from "./dev/dev.js";
 import bot from "./bot.js";
 
+/* The order is important; don't try to fix it */
 import { RestrictionName } from "../utils/restriction.js";
 
 export const COMMANDS: Command<any, any>[] = [
-	settings, reset, imagine, premium, info, bot, ban, pardon, warn, dev
+	settings, reset, imagine, premium, info, bot, ban, pardon, warn, dev, roles
 ];
 
-function transformCommand(command: Command): CreateApplicationCommand {
-	const options: Camelize<DiscordApplicationCommandOption[]> = [];
-	const sub: Camelize<DiscordApplicationCommandOption[]> = [];
+function transformCommand(command: Command) {
+	const options: ApplicationCommandOption[] = [];
+	const sub: ApplicationCommandOption[] = [];
 
 	for (const [ name, data ] of Object.entries(command.options ?? {})) {
 		const { type, description, choices, required } = data;

@@ -19,8 +19,12 @@ export default createCommand({
 			await fetchCampaigns();
 		}
 
-		return { embeds: {
-			description: "👍", color: EmbedColor.Yellow
-		} };
+		return {
+			embeds: {
+				description: "👍", color: EmbedColor.Yellow
+			},
+
+			ephemeral: true
+		};
 	}
 });

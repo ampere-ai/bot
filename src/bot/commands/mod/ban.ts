@@ -36,7 +36,6 @@ export default createCommand({
 	sub: {
 		user: {
 			description: "Ban a user from using the bot",
-
 		},
 
 		guild: {
