@@ -23,6 +23,7 @@ import { BRANDING_COLOR } from "../../config.js";
 import { mergeImages } from "../utils/merge.js";
 import { Emitter } from "../utils/event.js";
 import { charge } from "../premium.js";
+import { truncate } from "../utils/helpers.js";
 
 interface ImageStartOptions {
 	bot: Bot;
@@ -478,5 +479,5 @@ function displayFields(options: ImageStartOptions): DiscordEmbedField[] {
 function displayPrompt(
 	{ action, interaction, prompt }: Pick<ImageFormatOptions, "action" | "interaction" | "prompt">
 ) {
-	return `**${prompt.prompt}** — @${interaction.user.username}${action !== null ? ` ${action === "upscale" ? "🔎" : ""}` : ""}`;
+	return `**${truncate(prompt.prompt, 200)}** — @${interaction.user.username}${action !== null ? ` ${action === "upscale" ? "🔎" : ""}` : ""}`;
 }
