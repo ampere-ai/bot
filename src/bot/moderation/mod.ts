@@ -41,7 +41,7 @@ export async function moderate(options: ModerationOptions) {
 		try {
 			const response = await buildModerationLogs(options, data);
 			await bot.helpers.sendMessage(MOD_CHANNELS.LOGS, transformResponse(response));
-		} catch { /* Stub */ }
+		} catch (error) { console.trace(error); /* Stub */ }
 	}
 
 	/* Which infraction to give to the user, if applicable */

@@ -12,6 +12,9 @@ import { ResponseError } from "./errors/response.js";
 import { titleCase } from "./utils/helpers.js";
 import { displayBar } from "./utils/bar.js";
 
+/** Default fee for the pay-as-you-go plan, in % */
+const PAYG_FEE = 0.2;
+
 async function handlePayment(bot: Bot, data: PaymentData) {
 	try {
 		/* Get the DM channel with the user. */
@@ -188,9 +191,7 @@ export async function charge<T extends PlanExpense>(
 		time: Date.now()
 	} as T;
 
-	const updatedUsage = Math.max(
-		entry.plan.used + used * (bonus ?? 0 + 1), 0
-	);
+	const updatedUsage = entry.plan.used + used * ((bonus ?? PAYG_FEE) + 1);
 
 	await bot.db.update(location(entry), entry, {
 		plan: {
