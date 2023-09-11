@@ -31,9 +31,6 @@ export interface DBInfraction {
     /** Why this action was taken */
     reason?: string;
 
-    /** Whether the user has seen this infraction */
-    seen?: boolean;
-
     /** How long this infraction lasts, e.g. for bans */
     until?: number;
 
@@ -44,4 +41,4 @@ export interface DBInfraction {
     moderation?: ModerationResult;
 }
 
-export type GiveInfractionOptions = Omit<DBInfraction, "id" | "when">
+export type GiveInfractionOptions = Omit<DBInfraction, "id" | "when">;

@@ -1,5 +1,6 @@
 import type { Embed, Bot } from "@discordeno/bot";
 import { randomUUID } from "crypto";
+import { bold } from "colorette";
 
 import type { ModerationNoticeOptions, ModerationOptions, ModerationResult } from "./types/mod.js";
 import type { DBInfraction, GiveInfractionOptions } from "../../db/types/moderation.js";
@@ -70,8 +71,8 @@ export function moderationNotice({ result, small }: ModerationNoticeOptions): Me
 	};
 }
 
-export function giveInfraction<T extends DBGuild | DBUser>(bot: Bot, entry: T, {
-	by, reason, type, moderation, reference, until, seen
+export async function giveInfraction<T extends DBGuild | DBUser>(bot: Bot, entry: T, {
+	by, reason, type, moderation, reference, until
 }: GiveInfractionOptions): Promise<T> {
 	const data: DBInfraction = {
 		by, reason, type, moderation,
@@ -80,9 +81,12 @@ export function giveInfraction<T extends DBGuild | DBUser>(bot: Bot, entry: T, {
 		when: Date.now()
 	};
 
-	if (type === "warn") data.seen = seen ?? false;
 	if (reference) data.reference = reference;
 	if (until) data.until = until;
+
+	if ([ "warn", "ban", "unban" ].includes(data.type)) {
+		await sendInfractionDM(bot, entry, data);
+	}
 
 	return bot.db.update<T>((entry as DBUser).voted !== undefined ? "users" : "guilds", entry, {
 		infractions: [
@@ -130,15 +134,59 @@ export function isBanned(entry: DBGuild | DBUser) {
 	return infraction;
 }
 
-export function banNotice(entry: DBGuild | DBUser, infraction: DBInfraction): MessageResponse {
+export async function sendInfractionDM(bot: Bot, entry: DBGuild | DBUser, infraction: DBInfraction) {
+	/* TODO: DM the guild owner about the infraction */
+	if ((entry as DBUser).voted === undefined) return;
+
+	/* ID of the user to DM */
+	const id = entry.id;
+
+	try {
+		const channel = await bot.helpers.getDmChannel(id);
+		await channel.send(infractionNotice(entry, infraction));
+
+	} catch (error) {
+		bot.logger.warn(`Couldn't DM user ${bold(id)} about infraction ->`, error);
+	}
+}
+
+/** Display an infraction nicely to the user. */
+export function infractionNotice(entry: DBGuild | DBUser, infraction: DBInfraction): MessageResponse {
 	const location = (entry as DBUser).voted !== undefined ? "user" : "guild";
 
+	if (infraction.type === "ban") {
+		return {
+			embeds: {
+				title: `${location === "guild" ? "This server was" : "You were"} **${infraction.until ? "temporarily" : "permanently"}** banned from using the bot 😔`,
+				description: `_If you want to appeal or have questions about this ban, join our **[support server](https://${SUPPORT_INVITE})**_.`,
+				fields: buildInfractionInfo(infraction).fields,
+				color: EmbedColor.Red
+			}
+		};
+
+	} else if (infraction.type === "unban") {
+		return {
+			embeds: {
+				title: `${location === "guild" ? "Your server's" : "Your"} ban was revoked & you can use the bot again 🙌`,
+				description: `_If you have any further questions regarding this matter, join our **[support server](https://${SUPPORT_INVITE})**_.`,
+				fields: buildInfractionInfo(infraction).fields,
+				color: EmbedColor.Yellow
+			}
+		};
+
+	} else if (infraction.type === "warn") {
+		return {
+			embeds: {
+				title: "Before you continue ...",
+				description: `${location === "guild" ? "This server" : "You"} received a warning, as a consequence of ${location === "guild" ? "the" : "your"} interactions with our bot. *This is only a warning, you can continue to use the bot. If ${location === "guild" ? "your server" : "you"} however ${location === "guild" ? "keeps" : "keep"} violating our **usage policies**, we may have to take further moderative actions*.`,
+				fields: buildInfractionInfo(infraction).fields,
+				footer: { text: SUPPORT_INVITE },
+				color: EmbedColor.Yellow
+			}
+		};
+	}
+
 	return {
-		embeds: {
-			title: `${location === "guild" ? "This server is" : "You are"} banned **${infraction.until ? "temporarily" : "permanently"}** from using the bot 😔`,
-			description: `_If you want to appeal or have questions about this ban, join the **[support server](https://${SUPPORT_INVITE})**_.`,
-			fields: buildInfractionInfo(infraction).fields,
-			color: EmbedColor.Red
-		}
+		embeds: buildInfractionInfo(infraction)
 	};
 }

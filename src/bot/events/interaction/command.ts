@@ -6,7 +6,7 @@ import { EmbedColor } from "../../utils/response.js";
 
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../../utils/cooldown.js";
 import { canUse, restrictionTypes } from "../../utils/restriction.js";
-import { banNotice, isBanned } from "../../moderation/mod.js";
+import { infractionNotice, isBanned } from "../../moderation/mod.js";
 
 import type { Command } from "../../types/command.js";
 import { COMMANDS } from "../../commands/mod.js";
@@ -21,7 +21,7 @@ export async function executeCommand(bot: Bot, interaction: Interaction) {
 	const type = bot.db.type(env);
 
 	if (isBanned(env.user)) return void await interaction.reply(
-		banNotice(env.user, isBanned(env.user)!)
+		infractionNotice(env.user, isBanned(env.user)!)
 	);
 	
 	if (command.cooldown) {

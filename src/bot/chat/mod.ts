@@ -10,7 +10,7 @@ import type { DBEnvironment } from "../../db/types/mod.js";
 import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/user.js";
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../utils/cooldown.js";
 import { transformResponse, type MessageResponse, EmbedColor } from "../utils/response.js";
-import { banNotice, isBanned, moderate, moderationNotice } from "../moderation/mod.js";
+import { infractionNotice, isBanned, moderate, moderationNotice } from "../moderation/mod.js";
 import { CHAT_MODELS, type ChatModel, type ChatModelResult } from "./models/mod.js";
 import { ModerationSource } from "../moderation/types/mod.js";
 import { SettingsLocation } from "../types/settings.js";
@@ -58,7 +58,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 	}
 
 	if (isBanned(env.user)) return void await message.reply(
-		banNotice(env.user, isBanned(env.user)!)
+		infractionNotice(env.user, isBanned(env.user)!)
 	);
 
 	/* User's loading indicator */

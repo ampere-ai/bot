@@ -84,7 +84,7 @@ export const MODERATION_FILTERS: ModerationFilter[] = [
 
 				{
 					words: [ "nigger", "n i g g e r", "niggr", "nigga" ],
-					action: { type: "ban", duration: 7 * 24 * 60 * 60 * 1000 }
+					action: { type: "ban", reason: "Racist content", duration: 7 * 24 * 60 * 60 * 1000 }
 				},
 
 				{
@@ -151,7 +151,7 @@ export function applyFilters({ auto }: {
 }): GiveInfractionOptions | null {
 	if (auto.type === "warn") {
 		return {
-			type: "warn", reason: auto.reason, seen: false
+			type: "warn", reason: auto.reason
 		};
 	} else if (auto.type === "ban") {
 		return {
