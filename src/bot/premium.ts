@@ -5,9 +5,9 @@ import type { DBPlan, PlanExpense } from "../db/types/premium.js";
 import type { DBEnvironment } from "../db/types/mod.js";
 import type { PaymentData } from "./types/premium.js";
 import type { DBGuild } from "../db/types/guild.js";
-import type { DBUser } from "../db/types/user.js";
 
 import { EmbedColor, type MessageResponse } from "./utils/response.js";
+import { DBRole, type DBUser } from "../db/types/user.js";
 import { ResponseError } from "./errors/response.js";
 import { titleCase } from "./utils/helpers.js";
 import { displayBar } from "./utils/bar.js";
@@ -128,10 +128,14 @@ export function buildPremiumOverview(bot: Bot, interaction: Interaction, { user,
 			embed.description = displayMessage;
 
 		} else if (type.type === "subscription") {
-			const subscription = subscriptions[type.location]!;
+			const subscription = subscriptions[type.location];
 			embed.title = `${type.location === "guild" ? "The server's" : "Your"} Premium subscription ✨`;
 
-			embed.fields = [
+			if (subscription === null && user.roles.includes(DBRole.Moderator)) {
+				embed.description = "*Due to being a moderator of the bot, you have access to **free Premium***.";	
+			}
+
+			if (subscription) embed.fields = [
 				{
 					name: "Premium subscriber since", inline: true,
 					value: `<t:${Math.floor(subscription.since / 1000)}:F>`,

@@ -68,7 +68,16 @@ export async function createDB() {
 		);
 
 		const checks: Record<typeof typePriority, (entry: DBGuild | DBUser) => boolean> = {
-			subscription: entry => entry.subscription !== null && Date.now() < entry.subscription.expires,
+			subscription: entry => {
+				/* Give all moderators access to Premium. */
+				if (
+					(entry as DBUser).voted !== undefined
+					&& (entry as DBUser).roles.includes(DBRole.Moderator)
+				) return true;
+
+				return entry.subscription !== null && Date.now() < entry.subscription.expires;
+			},
+
 			plan: entry => entry.plan !== null && entry.plan.total > entry.plan.used
 		};
 
