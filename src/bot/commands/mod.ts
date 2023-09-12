@@ -3,6 +3,7 @@ import type { Command } from "../types/command.js";
 
 import { MOD_GUILD_ID } from "../../config.js";
 
+import translate from "./translate.js";
 import settings from "./settings.js";
 import pardon from "./mod/pardon.js";
 import imagine from "./imagine.js";
@@ -19,7 +20,7 @@ import bot from "./bot.js";
 import { RestrictionName } from "../utils/restriction.js";
 
 export const COMMANDS: Command<any, any>[] = [
-	settings, reset, imagine, premium, info, bot, ban, pardon, warn, dev, roles
+	settings, reset, imagine, premium, info, bot, ban, pardon, warn, dev, roles, translate
 ];
 
 function transformCommand(command: Command) {
@@ -33,6 +34,11 @@ function transformCommand(command: Command) {
 			options.push({
 				name, type, description, choices, required,
 				maxValue: data.max, minValue: data.min
+			});
+		} else if (data.type === ApplicationCommandOptionTypes.String) {
+			options.push({
+				name, type, description, choices, required,
+				maxLength: data.maxLength, minLength: data.minLength
 			});
 		} else {
 			options.push({

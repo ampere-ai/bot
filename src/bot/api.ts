@@ -110,10 +110,10 @@ class BaseAPI {
 
 class TextAPI extends BaseAPI {
 	public async gpt(options: {
-		messages: ConversationMessage[],
-		maxTokens?: number,
-		temperature?: number,
-		model?: string
+		messages: ConversationMessage[];
+		maxTokens?: number;
+		temperature?: number;
+		model?: string;
 	}, emitter: Emitter<ChatModelResult>): Promise<ChatModelResult> {
 		return this.fetch({
 			path: "text/gpt", emitter, options, stream: true
@@ -121,12 +121,29 @@ class TextAPI extends BaseAPI {
 	}
 
 	public async llama(options: {
-		messages: ConversationMessage[],
-		maxTokens?: number,
-		temperature?: number
+		messages: ConversationMessage[];
+		maxTokens?: number;
+		temperature?: number;
 	}, emitter: Emitter<ChatModelResult>): Promise<ChatModelResult> {
 		return this.fetch({
 			path: "text/llama", emitter, options, stream: true
+		});
+	}
+
+	public async translate(options: {
+		content: string;
+		language: string;
+		maxTokens?: number;
+		model?: string;
+	}): Promise<{
+		cost: number;
+		done: boolean;
+		content: string;
+		error?: string;
+		language: string;
+	}> {
+		return this.fetch({
+			path: "text/translate", options, stream: false
 		});
 	}
 }

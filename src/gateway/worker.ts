@@ -23,8 +23,8 @@ const publisher = connection.createPublisher();
 const shards = new Collection<number, DiscordenoShard>();
 
 /* Store loading guild & guild IDs to change GUILD_CREATE to GUILD_LOADED_DD, if needed. */
-const loadingGuilds: Set<bigint> = new Set();
-const guilds: Set<bigint> = new Set();
+const loadingGuilds = new Set<bigint>();
+const guilds = new Set<bigint>();
 
 async function handleMessage(shard: DiscordenoShard, payload: DiscordGatewayPayload) {
 	switch (payload.t) {

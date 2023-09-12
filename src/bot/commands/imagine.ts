@@ -6,24 +6,23 @@ import type { InteractionHandlerOptions } from "../types/interaction.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 import type { DBImage } from "../../db/types/image.js";
 
+import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/indicator.js";
+import { findBestSize, generate, interrogate, validRatio } from "../image/mod.js";
+import { type ImageGenerationResult, IMAGE_SAMPLERS } from "../types/image.js";
 import { EmbedColor, MessageResponse } from "../utils/response.js";
 import { moderate, moderationNotice } from "../moderation/mod.js";
 import { ModerationSource } from "../moderation/types/mod.js";
 import { ResponseError } from "../errors/response.js";
 import { createCommand } from "../helpers/command.js";
-import { getSettingsValue } from "../settings.js";
-
-import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/user.js";
-import { findBestSize, generate, interrogate, validRatio } from "../image/mod.js";
-import { type ImageGenerationResult, IMAGE_SAMPLERS } from "../types/image.js";
 import { handleError } from "../moderation/error.js";
+import { getSettingsValue } from "../settings.js";
 import { IMAGE_MODELS } from "../image/models.js";
 import { IMAGE_STYLES } from "../image/styles.js";
 import { BRANDING_COLOR } from "../../config.js";
 import { mergeImages } from "../utils/merge.js";
+import { truncate } from "../utils/helpers.js";
 import { Emitter } from "../utils/event.js";
 import { charge } from "../premium.js";
-import { truncate } from "../utils/helpers.js";
 
 interface ImageStartOptions {
 	bot: Bot;

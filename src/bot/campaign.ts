@@ -4,6 +4,7 @@ import type { CampaignDisplay, CampaignRender, DBCampaign } from "../db/types/ca
 import type { DBEnvironment } from "../db/types/mod.js";
 
 import { EmbedColor } from "./utils/response.js";
+import { DBRole } from "../db/types/user.js";
 import { bot } from "./mod.js";
 
 /** List of all database campaigns */
@@ -11,7 +12,7 @@ let campaigns: DBCampaign[] = [];
 
 /** Fetch all campaigns from the database. */
 export async function fetchCampaigns() {
-	campaigns = await bot.db.all<DBCampaign>("campaigns");
+	campaigns = await bot.db.all("campaigns");
 }
 
 export function getCampaign(id: string) {
@@ -20,9 +21,9 @@ export function getCampaign(id: string) {
 
 /** Pick a random campaign to display, increment its views & format it accordingly. */
 export async function pickAdvertisement(env: DBEnvironment): Promise<CampaignDisplay | null> {
-	/* Disable all ads for Premium users. */
+	/* Disable all ads for Premium users, that are not developers of the bot. */
 	const type = bot.db.premium(env);
-	if (type !== null) return null;
+	if (type !== null && !env.user.roles.includes(DBRole.Owner)) return null;
 
 	const campaign = pick();
 	if (!campaign) return null;

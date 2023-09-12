@@ -7,7 +7,7 @@ import { randomUUID } from "crypto";
 import type { Conversation, ConversationResult, ConversationUserMessage } from "../types/conversation.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
-import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/user.js";
+import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/indicator.js";
 import { infractionNotice, isBanned, moderate, moderationNotice } from "../moderation/mod.js";
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../utils/cooldown.js";
 import { transformResponse, type MessageResponse, EmbedColor } from "../utils/response.js";

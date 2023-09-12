@@ -8,14 +8,15 @@ import type { DBEnvironment } from "../db/types/mod.js";
 import type { DBGuild } from "../db/types/guild.js";
 import type { DBUser } from "../db/types/user.js";
 
-import { LOADING_INDICATORS, USER_LANGUAGES } from "../db/types/user.js";
 import { type MessageResponse, EmbedColor } from "./utils/response.js";
 import { canUse, restrictionTypes } from "./utils/restriction.js";
+import { USER_LANGUAGES } from "../db/types/language.js";
 import { CHAT_MODELS } from "./chat/models/mod.js";
 import { resetConversation } from "./chat/mod.js";
 import { IMAGE_MODELS } from "./image/models.js";
 import { IMAGE_STYLES } from "./image/styles.js";
 import { TONES } from "./chat/tones/mod.js";
+import { LOADING_INDICATORS } from "../db/types/indicator.js";
 
 export const SettingsCategories: SettingsCategory[] = [
 	{
