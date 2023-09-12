@@ -59,4 +59,5 @@ export const BRANDING_COLOR = parseInt(process.env.BRANDING_COLOR!, 16);
 /** Which gateway intents should be used */
 export const INTENTS =
     Intents.DirectMessages |
-    Intents.GuildMessages;
+    Intents.GuildMessages |
+	Intents.Guilds;
