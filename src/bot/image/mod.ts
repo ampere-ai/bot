@@ -1,6 +1,7 @@
 import type {
 	ImageGenerationOptions, ImageGenerationRatio, ImageGenerationResult, ImageGenerationSize, ImageModel, ImageInterrogateOptions, ImageInterrogateResult
 } from "../types/image.js";
+
 import { Emitter } from "../utils/event.js";
 
 export async function generate({ bot, model, emitter, body }: ImageGenerationOptions) {

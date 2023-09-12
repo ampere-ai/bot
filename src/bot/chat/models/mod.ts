@@ -7,8 +7,9 @@ import type { DBEnvironment } from "../../../db/types/mod.js";
 import type { Emitter } from "../../utils/event.js";
 import type { HistoryData } from "../history.js";
 
-import ChatGPT from "./chatgpt.js";
-import GPT4 from "./gpt-4.js";
+import chatgpt from "./chatgpt.js";
+import llama from "./llama.js";
+import gpt4 from "./gpt-4.js";
 
 export interface ChatModel {
 	/** Name of the chat model */
@@ -64,5 +65,5 @@ export interface ChatModelResult {
 }
 
 export const CHAT_MODELS: ChatModel[] = [
-	ChatGPT, GPT4
+	chatgpt, gpt4, llama
 ];

@@ -25,7 +25,7 @@ export interface ImageModel {
 	id: string;
 
 	/** Which path is used */
-	path: "sh";
+	path: "sh" | "kandinsky";
 
     /** Various settings for the model */
     settings?: ImageConfigModelSettings;
@@ -110,7 +110,7 @@ export interface ImageGenerationResult {
     id: string;
 	done: boolean;
     results: ImageRawResult[];
-	progress: number;
+	progress: number | null;
     cost: number;
 }
 

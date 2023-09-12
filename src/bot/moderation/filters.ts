@@ -99,7 +99,7 @@ export const MODERATION_FILTERS: ModerationFilter[] = [
 				},
 
 				{
-					words: [ "kid", "child", "teen", "young", "boy", "girl", "underage", "minor", "prepubescent" ],
+					words: [ "kid", "child", "teen", "young", "underage", "minor", "prepubescent" ],
 					action: { type: "block", reason: "Possibly sexual content involving minors" },
 					source: ModerationSource.ImagePrompt
 				}

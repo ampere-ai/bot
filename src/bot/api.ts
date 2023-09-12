@@ -119,6 +119,16 @@ class TextAPI extends BaseAPI {
 			path: "text/gpt", emitter, options, stream: true
 		});
 	}
+
+	public async llama(options: {
+		messages: ConversationMessage[],
+		maxTokens?: number,
+		temperature?: number
+	}, emitter: Emitter<ChatModelResult>): Promise<ChatModelResult> {
+		return this.fetch({
+			path: "text/llama", emitter, options, stream: true
+		});
+	}
 }
 
 class ImageAPI extends BaseAPI {
@@ -135,6 +145,21 @@ class ImageAPI extends BaseAPI {
 	}, emitter?: Emitter<ImageGenerationResult>): Promise<ImageGenerationResult> {
 		return this.fetch({
 			path: "image/sh", emitter, options, stream: true
+		});
+	}
+
+	public async kandinsky(options: {
+		prompt: string;
+		negativePrompt?: string;
+		width?: number;
+		height?: number;
+		steps?: number;
+		guidance?: number;
+		sampler?: string;
+		amount?: number;
+	}, emitter?: Emitter<ImageGenerationResult>): Promise<ImageGenerationResult> {
+		return this.fetch({
+			path: "image/kandinsky", emitter, options, stream: true
 		});
 	}
 
