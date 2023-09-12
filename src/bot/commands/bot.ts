@@ -33,6 +33,7 @@ export default createCommand({
 		const workerId = shardId % SHARDS_PER_WORKER;
 		const shard = info.shards[shardId];
 
+		const guildCount = info.workers.reduce<number>((acc, worker) => acc + worker.guildCount, 0);
 		const mem = memoryUsage();
 
 		return {
@@ -41,6 +42,11 @@ export default createCommand({
 				color: BRANDING_COLOR,
 
 				fields: [
+					{
+						name: "Servers 🖥️", inline: true,
+						value: `${new Intl.NumberFormat("en-US").format(guildCount)}`
+					},
+
 					{
 						name: "Cluster & Shard 💎", inline: true,
 						value: `\`${workerId + 1}\`/\`${info.workers.length}\`— \`${shardId + 1}\`/\`${info.shards.length}\``

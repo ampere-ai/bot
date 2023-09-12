@@ -90,7 +90,8 @@ function buildShardInfo(shard: DiscordenoShard): WorkerShardInfo {
 
 function buildInfo(): WorkerInfo {
 	return {
-		shards: shards.map(buildShardInfo)
+		shards: shards.map(buildShardInfo),
+		guildCount: guilds.size
 	};
 }
 

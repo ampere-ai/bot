@@ -7,11 +7,11 @@ import { type ModerationOptions, type ModerationResult, SourceToEmoji, SourceToN
 import { type DBInfraction, InfractionTypeToEmoji } from "../../db/types/moderation.js";
 import { type MessageResponse, EmbedColor } from "../utils/response.js";
 import { InteractionHandlerOptions } from "../types/interaction.js";
+import { titleCase, truncate } from "../utils/helpers.js";
 import { banEntry, isBanned, warnEntry } from "./mod.js";
 import { MODERATION_FILTERS } from "./filters.js";
 import { BRANDING_COLOR } from "../../config.js";
 import { QUICK_ACTIONS } from "./types/quick.js";
-import { titleCase } from "../utils/helpers.js";
 
 interface ModerationTarget {
 	/** Type of the target */
@@ -213,7 +213,7 @@ export async function buildModerationOverview(bot: Bot, location: "user" | "guil
 
 			return {
 				name: `· ${flag.reason ?? action?.name ?? ""} ${SourceToEmoji[flag.moderation!.source]}`,
-				value: `\`${flag.reference!.data}\` · <t:${Math.floor(flag.when / 1000)}:f>`,
+				value: `\`${truncate(flag.reference!.data, 100)}\` · <t:${Math.floor(flag.when / 1000)}:f>`,
 				inline: true
 			};
 		})

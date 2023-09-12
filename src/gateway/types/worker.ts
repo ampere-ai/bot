@@ -31,4 +31,5 @@ export interface WorkerShardInfo {
 
 export interface WorkerInfo {
 	shards: WorkerShardInfo[];
+	guildCount: number;
 }
