@@ -34,6 +34,8 @@ export default createCommand({
 		const shard = info.shards[shardId];
 
 		const guildCount = info.workers.reduce<number>((acc, worker) => acc + worker.guildCount, 0);
+		const userCount = await bot.db.count("users");
+
 		const mem = memoryUsage();
 
 		return {
@@ -45,6 +47,12 @@ export default createCommand({
 					{
 						name: "Servers 🖥️", inline: true,
 						value: `${new Intl.NumberFormat("en-US").format(guildCount)}`
+					},
+
+
+					{
+						name: "Users 🫂", inline: true,
+						value: `${new Intl.NumberFormat("en-US").format(userCount)}`
 					},
 
 					{

@@ -1,6 +1,6 @@
 import RabbitMQ from "rabbitmq-client";
 
-import type { CollectionName, DBEnvironment, DBObject, DBRequestAll, DBRequestData, DBRequestFetch, DBRequestGet, DBRequestType, DBRequestUpdate, DBResponse, DBType } from "../db/types/mod.js";
+import type { CollectionName, DBEnvironment, DBObject, DBRequestAll, DBRequestCount, DBRequestData, DBRequestFetch, DBRequestGet, DBRequestType, DBRequestUpdate, DBResponse, DBType } from "../db/types/mod.js";
 import type { DBGuild } from "../db/types/guild.js";
 
 import { DBRole, DBUserType, type DBUser } from "../db/types/user.js";
@@ -52,6 +52,12 @@ export async function createDB() {
 		return await execute("all", {
 			collection
 		} as DBRequestAll);
+	};
+
+	const count = async (collection: CollectionName): Promise<number> => {
+		return await execute("count", {
+			collection
+		} as DBRequestCount);
 	};
 
 	const clearCache = async (): Promise<void> => {
@@ -122,7 +128,7 @@ export async function createDB() {
 	};
 
 	return { 
-		rpc, execute, get, fetch, update, premium, voted, types, all, clearCache,
+		rpc, execute, get, fetch, update, premium, voted, types, all, count, clearCache,
 
 		env: async (user: bigint, guild?: bigint): Promise<DBEnvironment> => {
 			const data: Partial<DBEnvironment> = {};

@@ -141,6 +141,14 @@ async function all<T extends DBObject = DBObject>(collection: CollectionName): P
 	return data as T[];
 }
 
+async function count(collection: CollectionName): Promise<number> {
+	const { count } = await db.from(collection)
+		.select("*", { count: "exact" });
+
+	if (count === null) throw new Error("Something went wrong");
+	return count;
+}
+
 async function handleMessage(data: DBRequestData): Promise<any> {
 	if (data.type === "get") {
 		return await get(data.collection, data.id);
@@ -150,6 +158,8 @@ async function handleMessage(data: DBRequestData): Promise<any> {
 		return await update(data.collection, data.id, data.updates);
 	} else if (data.type === "all") {
 		return await all(data.collection);
+	} else if (data.type === "count") {
+		return await count(data.collection);
 	} else if (data.type === "clearCache") {
 		return await redis.flushAll();
 	}
