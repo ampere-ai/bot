@@ -9,7 +9,7 @@ export default createChatModel({
 	maxTokens: 8191,
 
 	cooldown: {
-		subscription: 30 * 1000,
+		subscription: 30 * 1000
 	},
 
 	initialPrompt: {

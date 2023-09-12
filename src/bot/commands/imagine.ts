@@ -63,9 +63,9 @@ export default createCommand({
 	description: "Generate beautiful images using AI",
 
 	cooldown: {
-		user: 5 * 60 * 1000,
-		voter: 4 * 60 * 1000,
-		subscription: 1.5 * 60 * 1000
+		user: 1.75 * 60 * 1000,
+		voter: 1.5 * 60 * 1000,
+		subscription: 30 * 1000
 	},
 
 	options: {

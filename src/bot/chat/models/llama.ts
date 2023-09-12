@@ -7,8 +7,8 @@ export default createChatModel({
 	maxTokens: 2048,
 	
 	cooldown: {
-		user: 80 * 1000,
-		voter: 60 * 1000,
+		user: 60 * 1000,
+		voter: 45 * 1000,
 		subscription: 10 * 1000
 	},
 
