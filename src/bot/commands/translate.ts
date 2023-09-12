@@ -11,8 +11,8 @@ export default createCommand({
 	description: "Translate text using AI",
 
 	cooldown: {
-		user: 1.75 * 60 * 1000,
-		voter: 1.5 * 60 * 1000,
+		user: 2.5 * 60 * 1000,
+		voter: 2.25 * 60 * 1000,
 		subscription: 30 * 1000
 	},
 
