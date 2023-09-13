@@ -70,8 +70,12 @@ class BaseAPI {
 	
 					onopen: async response => {
 						if (!response.ok) {
-							reject(new APIError(response, await response.json()));
+							throw new APIError(response, await response.json());
 						}
+					},
+					
+					onerror: error => {
+						throw error;
 					},
 	
 					onmessage: ({ data: raw }) => {
@@ -127,6 +131,16 @@ class TextAPI extends BaseAPI {
 	}, emitter: Emitter<ChatModelResult>): Promise<ChatModelResult> {
 		return this.fetch({
 			path: "text/llama", emitter, options, stream: true
+		});
+	}
+
+	public async google(options: {
+		messages: ConversationMessage[];
+		temperature?: number;
+		model?: "chat-bison-001";
+	}, emitter: Emitter<ChatModelResult>): Promise<ChatModelResult> {
+		return this.fetch({
+			path: "text/google", emitter, options, stream: true
 		});
 	}
 

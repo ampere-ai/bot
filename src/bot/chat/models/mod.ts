@@ -10,6 +10,7 @@ import type { HistoryData } from "../history.js";
 import chatgpt from "./chatgpt.js";
 import llama from "./llama.js";
 import gpt4 from "./gpt-4.js";
+import bard from "./bard.js";
 
 export interface ChatModel {
 	/** Name of the chat model */
@@ -65,5 +66,5 @@ export interface ChatModelResult {
 }
 
 export const CHAT_MODELS: ChatModel[] = [
-	chatgpt, gpt4, llama
+	chatgpt, gpt4, llama, bard
 ];
