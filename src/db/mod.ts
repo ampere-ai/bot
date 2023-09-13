@@ -91,8 +91,8 @@ async function update<T extends DBObject = DBObject>(
 	let updated: T;
 
 	if (typeof obj === "string") {
-		const cached: T = (await getCache(collectionKey(collection, id)))!;
-		updated = { ...cached, ...queued, ...updates as T };
+		const existing = await get<T>(collection, id)!;
+		updated = { ...existing, ...queued, ...updates as T };
 	} else {
 		updated = { ...obj, ...queued, ...updates as T };
 	}
