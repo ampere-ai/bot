@@ -5,6 +5,8 @@ import { ModerationSource } from "../moderation/types/mod.js";
 import { USER_LANGUAGES } from "../../db/types/language.js";
 import { createCommand } from "../helpers/command.js";
 import { BRANDING_COLOR } from "../../config.js";
+import { APIError } from "../errors/api.js";
+import { ResponseError } from "../errors/response.js";
 
 export default createCommand({
 	name: "translate",
@@ -44,30 +46,40 @@ export default createCommand({
 		if (moderation.blocked) return moderationNotice({ result: moderation });
 		await interaction.deferReply();
 
-		const result = await bot.api.text.translate({
-			content, language: language.modelName ?? language.name
-		});
+		try {
+			const result = await bot.api.text.translate({
+				content, language: language.modelName ?? language.name
+			});
 
-		await interaction.editReply({
-			embeds: {
-				title: "Translated message 🌐",
-				description: `\`\`\`\n${result.content}\n\`\`\``,
-				color: BRANDING_COLOR,
+			await interaction.editReply({
+				embeds: {
+					title: "Translated message 🌐",
+					description: `\`\`\`\n${result.content}\n\`\`\``,
+					color: BRANDING_COLOR,
 
-				fields: [
-					{
-						name: "Detected language",
-						value: result.language,
-						inline: true
-					},
+					fields: [
+						{
+							name: "Detected language",
+							value: result.language,
+							inline: true
+						},
 
-					{
-						name: "Translated into",
-						value: language.name,
-						inline: true
-					}
-				]
+						{
+							name: "Translated into",
+							value: language.name,
+							inline: true
+						}
+					]
+				}
+			});
+		} catch (error) {
+			if (error instanceof APIError) {
+				throw new ResponseError({
+					message: error.message
+				});
+			} else {
+				throw error;
 			}
-		});
+		}
 	}
 });

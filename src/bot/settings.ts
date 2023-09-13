@@ -154,7 +154,7 @@ export const SettingsCategories: SettingsCategory[] = [
 			{
 				name: "Location priority", emoji: "✨",
 				description: "Whether to prioritize your own or the server's Premium",
-				location: SettingsLocation.Both, default: "guild",
+				location: SettingsLocation.User, default: "guild",
 				type: SettingsOptionType.Choices,
 
 				choices: [

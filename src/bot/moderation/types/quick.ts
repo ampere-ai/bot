@@ -27,6 +27,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
 	{ reason: "Trolling" },
 	{ reason: "Tricking bot into generating inappropriate content" },
 	{ reason: "Using bot to generate inappropriate content" },
+	{ reason: "Extreme sexual content" },
 
 	/* Warning reasons & timed ban reasons */
 	{ reason: "Joking about self-harm/suicide", duration: dayjs.duration({ days: 3 }) },

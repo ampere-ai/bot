@@ -3,6 +3,7 @@ import type { InteractionHandler } from "../types/interaction.js";
 
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../utils/cooldown.js";
 import { canUse, restrictionTypes } from "../utils/restriction.js";
+import { ResponseError } from "../errors/response.js";
 import { handleError } from "../moderation/error.js";
 import { EmbedColor } from "../utils/response.js";
 
@@ -69,6 +70,15 @@ export async function handleInteraction(bot: Bot, interaction: Interaction) {
 		if (response) await interaction.reply(response);
 
 	} catch (error) {
+		if (error instanceof ResponseError) {
+			try {
+				return void await interaction.reply(error.display());
+			} catch {
+				return void await interaction.editReply(error.display())
+					.catch(() => {});
+			}
+		}
+
 		try {
 			await interaction.reply(
 				await handleError(bot, { error, guild: interaction.guildId })

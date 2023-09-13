@@ -69,9 +69,12 @@ export async function executeCommand(bot: Bot, interaction: Interaction) {
 
 	} catch (error) {
 		if (error instanceof ResponseError) {
-			return void await interaction.reply(
-				error.display()
-			);
+			try {
+				return void await interaction.reply(error.display());
+			} catch {
+				return void await interaction.editReply(error.display())
+					.catch(() => {});
+			}
 		}
 
 		try {
