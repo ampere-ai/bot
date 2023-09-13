@@ -3,9 +3,20 @@ import { MessageComponentTypes, ButtonStyles, type ActionRow, type Embed, Button
 import type { CampaignDisplay, CampaignRender, DBCampaign } from "../db/types/campaign.js";
 import type { DBEnvironment } from "../db/types/mod.js";
 
+import { DBRole, DBUserType } from "../db/types/user.js";
 import { EmbedColor } from "./utils/response.js";
-import { DBRole } from "../db/types/user.js";
 import { bot } from "./mod.js";
+
+/** Ad display counters */
+const counters = new Map<string, number>();
+
+/** After how many interactions to display an advertisement, for each user type */
+const COUNTER_LIMITS: Record<DBUserType, number | null> = {
+	plan: null,
+	subscription: null,
+	voter: 15,
+	user: 10
+};
 
 /** List of all database campaigns */
 let campaigns: DBCampaign[] = [];
@@ -21,12 +32,24 @@ export function getCampaign(id: string) {
 
 /** Pick a random campaign to display, increment its views & format it accordingly. */
 export async function pickAdvertisement(env: DBEnvironment): Promise<CampaignDisplay | null> {
-	/* Disable all ads for Premium users, that are not developers of the bot. */
-	const type = bot.db.premium(env);
-	if (type !== null && !env.user.roles.includes(DBRole.Owner)) return null;
+	/* Type of the user, e.g. "voter" or just "user" */
+	const type = env.user.roles.includes(DBRole.Owner) ? "user" : bot.db.type(env);
+	if (COUNTER_LIMITS[type] === null) return null;
+
+	/* Current advertisement counter */
+	const currentCounter = counters.get(env.user.id) ?? 0;
+
+	/* If an ad was requested to be displayed, but one was already shown too recently, increment the counter & return. */
+	if (COUNTER_LIMITS[type]! > currentCounter) {
+		counters.set(env.user.id, currentCounter + 1);
+		return null;
+	}
 
 	const campaign = pick();
 	if (!campaign) return null;
+
+	/* Reset the counter, if an ad was displayed. */
+	counters.delete(env.user.id);
 
 	/* TODO: Increment statistics */
 
@@ -89,7 +112,7 @@ function render(campaign: DBCampaign): CampaignRender {
 			? { url: campaign.settings.thumbnail }
 			: undefined,
 
-		footer: { text: "This is a sponsored advertisement." }
+		footer: { text: "Sponsored advertisement" }
 	};
 
 	const row: ActionRow = {

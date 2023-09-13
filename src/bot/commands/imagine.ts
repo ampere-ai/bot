@@ -23,6 +23,7 @@ import { mergeImages } from "../utils/merge.js";
 import { truncate } from "../utils/helpers.js";
 import { Emitter } from "../utils/event.js";
 import { charge } from "../premium.js";
+import { pickAdvertisement } from "../campaign.js";
 
 interface ImageStartOptions {
 	bot: Bot;
@@ -160,7 +161,7 @@ export default createCommand({
 		if (moderation.blocked) return moderationNotice({ result: moderation });
 
 		try {
-			const result = await start({
+			await start({
 				bot, action: "generate",
 				ratio, count, env, guidance, interaction, model, sampler, steps,
 
@@ -169,9 +170,6 @@ export default createCommand({
 					style: style ? style.id : undefined
 				}
 			});
-
-			const message = await bot.helpers.getOriginalInteractionResponse(interaction.token);
-			await message.edit(result);
 
 		} catch (error) {
 			if (error instanceof ResponseError) {
@@ -222,7 +220,7 @@ export async function handleImagineInteraction({ bot, interaction, env, args }: 
 		if (action === "upscale") {
 			const buffer = await bot.api.storage.get("images", `${imageResult!.id}.png`);
 	
-			const result = await start({
+			await start({
 				bot, interaction, action,
 	
 				ratio: `${ratio.a}:${ratio.b}`,
@@ -233,11 +231,8 @@ export async function handleImagineInteraction({ bot, interaction, env, args }: 
 				sampler, steps, prompt
 			});
 	
-			const message = await bot.helpers.getOriginalInteractionResponse(interaction.token);
-			return void await message.edit(result);
-	
 		} else if (action === "redo") {
-			const result = await start({
+			await start({
 				bot, interaction,
 				
 				action: "generate",
@@ -247,9 +242,6 @@ export async function handleImagineInteraction({ bot, interaction, env, args }: 
 	
 				sampler, steps, prompt
 			});
-	
-			const message = await bot.helpers.getOriginalInteractionResponse(interaction.token);
-			return void await message.edit(result);
 		}
 	} catch (error) {
 		pressed.style = ButtonStyles.Danger;
@@ -264,7 +256,7 @@ export async function handleImagineInteraction({ bot, interaction, env, args }: 
 	}
 }
 
-async function start(options: ImageStartOptions): Promise<MessageResponse> {
+async function start(options: ImageStartOptions) {
 	const { bot, ratio: rawRatio, model, prompt, action, source, sampler, steps, guidance, count, interaction, env } = options;
 
 	/* Parse & validate the given aspect ratio. */
@@ -353,9 +345,19 @@ async function start(options: ImageStartOptions): Promise<MessageResponse> {
 		);
 	}));
 
-	return await formatResult({
+	const response = await message.edit(await formatResult({
 		...options, result, size
-	});
+	}));
+
+	/* Advertisement to display */
+	const ad = await pickAdvertisement(env);
+
+	if (ad) {
+		await response.reply({
+			components: [ ad.response.row ],
+			embeds: ad.response.embed
+		});
+	}
 }
 
 /** Format the image generation result into a clean embed. */

@@ -1,4 +1,4 @@
-import type { Bot, Message } from "@discordeno/bot";
+import type { ActionRow, Bot, Message } from "@discordeno/bot";
 
 import { type ButtonComponent, MessageComponentTypes, ButtonStyles, Embed } from "@discordeno/bot";
 import { setTimeout as delay } from "timers/promises";
@@ -17,6 +17,7 @@ import { SettingsLocation } from "../types/settings.js";
 import { TONES, type ChatTone } from "./tones/mod.js";
 import { ResponseError } from "../errors/response.js";
 import { handleError } from "../moderation/error.js";
+import { pickAdvertisement } from "../campaign.js";
 import { getSettingsValue } from "../settings.js";
 import { buildHistory } from "./history.js";
 import { Emitter } from "../utils/event.js";
@@ -60,7 +61,9 @@ export async function handleMessage(bot: Bot, message: Message) {
 
 	if (hasCooldown(conversation)) {
 		const { remaining } = getCooldown(conversation)!;
-		const reply = await message.reply(await cooldownNotice(conversation, env));
+
+		await bot.helpers.addReaction(message.channelId, message.id, "🐢").catch(() => {});
+		const reply = await message.reply(cooldownNotice(bot, env, conversation));
 
 		return void setTimeout(() => {
 			reply.delete().catch(() => {});
@@ -93,7 +96,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 				queued = true;
 
 				const reply = await message.reply(
-					format({ bot, message, env, model, tone, result })
+					await format({ bot, message, env, model, tone, result })
 				);
 
 				messageID = reply.id;
@@ -102,7 +105,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 				await bot.helpers.editMessage(
 					message.channelId, messageID,
 					
-					transformResponse(format({
+					transformResponse(await format({
 						bot, message, env, model, tone, result
 					}))
 				);
@@ -149,13 +152,13 @@ export async function handleMessage(bot: Bot, message: Message) {
 			await bot.helpers.editMessage(
 				message.channelId, messageID,
 				
-				transformResponse(format({
+				transformResponse(await format({
 					bot, message, env, model, tone, result
 				}))
 			);
 		} else {
 			await message.reply(
-				format({ bot, message, env, model, tone, result })
+				await format({ bot, message, env, model, tone, result })
 			);
 		} 
 
@@ -240,22 +243,24 @@ function formatResult(result: ChatModelResult, id: string): ConversationResult {
 }
 
 /** Format the chat model's response to be displayed nicely on Discord. */
-function format(
+async function format(
 	{ bot, message, env, result, model, tone }: Pick<ExecuteOptions, "bot" | "env" | "model" | "tone"> & {
 		message: Message, result: ConversationResult
 	}
-): MessageResponse {
+) {
 	const indicator = getLoadingIndicatorFromUser(env.user);
 	const emoji = loadingIndicatorToString(indicator);
 
 	const response: MessageResponse = {};
 	let content = result.message.content.trim();
 
-	const components: ButtonComponent[] = [];
+	const components: ActionRow[] = [];
+	const buttons: ButtonComponent[] = [];
+
 	const embeds: Embed[] = [];
 
 	if (result.done) {
-		components.push({
+		buttons.push({
 			type: MessageComponentTypes.Button,
 			label: model.name,
 			emoji: typeof model.emoji === "string" ? { name: model.emoji } : model.emoji,
@@ -263,7 +268,7 @@ function format(
 			style: ButtonStyles.Secondary
 		});
 
-		if (tone.id !== TONES[0].id) components.push({
+		if (tone.id !== TONES[0].id) buttons.push({
 			type: MessageComponentTypes.Button,
 			label: tone.name,
 			emoji: typeof tone.emoji === "string" ? { name: tone.emoji } : tone.emoji,
@@ -271,13 +276,21 @@ function format(
 			style: ButtonStyles.Secondary
 		});
 
-		if (components.length < 2) components.push({
+		if (buttons.length < 2) buttons.push({
 			type: MessageComponentTypes.Button,
 			label: `@${message.author.username}`,
 			emoji: { name: bot.db.icon(env) },
 			style: ButtonStyles.Secondary, disabled: true,
 			customId: randomUUID()
 		});
+
+		/* Advertisement to display */
+		const ad = await pickAdvertisement(env);
+
+		if (ad) {
+			components.push(ad.response.row);
+			embeds.push(ad.response.embed);
+		}
 	}
 
 	if (result.finishReason === "length") {
@@ -289,15 +302,16 @@ function format(
 		content += " **...**";
 	}
 
-	if (components.length > 0) response.components = [ {
+	if (buttons.length > 0) components.push({
 		type: MessageComponentTypes.ActionRow,
-		components: components as [ ButtonComponent ]
-	} ];
+		components: buttons as [ ButtonComponent ]
+	});
 
+	if (components.length > 0) response.components = components;
 	if (embeds.length > 0) response.embeds = embeds;
 
 	/* Generated response, with the pending indicator */
-	const formatted: string = `${content} **...** ${emoji}`;
+	const formatted = `${content} **...** ${emoji}`;
 
 	if (formatted.length > 2000) {
 		response.file = {

@@ -209,15 +209,30 @@ export default createInteractionHandler({
 							label: "Purchase", emoji: { name: "💸" },
 							customId: "premium:purchase",
 							style: ButtonStyles.Success
+						},
+
+						{
+							type: MessageComponentTypes.Button,
+							style: ButtonStyles.Link,
+							label: "Vote",
+							url: `https://top.gg/bot/${bot.id}`
 						}
 					]
 				} ],
 
-				embeds: {
-					title: "Want to get rid of annoying ads? ✨",
-					description: `**Premium** gets rid of all ads in the bot & also gives you additional benefits, such as\n\n${perks.map(p => `- ${p}`).join("\n")}`,
-					color: EmbedColor.Orange
-				},
+				embeds: [
+					{
+						title: "Want to get rid of annoying ads? ✨",
+						description: `**Premium** gets rid of all ads in the bot & also gives you additional benefits, such as\n\n${perks.map(p => `- ${p}`).join("\n")}`,
+						color: EmbedColor.Orange
+					},
+
+					{
+						title: "Voting for the bot <:topgg:1151514119749521468>",
+						description: "You can also **vote** for the bot on **top.gg** <:topgg:1151514119749521468>, to reduce the frequency of ads in the bot.",
+						color: 0xff3366
+					},
+				],
 
 				ephemeral: true
 			};

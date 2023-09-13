@@ -1,10 +1,9 @@
-import { Collection, type Interaction, type Embed, type Bot } from "@discordeno/bot";
+import { Collection, type Interaction, type Embed, type Bot, MessageComponentTypes, ButtonStyles } from "@discordeno/bot";
 
 import type { Conversation } from "../types/conversation.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
 import { EmbedColor, type MessageResponse } from "./response.js";
-import { pickAdvertisement } from "../campaign.js";
 import { DBRole } from "../../db/types/user.js";
 
 type CooldownTarget = Conversation | Interaction;
@@ -12,9 +11,9 @@ type CooldownTarget = Conversation | Interaction;
 /** Global command cool-downs */
 const cooldowns: Collection<string, number> = new Collection();
 
-export async function cooldownNotice(target: CooldownTarget, env: DBEnvironment): Promise<MessageResponse> {
+export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTarget): MessageResponse {
 	const cooldown = getCooldown(target);
-	const ad = await pickAdvertisement(env);
+	const premium = bot.db.premium(env);
 
 	const response: MessageResponse = {
 		ephemeral: true
@@ -28,9 +27,26 @@ export async function cooldownNotice(target: CooldownTarget, env: DBEnvironment)
 		}
 	];
 
-	if (ad) {
-		embeds.push(ad.response.embed);
-		response.components = [ ad.response.row ];
+	if (premium) {
+		embeds.push({
+			description: "By upgrading to **Premium** ✨, you will have practically no cool-down for all features throughout the bot. **Premium** ✨ also removes all annoying advertisements.",
+			color: EmbedColor.Orange
+		});
+
+		response.components = [
+			{
+				type: MessageComponentTypes.ActionRow,
+
+				components: [
+					{
+						type: MessageComponentTypes.Button,
+						label: "Upgrade to Premium", emoji: { name: "💸" },
+						customId: "premium:purchase",
+						style: ButtonStyles.Success
+					}
+				]
+			}
+		];
 	}
 
 	response.embeds = embeds;
