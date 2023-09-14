@@ -22,11 +22,21 @@ const publisher = connection.createPublisher();
 
 const shards = new Collection<number, DiscordenoShard>();
 
-/* Store loading guild & guild IDs to change GUILD_CREATE to GUILD_LOADED_DD, if needed. */
 const loadingGuilds = new Set<bigint>();
 const guilds = new Set<bigint>();
 
 async function handleMessage(shard: DiscordenoShard, payload: DiscordGatewayPayload) {
+	if (payload.t === "GUILD_CREATE") {
+		const guild = (payload.d as DiscordGuild);
+		const id = BigInt(guild.id);
+
+		const existing = guilds.has(id);
+		if (existing) return;
+
+		if (loadingGuilds.has(id)) loadingGuilds.delete(id);
+		guilds.add(id);
+	}
+
 	switch (payload.t) {
 		case "READY": {
 			/* Marks which guilds the bot is in, when doing initial loading in cache. */
@@ -39,32 +49,15 @@ async function handleMessage(shard: DiscordenoShard, payload: DiscordGatewayPayl
 			break;
 		}
 
-		case "GUILD_CREATE": {
-			const guild = (payload.d as DiscordGuild);
-			const id = BigInt(guild.id);
-
-			const existing = guilds.has(id);
-			if (existing) return;
-
-			if (loadingGuilds.has(id)) {
-				payload.t = "GUILD_LOADED_DD" as any;
-				loadingGuilds.delete(id);
-			}
-
-			guilds.add(id);
-
-			break;
-		}
-
 		case "GUILD_DELETE": {
 			const guild = payload.d as DiscordUnavailableGuild;
 			if (guild.unavailable) return;
 
 			guilds.delete(BigInt(guild.id));
-
 			break;
 		}
 
+		case "GUILD_CREATE":
 		case "MESSAGE_CREATE":
 		case "INTERACTION_CREATE": {
 			if (payload.t === "MESSAGE_CREATE" && (payload.d as DiscordMessage).content?.length === 0) return;

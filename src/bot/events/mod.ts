@@ -1,18 +1,19 @@
 import type { EventHandlers } from "@discordeno/bot";
 
-import type { Args, ReplaceBot } from "../types/args.js";
+import type { Args, AddBotArg } from "../types/args.js";
 import { bot } from "../mod.js";
 
-import InteractionCreate from "./interaction/mod.js";
-import MessageCreate from "./message/create.js";
+import interactionCreate from "./interaction/mod.js";
+import messageCreate from "./message/create.js";
+import guildCreate from "./guild/create.js";
 
 export interface Event<T extends keyof EventHandlers> {
     name: T;
-    handler: ReplaceBot<Args<EventHandlers[T]>>;
+    handler: AddBotArg<Args<EventHandlers[T]>>;
 }
 
 const EVENTS = [
-	InteractionCreate, MessageCreate
+	interactionCreate, messageCreate, guildCreate
 ];
 
 export function setupEvents() {

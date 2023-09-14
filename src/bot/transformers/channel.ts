@@ -5,7 +5,7 @@ import { createTransformer } from "../helpers/transformer.js";
 
 export default createTransformer<"channel", Channel, DiscordChannel>({
 	name: "channel",
-	properties: [ "id", "name" ],
+	properties: [ "id", "name", "type", "permissionOverwrites" ],
 	
 	handler: (bot, channel) => {
 		Object.defineProperty(channel, "send", {
