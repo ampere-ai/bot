@@ -1,4 +1,4 @@
-import { type Bot, type DiscordEmbedField, type Embed, type Guild, type User, ActionRow, ButtonComponent, ButtonStyles, MessageComponentTypes, avatarUrl, guildIconUrl } from "@discordeno/bot";
+import { type Bot, type DiscordEmbedField, type Embed, type User, type Guild, ActionRow, ButtonComponent, ButtonStyles, MessageComponentTypes, avatarUrl, guildIconUrl } from "@discordeno/bot";
 
 import type { DBGuild } from "../../db/types/guild.js";
 import type { DBUser } from "../../db/types/user.js";
@@ -187,6 +187,20 @@ export async function buildModerationOverview(bot: Bot, location: "user" | "guil
 			{ name: "Roles ⚒️", value: [ ...user.roles, "*User*" ].map(role => `**${titleCase(role)}**`).join(", ") },
 			{ name: "Voted 📩", value: user.voted ? `<t:${Math.round(Date.parse(user.voted) / 1000)}:R>` : "❌" },
 		);
+	} else {
+		const guild = entry as Guild;
+
+		if (guild.description) fields.push({
+			name: "Description 🗒️", value: guild.description
+		});
+
+		if (guild.approximateMemberCount) fields.push({
+			name: "Members 🫂", value: guild.approximateMemberCount.toString()
+		});
+
+		if (guild.vanityUrlCode) fields.push({
+			name: "Invite 📨", value: `[.gg/${guild.vanityUrlCode}](https://discord.gg/${guild.vanityUrlCode})`
+		});
 	}
 
 	const embeds: Embed[] = [
