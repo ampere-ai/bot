@@ -10,7 +10,7 @@ export default createEvent("guildCreate", async (bot, guild) => {
 
 	try {
 		const channel = findFittingChannel(guild);
-		if (channel) await channel.send(buildIntroductionMessage(bot, guild));
+		if (channel) await channel.send(buildIntroductionMessage(bot));
 
 	} catch (error) {
 		bot.logger.error(`Failed to send introduction message to guild ${bold(guild.id.toString())} ->`, error);
@@ -28,11 +28,11 @@ function findFittingChannel(guild: Guild) {
 	return null;
 }
 
-function buildIntroductionMessage(bot: Bot, guild: Guild): MessageResponse {
+function buildIntroductionMessage(bot: Bot): MessageResponse {
 	return {
 		embeds: {
 			title: "Hey there 👋",
-			description: `Thank you for inviting me to your server **${guild.name}**.`,
+			description: "Thank you for inviting me to your server.",
 			thumbnail: { url: "https://cdn.discordapp.com/avatars/1064152790181609532/9e3410d300b1d568d63768aaafdf9718.png?size=512" },
 			color: BRANDING_COLOR,
 

@@ -92,9 +92,9 @@ export function transformResponse<T extends (CreateMessageOptions | EditMessage 
 
 		messageReference: response.reference ? {
 			failIfNotExists: false,
-			channelId: response.reference.channelId,
-			guildId: response.reference.guildId,
-			messageId: response.reference.id
+			channelId: response.reference.channelId.toString(),
+			guildId: response.reference.guildId?.toString(),
+			messageId: response.reference.id.toString()
 		} : undefined
 	} as T;
 }

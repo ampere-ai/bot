@@ -288,7 +288,6 @@ async function format(
 			customId: randomUUID()
 		});
 
-		/* Advertisement to display */
 		const ad = await pickAdvertisement(env);
 
 		if (ad) {
@@ -314,7 +313,7 @@ async function format(
 	if (components.length > 0) response.components = components;
 	if (embeds.length > 0) response.embeds = embeds;
 
-	/* Generated response, with the pending indicator */
+	/* Generated response, with the loading indicator */
 	const formatted = `${content} **...** ${emoji}`;
 
 	if (formatted.length > 2000) {

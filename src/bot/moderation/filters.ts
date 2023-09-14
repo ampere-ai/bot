@@ -93,7 +93,7 @@ export const MODERATION_FILTERS: ModerationFilter[] = [
 				},
 
 				{
-					words: [ "sex", "no clothes", "naked", "nude", "uncensored", "clit", "uterus", "vagina", "penis", "dick", "breasts", "sexy", "ass", "titty", "tits", "cum", "creampied", "nsfw" ],
+					words: [ "sex", "no clothes", "naked", "nude", "uncensored", "clit", "uterus", "vagina", "penis", "dick", "breasts", "sexy", "titty", "tits", "cum", "creampied", "nsfw" ],
 					action: { type: "block", reason: "Sexual content" },
 					source: ModerationSource.ImagePrompt
 				},
