@@ -27,9 +27,9 @@ export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTar
 		}
 	];
 
-	if (premium) {
+	if (!premium) {
 		embeds.push({
-			description: "By upgrading to **Premium** ✨, you will have practically no cool-down for all features throughout the bot. **Premium** ✨ also removes all annoying advertisements.",
+			description: "By upgrading to **Premium** ✨, you will have practically **no cool-down** for **all features** throughout the bot. **Premium** ✨ also *removes* all annoying advertisements.",
 			color: EmbedColor.Orange
 		});
 

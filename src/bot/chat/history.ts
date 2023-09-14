@@ -32,15 +32,15 @@ export interface HistoryData {
 
 const MAX_LENGTH = {
 	input: {
-		user: 700,
-		voter: 750,
+		user: 600,
+		voter: 650,
 		subscription: 900,
 		plan: 1000
 	},
 
 	output: {
-		user: 350,
-		voter: 400,
+		user: 300,
+		voter: 350,
 		subscription: 650,
 		plan: 1000
 	}
