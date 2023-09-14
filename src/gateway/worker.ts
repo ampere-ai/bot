@@ -33,8 +33,12 @@ async function handleMessage(shard: DiscordenoShard, payload: DiscordGatewayPayl
 		const existing = guilds.has(id);
 		if (existing) return;
 
-		if (loadingGuilds.has(id)) loadingGuilds.delete(id);
 		guilds.add(id);
+
+		if (loadingGuilds.has(id)) {
+			loadingGuilds.delete(id);
+			return;
+		}
 	}
 
 	switch (payload.t) {

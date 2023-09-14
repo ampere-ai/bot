@@ -6,12 +6,11 @@ import type { MessageResponse } from "../../utils/response.js";
 import { createEvent } from "../../helpers/event.js";
 
 export default createEvent("guildCreate", async (bot, guild) => {
+	bot.logger.info(`Bot was added to guild ${bold(guild.name)}, ID ${bold(guild.id.toString())}`);
+
 	try {
 		const channel = findFittingChannel(guild);
-
-		if (channel) await channel.send(
-			buildIntroductionMessage(bot, guild)
-		);
+		if (channel) await channel.send(buildIntroductionMessage(bot, guild));
 
 	} catch (error) {
 		bot.logger.error(`Failed to send introduction message to guild ${bold(guild.id.toString())} ->`, error);
@@ -23,7 +22,6 @@ function findFittingChannel(guild: Guild) {
 		if (channel.type !== ChannelTypes.GuildText) continue;
 		if (channel.permissionOverwrites.length > 0) continue;
 
-		console.log(channel, channel.permissionOverwrites);
 		return channel;
 	}
 
