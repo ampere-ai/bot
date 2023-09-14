@@ -143,11 +143,11 @@ export default createCommand({
 		const sampler: ImageSampler = options.sampler ?? DEFAULT_GEN_OPTIONS.sampler;
 
 		/* Which model to use */
-		const modelID = options.model ?? getSettingsValue(env.user, "image:model");
+		const modelID = options.model ?? getSettingsValue(bot, env, "user", "image:model");
 		const model = IMAGE_MODELS.find(m => m.id === modelID)!;
 	
 		/* Which style to apply additionally */
-		const styleID: string | null = options.style ?? getSettingsValue(env.user, "image:style");
+		const styleID: string | null = options.style ?? getSettingsValue(bot, env, "user", "image:style");
 		const style = styleID !== null ? IMAGE_STYLES.find(s => s.id === styleID)! : null;
 
 		if (model.settings?.forcedSize && ratio !== "1:1") throw new ResponseError({
@@ -362,10 +362,10 @@ async function start(options: ImageStartOptions) {
 
 /** Format the image generation result into a clean embed. */
 async function formatResult(options: ImageFormatOptions & ImageStartOptions): Promise<MessageResponse> {
-	const { action, env, interaction, prompt, result, size } = options;
+	const { bot, action, env, interaction, prompt, result, size } = options;
 
 	if (!result.done) {
-		const indicator = getLoadingIndicatorFromUser(env.user);
+		const indicator = getLoadingIndicatorFromUser(bot, env);
 		const emoji = loadingIndicatorToString(indicator);
 
 		return { embeds: {

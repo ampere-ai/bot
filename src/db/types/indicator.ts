@@ -1,7 +1,7 @@
-import type { ComponentEmoji } from "@discordeno/bot";
+import type { Bot, ComponentEmoji } from "@discordeno/bot";
 
-import type { DBUser } from "./user.js";
 import { getSettingsValue } from "../../bot/settings.js";
+import type { DBEnvironment } from "./mod.js";
 
 export interface LoadingIndicator {
     /* Name of the loading indicator */
@@ -43,8 +43,8 @@ export const LOADING_INDICATORS: LoadingIndicator[] = [
 	}
 ];
 
-export function getLoadingIndicatorFromUser(user: DBUser) {
-	const id: string = getSettingsValue(user, "general:loading_indicator");
+export function getLoadingIndicatorFromUser(bot: Bot, env: DBEnvironment) {
+	const id: string = getSettingsValue(bot, env, "user", "general:loading_indicator");
 	return LOADING_INDICATORS.find(i => i.emoji.id.toString() === id)!;
 }
 

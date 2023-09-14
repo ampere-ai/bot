@@ -1,4 +1,4 @@
-import { ActionRow, ButtonComponent, ButtonStyles, MessageComponentTypes, SelectMenuComponent, SelectOption } from "@discordeno/bot";
+import { ActionRow, Bot, ButtonComponent, ButtonStyles, MessageComponentTypes, SelectMenuComponent, SelectOption } from "@discordeno/bot";
 import { randomUUID } from "crypto";
 
 import { SettingsCategory, SettingsLocation, SettingsOption, SettingsOptionType } from "./types/settings.js";
@@ -199,13 +199,21 @@ function getOption(key: string): SettingsOption {
 	return option;
 }
 
-export function getSettingsValue<T = string | number | boolean>(entry: DBGuild | DBUser, key: string): T {
-	const value = entry.settings[key] as T;
+export function getSettingsValue<T = string | number | boolean>(
+	bot: Bot, env: DBEnvironment, location: "guild" | "user", key: string
+): T {
+	const value = env[location]!.settings[key] as T;
 	const option = getOption(key);
 
 	/* If no option is selected & it's optional, return null. */
 	if (option.type === SettingsOptionType.Choices) {
 		if (value === "none") return null as T;
+	}
+
+	/* If the option is a select menu & the user doesn't have the permission to use the current choice, reset it. */
+	if (option.type === SettingsOptionType.Choices) {
+		const choice = option.choices.find(c => c.value === value) ?? null;
+		if (choice?.restrictions && !canUse(bot, env, choice.restrictions)) return option.default;
 	}
 	
 	return value ?? option.default;
@@ -235,7 +243,7 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 
 		return void await interaction.update(
 			buildSettingsPage(
-				location, newCategory, entry
+				bot, location, newCategory, env
 			)
 		);
 
@@ -247,7 +255,7 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 
 		const key = categoryOptionKey(category, option);
 
-		const currentValue = getSettingsValue(entry, key);
+		const currentValue = getSettingsValue(bot, env, "user", key);
 		let newValue: string | number | boolean | string[] | null = null;
 
 		if (option.type === SettingsOptionType.Boolean) {
@@ -306,32 +314,32 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 	/* View a specific settings category */
 	} else if (action === "view") {
 		return void await interaction.reply(
-			buildSettingsPage(location, category, entry)
+			buildSettingsPage(bot, location, category, env)
 		);
 	}
 
 	await interaction.update(
-		buildSettingsPage(location, category, entry)
+		buildSettingsPage(bot, location, category, env)
 	);
 }
 
 export function buildSettingsPage(
-	location: SettingsLocation, category: SettingsCategory, entry: DBUser | DBGuild
+	bot: Bot, location: SettingsLocation, category: SettingsCategory, env: DBEnvironment
 ): MessageResponse {
 	const rows: ActionRow[] = [];
 
 	for (const option of category.options.filter(
 		o => o.location && o.location !== SettingsLocation.Both ? o.location === location : true
 	)) {
-		const value = getSettingsValue(entry, categoryOptionKey(category, option));
+		const value = getSettingsValue(
+			bot, env, location === SettingsLocation.Guild ? "guild" : "user", categoryOptionKey(category, option)
+		);
+
 		rows.push(buildOption(location, category, option, value));
 	}
 
 	rows.push(buildPageSwitcher(location, category));
-
-	return {
-		components: rows, ephemeral: true
-	};
+	return { components: rows, ephemeral: true };
 }
 
 function buildOption(

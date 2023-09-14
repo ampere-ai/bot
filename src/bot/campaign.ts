@@ -14,8 +14,8 @@ const counters = new Map<string, number>();
 const COUNTER_LIMITS: Record<DBUserType, number | null> = {
 	plan: null,
 	subscription: null,
-	voter: 15,
-	user: 10
+	voter: 10,
+	user: 5
 };
 
 /** List of all database campaigns */

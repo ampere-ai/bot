@@ -1,4 +1,5 @@
 import RabbitMQ from "rabbitmq-client";
+import { Bot } from "@discordeno/bot";
 
 import type { CollectionName, DBEnvironment, DBObject, DBRequestAll, DBRequestCount, DBRequestData, DBRequestFetch, DBRequestGet, DBRequestType, DBRequestUpdate, DBResponse, DBType } from "../db/types/mod.js";
 import type { DBGuild } from "../db/types/guild.js";
@@ -8,7 +9,7 @@ import { getSettingsValue } from "./settings.js";
 import { RABBITMQ_URI } from "../config.js";
 import { VOTE_DURATION } from "./vote.js";
 
-export async function createDB() {
+export async function createDB(bot: Bot) {
 	const connection = new RabbitMQ.Connection(RABBITMQ_URI);
 
 	const rpc = connection.createRPCClient({
@@ -66,11 +67,11 @@ export async function createDB() {
 
 	const premium = (env: DBEnvironment): { type: "subscription" | "plan", location: "guild" | "user" } | null => {
 		/* In which order to use the plans in */
-		const locationPriority: "guild" | "user" = getSettingsValue(env.user, "premium:location_priority");
+		const locationPriority: "guild" | "user" = getSettingsValue(bot, env, "user", "premium:location_priority");
 
 		/* Whether to prefer the Premium of the guild or user itself */
 		const typePriority: "plan" | "subscription" = getSettingsValue(
-			env.guild ? env[locationPriority]! : env.user, "premium:type_priority"
+			bot, env, env.guild ? locationPriority : "user", "premium:type_priority"
 		);
 
 		const checks: Record<typeof typePriority, (entry: DBGuild | DBUser) => boolean> = {

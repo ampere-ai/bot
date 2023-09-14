@@ -16,7 +16,7 @@ import { createDB } from "./db.js";
 
 async function customizeBot(bot: Bot) {
 	bot.logger = createLogger({ name: "[BOT]" });
-	bot.db = await createDB();
+	bot.db = await createDB(bot);
 	bot.api = createAPI();
 	bot.rabbitmq = new RabbitMQ.Connection(RABBITMQ_URI);
 

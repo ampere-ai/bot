@@ -1,4 +1,4 @@
-import { SettingsCategories, buildSettingsPage, whichEntry } from "../settings.js";
+import { SettingsCategories, buildSettingsPage } from "../settings.js";
 import { SettingsLocation } from "../types/settings.js";
 import { ResponseError } from "../errors/response.js";
 import { createCommand } from "../helpers/command.js";
@@ -16,7 +16,7 @@ export default createCommand({
 		}
 	},
 
-	handler: async ({ interaction, sub, env }) => {
+	handler: async ({ bot, interaction, sub, env }) => {
 		const location = sub === "me" ? SettingsLocation.User : SettingsLocation.Guild;
 
 		if (location === SettingsLocation.Guild && !env.guild) throw new ResponseError({
@@ -30,7 +30,7 @@ export default createCommand({
 		});
 
 		return buildSettingsPage(
-			location, SettingsCategories[0], whichEntry(location, env)
+			bot, location, SettingsCategories[0], env
 		);
 	}
 });

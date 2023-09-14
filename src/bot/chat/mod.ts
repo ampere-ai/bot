@@ -75,10 +75,10 @@ export async function handleMessage(bot: Bot, message: Message) {
 	);
 
 	/* User's loading indicator */
-	const indicator = getLoadingIndicatorFromUser(env.user);
+	const indicator = getLoadingIndicatorFromUser(bot, env);
 
-	const model = getModel(env);
-	const tone = getTone(env);
+	const model = getModel(bot, env);
+	const tone = getTone(bot, env);
 
 	/* Event emitter, to receive partial results */
 	const emitter = new Emitter<ConversationResult>();
@@ -116,7 +116,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 	};
 
 	/* Whether partial messages should be enabled */
-	const partial = getSettingsValue<boolean>(env.user, "chat:partial_messages");
+	const partial = getSettingsValue<boolean>(bot, env, "user", "chat:partial_messages");
 	if (partial) emitter.on(handler);
 
 	const moderation = await moderate({
@@ -248,7 +248,7 @@ async function format(
 		message: Message, result: ConversationResult
 	}
 ) {
-	const indicator = getLoadingIndicatorFromUser(env.user);
+	const indicator = getLoadingIndicatorFromUser(bot, env);
 	const emoji = loadingIndicatorToString(indicator);
 
 	const response: MessageResponse = {};
@@ -336,13 +336,13 @@ export async function resetConversation(bot: Bot, env: DBEnvironment) {
 	});
 }
 
-function getModel(env: DBEnvironment) {
-	const id: string = getSettingsValue(env.user, "chat:model");
+function getModel(bot: Bot, env: DBEnvironment) {
+	const id: string = getSettingsValue(bot, env, "user", "chat:model");
 	return CHAT_MODELS.find(m => m.id === id) ?? CHAT_MODELS[0];
 }
 
-function getTone(env: DBEnvironment) {
-	const id: string = getSettingsValue(env.user, "chat:tone");
+function getTone(bot: Bot, env: DBEnvironment) {
+	const id: string = getSettingsValue(bot, env, "user", "chat:tone");
 	return TONES.find(t => t.id === id) ?? TONES[0];
 }
 

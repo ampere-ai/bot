@@ -4,9 +4,9 @@ import type { RestrictionName } from "../utils/restriction.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
 export enum SettingsLocation {
-	Guild = "g",
-	User = "u",
-	Both = "b"
+	Guild = "guild",
+	User = "user",
+	Both = "both"
 }
 
 export enum SettingsOptionType {
