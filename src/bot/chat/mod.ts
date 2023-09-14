@@ -251,7 +251,11 @@ async function format(
 	const indicator = getLoadingIndicatorFromUser(bot, env);
 	const emoji = loadingIndicatorToString(indicator);
 
-	const response: MessageResponse = {};
+	const response: MessageResponse = {
+		/* Disable @everyone and @here pings. */
+		mentions: { parse: [] }
+	};
+
 	let content = result.message.content.trim();
 
 	const components: ActionRow[] = [];

@@ -1,5 +1,5 @@
 import {
-	MessageFlags, type ActionRow, type CreateMessageOptions, type EditMessage, type Embed, type InteractionCallbackData, type Message
+	MessageFlags, type ActionRow, type CreateMessageOptions, type EditMessage, type Embed, type InteractionCallbackData, type Message, AllowedMentions
 } from "@discordeno/bot";
 
 export interface MessageResponse {
@@ -23,6 +23,9 @@ export interface MessageResponse {
 
     /** Whether the response should only be shown to the author */
     ephemeral?: boolean;
+
+	/** Mention settings */
+	mentions?: AllowedMentions;
 
     /** Message to reply to */
     reference?: Message;
@@ -84,6 +87,8 @@ export function transformResponse<T extends (CreateMessageOptions | EditMessage 
 				blob: new Blob([ Buffer.from(response.file.blob, "base64") ])
 			}
 		] : undefined,
+
+		allowedMentions: response.mentions,
 
 		messageReference: response.reference ? {
 			failIfNotExists: false,
