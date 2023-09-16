@@ -14,9 +14,6 @@ import { USER_LANGUAGES } from "../db/types/language.js";
 import { CHAT_MODELS } from "./chat/models/mod.js";
 import { resetConversation } from "./chat/mod.js";
 import { IMAGE_MODELS } from "./image/models.js";
-import { IMAGE_STYLES } from "./image/styles.js";
-import { TONES } from "./chat/tones/mod.js";
-import { LOADING_INDICATORS } from "../db/types/indicator.js";
 
 export const SettingsCategories: SettingsCategory[] = [
 	{
@@ -37,15 +34,11 @@ export const SettingsCategories: SettingsCategory[] = [
 			},
 
 			{
-				name: "Loading indicator",
+				name: "Indicator",
 				description: "Which emoji to use throughout the bot to indicating loading",
-				emoji: "🔄", type: SettingsOptionType.Choices,
+				emoji: "🔄", type: SettingsOptionType.String,
+				hidden: true, default: "indicator-orb",
 				location: SettingsLocation.User,
-				default: LOADING_INDICATORS[0].emoji.id.toString(),
-				
-				choices: LOADING_INDICATORS.map(l => ({
-					name: l.name, emoji: l.emoji, value: l.emoji.id.toString()
-				}))
 			}
 		]
 	},
@@ -72,15 +65,11 @@ export const SettingsCategories: SettingsCategory[] = [
 			},
 
 			{
-				name: "Tone",
-				description: "Which tone the AI language model should have",
-				emoji: "😊", type: SettingsOptionType.Choices,
+				name: "Personality", emoji: "😊",
+				description: "How the AI language model should act",
+				type: SettingsOptionType.String,
 				location: SettingsLocation.User,
-				default: "neutral",
-				
-				choices: TONES.map(t => ({
-					name: t.name, description: t.description, emoji: t.emoji, value: t.id
-				})),
+				hidden: true, default: "personality-neutral",
 
 				handler: (bot, env) => {
 					return resetConversation(bot, env);
@@ -117,12 +106,8 @@ export const SettingsCategories: SettingsCategory[] = [
 				name: "Style", emoji: "🖌️",
 				description: "Which image style to use",
 				location: SettingsLocation.User,
-				type: SettingsOptionType.Choices,
-				optional: true, default: null,
-
-				choices: IMAGE_STYLES.map(m => ({
-					name: m.name, emoji: m.emoji, value: m.id
-				}))
+				type: SettingsOptionType.String,
+				default: "style-none", hidden: true
 			},
 		]
 	},
@@ -185,7 +170,7 @@ function categoryOptionKey(category: SettingsCategory, option: SettingsOption): 
 	return `${categoryKey(category)}:${optionKey(option)}`;
 }
 
-export function whichEntry(location: SettingsLocation, env: DBEnvironment) {
+export function whichEntry(location: SettingsLocation, env: DBEnvironment): DBUser | DBGuild {
 	return location === SettingsLocation.Guild
 		? env.guild! : env.user;
 }
@@ -197,6 +182,21 @@ function getOption(key: string): SettingsOption {
 	const option = category.options.find(o => optionKey(o) === optionName)!;
 
 	return option;
+}
+
+export function updateSettings<T extends DBUser | DBGuild>(
+	bot: Bot, env: DBEnvironment, location: "guild" | "user", changes: Record<string, any>
+): Promise<T> {
+	for (const [key, value] of Object.entries(changes)) {
+		const option = getOption(key);
+
+		/** FIXME: Why do I have to cast it to 'never'?? */
+		if (option.handler) option.handler(bot, env, value as never);
+	}
+	
+	return bot.db.update<any>(`${location}s`, env[location]!, {
+		settings: { ...env.user.settings, ...changes }
+	});
 }
 
 export function getSettingsValue<T = string | number | boolean>(
@@ -225,9 +225,6 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 
 	const categoryName = args.shift()!;
 	const category = SettingsCategories.find(c => categoryKey(c) === categoryName)!;
-
-	let entry = whichEntry(location, env);
-	const settings = entry.settings;
 
 	/* Change the page */
 	if (action === "page") {
@@ -260,6 +257,10 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 
 		if (option.type === SettingsOptionType.Boolean) {
 			newValue = !currentValue;
+
+		} else if (option.type === SettingsOptionType.String) {
+			/** TODO: Implement */
+			newValue = "";
 
 		} else if (option.type === SettingsOptionType.Choices) {
 			const choice = option.choices.find(c => c.value === newValue) ?? null;
@@ -298,17 +299,10 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 			}
 		}
 
-		if (newValue !== null) {
-			settings[key] = newValue;
-
-			entry = await bot.db.update<DBGuild | DBUser>(
-				location === SettingsLocation.Guild ? "guilds" : "users", entry,
-				{ settings: { ...settings, [key]: newValue } }
-			);
-
-			if (option.handler) await option.handler(
-				bot, env, newValue as any
-			);
+		if (newValue !== null && location !== SettingsLocation.Both) {
+			env[location] = await updateSettings(bot, env, location, {
+				[key]: newValue
+			});
 		}
 
 	/* View a specific settings category */
@@ -335,7 +329,7 @@ export function buildSettingsPage(
 			bot, env, location === SettingsLocation.Guild ? "guild" : "user", categoryOptionKey(category, option)
 		);
 
-		rows.push(buildOption(location, category, option, value));
+		if (!option.hidden) rows.push(buildOption(location, category, option, value));
 	}
 
 	rows.push(buildPageSwitcher(location, category));
@@ -406,26 +400,25 @@ function buildPageSwitcher(location: SettingsLocation, category: SettingsCategor
 	const components: [ ButtonComponent, ButtonComponent, ButtonComponent ] = [
 		{
 			type: MessageComponentTypes.Button,
-			label: undefined!, emoji: { name: "◀️" },
-			style: ButtonStyles.Secondary,
+			style: ButtonStyles.Secondary, emoji: { name: "◀️" },
 			customId: `settings:page:${location}:${categoryKey(category)}:-1`,
 			disabled: currentIndex - 1 < 0
 		},
 
 		{
 			type: MessageComponentTypes.Button,
-			label: category.name, emoji: typeof category.emoji === "string" ? { name: category.emoji } : category.emoji,
+			label: category.name,
 			style: ButtonStyles.Success,
+			emoji: typeof category.emoji === "string" ? { name: category.emoji } : category.emoji,
 			customId: `settings:current:${location}:${categoryKey(category)}`
 		},
 
 		{
 			type: MessageComponentTypes.Button,
-			label: undefined!, emoji: { name: "▶️" },
-			style: ButtonStyles.Secondary,
+			style: ButtonStyles.Secondary, emoji: { name: "▶️" },
 			customId: `settings:page:${location}:${categoryKey(category)}:1`,
-			disabled:  currentIndex + 1 > SettingsCategories.length - 1
-		},
+			disabled: currentIndex + 1 > SettingsCategories.length - 1
+		}
 	];
 
 	return {

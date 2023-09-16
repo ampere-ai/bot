@@ -2,28 +2,28 @@ import { ApplicationCommandOptionTypes, DiscordEmbedField, MessageComponentTypes
 import { ActionRow, Bot, ButtonStyles, Interaction } from "@discordeno/bot";
 
 import type { ImageGenerationAction, ImageModel, ImagePrompt, ImageSampler, ImageGenerationOptions, ImageGenerationSize } from "../types/image.js";
+import type { MarketplaceIndicator, MarketplaceStyle } from "../../db/types/marketplace.js";
 import type { InteractionHandlerOptions } from "../types/interaction.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 import type { DBImage } from "../../db/types/image.js";
 
-import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/indicator.js";
 import { findBestSize, generate, interrogate, validRatio } from "../image/mod.js";
 import { type ImageGenerationResult, IMAGE_SAMPLERS } from "../types/image.js";
+import { getMarketplaceEntry, getMarketplaceSetting } from "../marketplace.js";
 import { EmbedColor, MessageResponse } from "../utils/response.js";
 import { moderate, moderationNotice } from "../moderation/mod.js";
 import { ModerationSource } from "../moderation/types/mod.js";
+import { emojiToString, truncate } from "../utils/helpers.js";
 import { ResponseError } from "../errors/response.js";
 import { createCommand } from "../helpers/command.js";
 import { handleError } from "../moderation/error.js";
+import { pickAdvertisement } from "../campaign.js";
 import { getSettingsValue } from "../settings.js";
 import { IMAGE_MODELS } from "../image/models.js";
-import { IMAGE_STYLES } from "../image/styles.js";
 import { BRANDING_COLOR } from "../../config.js";
 import { mergeImages } from "../utils/merge.js";
-import { truncate } from "../utils/helpers.js";
 import { Emitter } from "../utils/event.js";
 import { charge } from "../premium.js";
-import { pickAdvertisement } from "../campaign.js";
 
 interface ImageStartOptions {
 	bot: Bot;
@@ -84,15 +84,6 @@ export default createCommand({
 			}))
 		},
 
-		style: {
-			type: ApplicationCommandOptionTypes.String,
-			description: "Which style to use",
-
-			choices: IMAGE_STYLES.map(s => ({
-				name: `${s.emoji} ${s.name}`, value: s.id
-			}))
-		},
-
 		negative: {
 			type: ApplicationCommandOptionTypes.String,
 			description: "Things to *not include in the generated images",
@@ -147,8 +138,7 @@ export default createCommand({
 		const model = IMAGE_MODELS.find(m => m.id === modelID)!;
 	
 		/* Which style to apply additionally */
-		const styleID: string | null = options.style ?? getSettingsValue(bot, env, "user", "image:style");
-		const style = styleID !== null ? IMAGE_STYLES.find(s => s.id === styleID)! : null;
+		const style: MarketplaceStyle | null = await getMarketplaceSetting(bot, env, "style");
 
 		if (model.settings?.forcedSize && ratio !== "1:1") throw new ResponseError({
 			message: `**${model.name}** has a fixed resolution of \`${model.settings.forcedSize.width}×${model.settings.forcedSize.height}\`; *you cannot modify the aspect ratio*`
@@ -271,11 +261,11 @@ async function start(options: ImageStartOptions) {
 		? findBestSize(ratio, model) : model.settings.forcedSize;
 
 	/* The image generation style to apply additionally */
-	const style = IMAGE_STYLES.find(s => s.id === prompt.style) ?? null;
+	const style = prompt.style ? await getMarketplaceSetting<MarketplaceStyle>(bot, env, "style") : null;
 
 	/* The formatted prompt, to pass to the API */
 	let formattedPrompt = prompt.prompt;
-	if (style && style.tags) formattedPrompt += `, ${style.tags.join(", ")}`;
+	if (style && style.data.tags) formattedPrompt += `, ${style.data.tags.join(", ")}`;
 
 	/* Just why... */
 	await interaction.reply(
@@ -365,8 +355,9 @@ async function formatResult(options: ImageFormatOptions & ImageStartOptions): Pr
 	const { bot, action, env, interaction, prompt, result, size } = options;
 
 	if (!result.done) {
-		const indicator = getLoadingIndicatorFromUser(bot, env);
-		const emoji = loadingIndicatorToString(indicator);
+		const emoji = emojiToString((
+			await getMarketplaceSetting<MarketplaceIndicator>(bot, env, "indicator")
+		).data);
 
 		return { embeds: {
 			title: displayPrompt({ action, interaction, prompt }),
@@ -383,7 +374,7 @@ async function formatResult(options: ImageFormatOptions & ImageStartOptions): Pr
 		embeds: {
 			title: displayPrompt({ action, interaction, prompt }),
 			image: { url: `attachment://${result.id}.png`, ...size },
-			fields: displayFields(options),
+			fields: await displayFields(options),
 			color: BRANDING_COLOR
 		},
 
@@ -445,7 +436,7 @@ function buildActionButtons({ action, result: { id, results } }: ImageToolbarOpt
 	return rows;
 }
 
-function displayFields(options: ImageStartOptions): DiscordEmbedField[] {
+async function displayFields(options: ImageStartOptions) {
 	const fields: Omit<DiscordEmbedField, "inline">[] = [];
 	fields.push({ name: "Model", value: options.model.name });
 
@@ -469,7 +460,7 @@ function displayFields(options: ImageStartOptions): DiscordEmbedField[] {
 	});
 
 	if (options.prompt.style) {
-		const style = IMAGE_STYLES.find(s => s.id === options.prompt.style)!;
+		const style = await getMarketplaceEntry<MarketplaceStyle>(options.bot, options.prompt.style);
 		fields.push({ name: "Style", value: `${style.name} ${style.emoji}` });
 	}
 

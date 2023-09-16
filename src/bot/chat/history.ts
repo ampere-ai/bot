@@ -4,9 +4,9 @@ import { get_encoding } from "@dqbd/tiktoken";
 const encoder = get_encoding("cl100k_base");
 
 import type { Conversation, ConversationMessage, ConversationUserMessage } from "../types/conversation.js";
+import type { MarketplacePersonality } from "../../db/types/marketplace.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 import type { ChatModel } from "./models/mod.js";
-import type { ChatTone } from "./tones/mod.js";
 
 import { ChatError, ChatErrorType } from "../errors/chat.js";
 
@@ -15,7 +15,7 @@ interface BuildHistoryOptions {
 	conversation: Conversation;
 	input: ConversationUserMessage;
 	model: ChatModel;
-	tone: ChatTone;
+	personality: MarketplacePersonality;
 	env: DBEnvironment;
 }
 
@@ -46,7 +46,7 @@ const MAX_LENGTH = {
 	}
 };
 
-export function buildHistory({ bot, env, model, tone, conversation, input }: BuildHistoryOptions): HistoryData {
+export function buildHistory({ bot, env, model, personality, conversation, input }: BuildHistoryOptions): HistoryData {
 	let messages: ConversationMessage[] = [];
 	let tokens = 0;
 
@@ -69,9 +69,14 @@ export function buildHistory({ bot, env, model, tone, conversation, input }: Bui
 			else messages.push(model.initialPrompt);
 		}
 
-		if (tone.prompt) {
-			if (Array.isArray(tone.prompt)) messages.push(...tone.prompt);
-			else messages.push(tone.prompt);
+		if (personality.data.prompt) {
+			if (Array.isArray(personality.data.prompt)) messages.push(...personality.data.prompt.map<ConversationMessage>(prompt => (
+				{ role: "system", content: prompt }
+			)));
+			
+			else messages.push({
+				role: "system", content: personality.data.prompt
+			});
 		}
 
 		/** Add the conversation's history. */

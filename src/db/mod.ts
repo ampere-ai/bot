@@ -143,7 +143,7 @@ async function all<T extends DBObject = DBObject>(collection: CollectionName): P
 
 async function count(collection: CollectionName): Promise<number> {
 	const { count } = await db.from(collection)
-		.select("*", { count: "exact" });
+		.select("*", { count: "planned" });
 
 	if (count === null) throw new Error("Something went wrong");
 	return count;

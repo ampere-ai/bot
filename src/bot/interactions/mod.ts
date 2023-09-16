@@ -7,6 +7,7 @@ import { ResponseError } from "../errors/response.js";
 import { handleError } from "../moderation/error.js";
 import { EmbedColor } from "../utils/response.js";
 
+import marketplace from "./marketplace.js";
 import moderation from "./moderation.js";
 import settings from "./settings.js";
 import campaign from "./campaign.js";
@@ -14,7 +15,7 @@ import premium from "./premium.js";
 import imagine from "./imagine.js";
 
 export const HANDLERS: InteractionHandler[] = [
-	settings, premium, campaign, imagine, moderation
+	settings, premium, campaign, imagine, moderation, marketplace
 ];
 
 export const INTERACTION_SEP = ":";

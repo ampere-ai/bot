@@ -13,6 +13,9 @@ export enum SettingsOptionType {
     /** Simple true-false value */
     Boolean,
 
+	/** Users can enter an arbitrary string in a modal menu */
+	String,
+
     /** Users can choose one option from a list */
     Choices,
 
@@ -39,7 +42,7 @@ export interface SettingsOptionChoice<T> {
 	value: T;
 }
 
-export type SettingsOption<T extends string | number | boolean = any> = BooleanSettingsOption | ChoiceSettingsOption<T> | MultipleChoiceSettingsOption<T>
+export type SettingsOption<T extends string  = any> = BooleanSettingsOption | StringSettingsOption | ChoiceSettingsOption<T> | MultipleChoiceSettingsOption<T>
 
 interface BaseSettingsOption<T> {
     /** Name of the settings option */
@@ -60,6 +63,12 @@ interface BaseSettingsOption<T> {
     /** Handler to execute when this setting is changed */
     handler?: (bot: Bot, env: DBEnvironment, value: T) => Promise<void> | void;
 
+	/** Whether this option is not required */
+	optional?: boolean;
+
+	/** Whether this option is hidden from the user & only used internally */
+	hidden?: boolean;
+
     /** Default value of this settings option */
     default: T;
 }
@@ -68,11 +77,16 @@ type BooleanSettingsOption = BaseSettingsOption<boolean> & {
 	type: SettingsOptionType.Boolean;
 }
 
+type StringSettingsOption = BaseSettingsOption<string> & {
+	type: SettingsOptionType.String;
+
+	/* Minimum & maximum length of the string */
+	minLength?: number;
+	maxLength?: number;
+}
+
 type ChoiceSettingsOption<T> = BaseSettingsOption<T | null> & {
 	type: SettingsOptionType.Choices;
-
-	/** Whether this choice is optional */
-	optional?: boolean;
 
 	/** Choices for the option */
 	choices: SettingsOptionChoice<T>[];
@@ -85,8 +99,8 @@ type MultipleChoiceSettingsOption<T> = BaseSettingsOption<T> & {
 	choices: SettingsOptionChoice<T>[];
 
 	/* Minimum & maximum of options to pick */
-	min: number;
-	max: number;
+	min?: number;
+	max?: number;
 }
 
 export interface SettingsCategory {

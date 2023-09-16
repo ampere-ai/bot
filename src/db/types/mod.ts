@@ -5,8 +5,8 @@ import type { DBGuild } from "./guild.js";
 import type { DBImage } from "./image.js";
 import type { DBUser } from "./user.js";
 
-export type CollectionName = "users" | "guilds" | "conversations" | "campaigns" | "datasets";
-export const CollectionNames: CollectionName[] = [ "users", "guilds", "conversations", "campaigns", "datasets" ];
+export type CollectionName = "users" | "guilds" | "conversations" | "campaigns" | "datasets" | "marketplace";
+export const CollectionNames: CollectionName[] = [ "users", "guilds", "conversations", "campaigns", "datasets", "marketplace" ];
 
 export type DBType = DBUser | DBGuild | Conversation | DBImage | DBCampaign | DBDatasetEntry;
 

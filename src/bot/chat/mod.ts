@@ -1,22 +1,23 @@
-import type { ActionRow, Bot, Message } from "@discordeno/bot";
+import type { ActionRow, Bot, ComponentEmoji, Message } from "@discordeno/bot";
 
 import { type ButtonComponent, MessageComponentTypes, ButtonStyles, Embed } from "@discordeno/bot";
 import { setTimeout as delay } from "timers/promises";
 import { randomUUID } from "crypto";
 
 import type { Conversation, ConversationResult, ConversationUserMessage } from "../types/conversation.js";
+import { MarketplaceIndicator, type MarketplacePersonality } from "../../db/types/marketplace.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
-import { getLoadingIndicatorFromUser, loadingIndicatorToString } from "../../db/types/indicator.js";
 import { infractionNotice, isBanned, moderate, moderationNotice } from "../moderation/mod.js";
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../utils/cooldown.js";
 import { transformResponse, type MessageResponse, EmbedColor } from "../utils/response.js";
 import { CHAT_MODELS, type ChatModel, type ChatModelResult } from "./models/mod.js";
 import { ModerationSource } from "../moderation/types/mod.js";
+import { getMarketplaceSetting } from "../marketplace.js";
 import { SettingsLocation } from "../types/settings.js";
-import { TONES, type ChatTone } from "./tones/mod.js";
 import { ResponseError } from "../errors/response.js";
 import { handleError } from "../moderation/error.js";
+import { emojiToString } from "../utils/helpers.js";
 import { pickAdvertisement } from "../campaign.js";
 import { getSettingsValue } from "../settings.js";
 import { buildHistory } from "./history.js";
@@ -28,7 +29,7 @@ interface ExecuteOptions {
 	conversation: Conversation;
 	input: ConversationUserMessage;
 	model: ChatModel;
-	tone: ChatTone;
+	personality: MarketplacePersonality;
 	env: DBEnvironment;
 	emitter: Emitter<ConversationResult>;
 }
@@ -75,10 +76,12 @@ export async function handleMessage(bot: Bot, message: Message) {
 	);
 
 	/* User's loading indicator */
-	const indicator = getLoadingIndicatorFromUser(bot, env);
+	const indicator = (
+		await getMarketplaceSetting<MarketplaceIndicator>(bot, env, "indicator")
+	).data;
 
+	const personality: MarketplacePersonality = await getMarketplaceSetting(bot, env, "personality");
 	const model = getModel(bot, env);
-	const tone = getTone(bot, env);
 
 	/* Event emitter, to receive partial results */
 	const emitter = new Emitter<ConversationResult>();
@@ -96,7 +99,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 				queued = true;
 
 				const reply = await message.reply(
-					await format({ bot, message, env, model, tone, result })
+					await format({ env, model, personality, indicator, result })
 				);
 
 				messageID = reply.id;
@@ -106,7 +109,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 					message.channelId, messageID,
 					
 					transformResponse(await format({
-						bot, message, env, model, tone, result
+						env, model, personality, indicator, result
 					}))
 				);
 			}
@@ -135,12 +138,12 @@ export async function handleMessage(bot: Bot, message: Message) {
 			bot.helpers.triggerTypingIndicator(message.channelId),
 
 			bot.helpers.addReaction(
-				message.channelId, message.id, `${indicator.emoji.name}:${indicator.emoji.id}`
+				message.channelId, message.id, `${indicator.name}:${indicator.id}`
 			)
 		]);
 
 		const result = await execute({
-			bot, conversation, emitter, env, input, model, tone
+			bot, conversation, emitter, env, input, model, personality
 		});
 
 		/* Wait for the queued message to send. */
@@ -153,12 +156,12 @@ export async function handleMessage(bot: Bot, message: Message) {
 				message.channelId, messageID,
 				
 				transformResponse(await format({
-					bot, message, env, model, tone, result
+					env, model, personality, indicator, result
 				}))
 			);
 		} else {
 			await message.reply(
-				await format({ bot, message, env, model, tone, result })
+				await format({ env, model, personality, indicator, result })
 			);
 		} 
 
@@ -171,7 +174,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 		
 	} finally {
 		await bot.helpers.deleteOwnReaction(
-			message.channelId, message.id, `${indicator.emoji.name}:${indicator.emoji.id}`
+			message.channelId, message.id, `${indicator.name}:${indicator.id}`
 		).catch(() => {});
 
 		runningGenerations.delete(message.author.id);
@@ -226,8 +229,7 @@ async function execute(options: ExecuteOptions): Promise<ConversationResult> {
 	/* Charge the user accordingly, if they're using the pay-as-you-go plan. */
 	await charge(bot, env, {
 		type: "chat", used: result.cost ?? 0, data: {
-			model: options.model.id,
-			tone: options.tone.id
+			model: options.model.id
 		}
 	});
 
@@ -244,16 +246,14 @@ function formatResult(result: ChatModelResult, id: string): ConversationResult {
 
 /** Format the chat model's response to be displayed nicely on Discord. */
 async function format(
-	{ bot, message, env, result, model, tone }: Pick<ExecuteOptions, "bot" | "env" | "model" | "tone"> & {
-		message: Message, result: ConversationResult
+	{ env, result, model, personality, indicator }: Pick<ExecuteOptions, "env" | "model" | "personality"> & {
+		result: ConversationResult;
+		indicator: ComponentEmoji;
 	}
 ) {
-	const indicator = getLoadingIndicatorFromUser(bot, env);
-	const emoji = loadingIndicatorToString(indicator);
-
 	const response: MessageResponse = {
 		/* Disable @everyone and @here pings. */
-		mentions: { parse: [] }
+		mentions: { parse: [],repliedUser: true }
 	};
 
 	let content = result.message.content.trim();
@@ -272,20 +272,12 @@ async function format(
 			style: ButtonStyles.Secondary
 		});
 
-		if (tone.id !== TONES[0].id) buttons.push({
+		buttons.push({
 			type: MessageComponentTypes.Button,
-			label: tone.name,
-			emoji: typeof tone.emoji === "string" ? { name: tone.emoji } : tone.emoji,
-			customId: `settings:view:${SettingsLocation.User}:chat:tone`,
+			label: personality.name,
+			emoji: typeof personality.emoji === "string" ? { name: personality.emoji } : personality.emoji,
+			customId: "market:category:personality",
 			style: ButtonStyles.Secondary
-		});
-
-		if (buttons.length < 2) buttons.push({
-			type: MessageComponentTypes.Button,
-			label: `@${message.author.username}`,
-			emoji: { name: bot.db.icon(env) },
-			style: ButtonStyles.Secondary, disabled: true,
-			customId: randomUUID()
 		});
 
 		const ad = await pickAdvertisement(env);
@@ -314,14 +306,14 @@ async function format(
 	if (embeds.length > 0) response.embeds = embeds;
 
 	/* Generated response, with the loading indicator */
-	const formatted = `${content} **...** ${emoji}`;
+	const formatted = `${content} **...** ${emojiToString(indicator)}`;
 
 	if (formatted.length > 2000) {
 		response.file = {
-			name: `${model.id}-${tone.id}-${Date.now()}.txt`, blob: Buffer.from(content).toString("base64")
+			name: `${model.id}-${Date.now()}.txt`, blob: Buffer.from(content).toString("base64")
 		};
 
-		response.content = !result.done ? emoji : "";
+		response.content = !result.done ? emojiToString(indicator) : "";
 	} else {
 		response.content = !result.done ? formatted : content;
 	}
@@ -342,11 +334,6 @@ export async function resetConversation(bot: Bot, env: DBEnvironment) {
 function getModel(bot: Bot, env: DBEnvironment) {
 	const id: string = getSettingsValue(bot, env, "user", "chat:model");
 	return CHAT_MODELS.find(m => m.id === id) ?? CHAT_MODELS[0];
-}
-
-function getTone(bot: Bot, env: DBEnvironment) {
-	const id: string = getSettingsValue(bot, env, "user", "chat:tone");
-	return TONES.find(t => t.id === id) ?? TONES[0];
 }
 
 /** Check whether the specified message pinged the bot. */

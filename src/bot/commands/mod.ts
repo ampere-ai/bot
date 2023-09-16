@@ -3,6 +3,7 @@ import type { Command } from "../types/command.js";
 
 import { MOD_GUILD_ID } from "../../config.js";
 
+import marketplace from "./marketplace.js";
 import translate from "./translate.js";
 import settings from "./settings.js";
 import pardon from "./mod/pardon.js";
@@ -21,7 +22,7 @@ import bot from "./bot.js";
 import { RestrictionName } from "../utils/restriction.js";
 
 export const COMMANDS: Command<any, any>[] = [
-	settings, reset, imagine, premium, info, bot, ban, pardon, warn, dev, roles, translate, vote
+	settings, reset, imagine, premium, info, bot, ban, pardon, warn, dev, roles, translate, vote, marketplace
 ];
 
 function transformCommand(command: Command) {

@@ -7,7 +7,6 @@ import type { DBGuild } from "../db/types/guild.js";
 import { DBRole, DBUserType, type DBUser } from "../db/types/user.js";
 import { getSettingsValue } from "./settings.js";
 import { RABBITMQ_URI } from "../config.js";
-import { VOTE_DURATION } from "./vote.js";
 
 export async function createDB(bot: Bot) {
 	const connection = new RabbitMQ.Connection(RABBITMQ_URI);
@@ -124,6 +123,8 @@ export async function createDB(bot: Bot) {
 			else if (p.type === "plan") types.push(DBUserType.PremiumPlan);
 		}
 
+		if (voted(env.user)) types.push(DBUserType.Voter);
+
 		types.push(DBUserType.User);
 		return types;
 	};
@@ -156,26 +157,6 @@ export async function createDB(bot: Bot) {
 
 		type: (env: DBEnvironment): DBUserType => {
 			return types(env)[0];
-		},
-
-		icon: (env: DBEnvironment) => {
-			if (env.user.roles.includes(DBRole.Moderator)) return "⚒️";
-			const p = premium(env);
-
-			if (p) {
-				if (p.type === "plan" && p.location === "user") return "📊";
-				if (p.type === "subscription" && p.location === "user") return "✨";
-				if (p.location === "guild") return "💫";
-			}
-
-			const votedAt = voted(env.user);
-
-			if (votedAt) {
-				if ((votedAt + VOTE_DURATION.asMilliseconds()) - Date.now() < 30 * 60 * 1000) return "📩";
-				else return "✉️";
-			}
-
-			return "👤";
 		}
 	};
 }
