@@ -13,6 +13,9 @@ import { CollectionNames, type CollectionName, type DBObject, type DBRequestData
 
 const logger = createLogger({ name: "[DB]" });
 
+/** Separator between collection and key, in Redis */
+const REDIS_KEY_SEP = ":";
+
 /** Collection templates */
 const CollectionTemplates: Partial<Record<CollectionName, (id: string) => DBObject>> = {
 	guilds: id => (({
@@ -78,8 +81,12 @@ async function setCache<T>(key: string, data: T) {
 	});
 }
 
+async function removeFromCache(key: string) {
+	await redis.keys(key);
+}
+
 function collectionKey(collection: CollectionName, id: string) {
-	return `${collection}:-:${id}`;
+	return `${collection}${REDIS_KEY_SEP}${id}`;
 }
 
 async function update<T extends DBObject = DBObject>(
@@ -134,6 +141,13 @@ async function fetch<T extends DBObject = DBObject>(collection: CollectionName, 
 	return template;
 }
 
+async function remove(collection: CollectionName, id: string): Promise<void> {
+	await db.from(collection)
+		.delete().eq("id", id);
+	
+	await removeFromCache(collectionKey(collection, id));
+}
+
 async function all<T extends DBObject = DBObject>(collection: CollectionName): Promise<T[]> {
 	const { data } = await db.from(collection)
 		.select("*");
@@ -145,7 +159,7 @@ async function count(collection: CollectionName): Promise<number> {
 	const { count } = await db.from(collection)
 		.select("*", { count: "planned" });
 
-	if (count === null) throw new Error("Something went wrong");
+	if (count === null) throw new Error("Couldn't get count");
 	return count;
 }
 
@@ -156,23 +170,28 @@ async function handleMessage(data: DBRequestData): Promise<any> {
 		return await fetch(data.collection, data.id);
 	} else if (data.type === "update") {
 		return await update(data.collection, data.id, data.updates);
+	} else if (data.type === "remove") {
+		return await remove(data.collection, data.id);
 	} else if (data.type === "all") {
 		return await all(data.collection);
 	} else if (data.type === "count") {
 		return await count(data.collection);
 	} else if (data.type === "clearCache") {
 		return await redis.flushAll();
+	} else if (data.type === "flush") {
+		return await workOnQueue();
 	}
 
 	throw new Error("Not implemented");
 }
+
 
 connection.createConsumer({
 	queue: "db"
 }, async (message, reply) => {
 	try {
 		const result = await handleMessage(message.body);
-		if (typeof result !== "undefined") await reply({ success: true, data: result });
+		await reply({ success: true, data: result ?? null });
 	} catch (error) {
 		logger.error(error);
 
@@ -196,8 +215,7 @@ async function workOnQueue() {
 			const id: string = entries[index][0];
 
 			const { error } = await db
-				.from(type)
-				.upsert(entry, { onConflict: "id" });
+				.from(type).upsert(entry, { onConflict: "id" });
 
 			if (error !== null) {
 				logger.error(`Failed to to save ${bold(id)} to collection ${bold(type)} ->`, error);

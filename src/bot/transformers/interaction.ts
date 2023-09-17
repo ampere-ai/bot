@@ -8,6 +8,15 @@ export default createTransformer<"interaction", Interaction, DiscordInteraction>
 	properties: null,
 
 	handler: (bot, interaction) => {
+		Object.defineProperty(interaction, "showModal", {
+			value: function(response: Pick<MessageResponse, "components">) {
+				return bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
+					type: InteractionResponseTypes.Modal,
+					data: response
+				});
+			}
+		});
+
 		Object.defineProperty(interaction, "reply", {
 			value: function(response: MessageResponse) {
 				return bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {

@@ -5,6 +5,6 @@ export function createCommand<
 	SubCommands extends Record<string, SubCommand> = Record<string, never>
 >(
 	command: Command<Options, SubCommands>
-): Command<Options, SubCommands> {
+) {
 	return command;
 }

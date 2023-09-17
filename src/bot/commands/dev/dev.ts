@@ -10,6 +10,10 @@ export default createCommand({
 	sub: {
 		refresh_cache: {
 			description: "Clear all cache entries in Redis & refresh loaded campaigns"
+		},
+
+		flush: {
+			description: "Save all queued database changes immediately"
 		}
 	},
 
@@ -17,6 +21,8 @@ export default createCommand({
 		if (sub === "refresh_cache") {
 			await bot.db.clearCache();
 			await fetchCampaigns();
+		} else if (sub === "flush") {
+			await bot.db.flush();
 		}
 
 		return {

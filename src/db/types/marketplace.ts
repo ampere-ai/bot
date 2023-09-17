@@ -2,36 +2,17 @@ import type { ComponentEmoji } from "@discordeno/bot";
 
 export type DBMarketplaceType = "personality" | "style" | "indicator";
 
-interface MarketplaceCategory {
-	/** Which type this category corresponds to */
-	type: DBMarketplaceType;
-
-	/** Display name of the category */
-	name?: string;
-
-	/** Which settings key this category corresponds to */
-	key: string;
-}
-
-export const MARKETPLACE_CATEGORIES: MarketplaceCategory[]  = [
-	{
-		type: "personality", key: "chat:personality"
-	},
-
-	{
-		type: "style", key: "image:style"
-	},
-
-	{
-		type: "indicator", name: "loading indicator", key: "general:indicator"
-	}
-];
-
 export interface DBMarketplaceStatus {
 	type: "approved" | "pending" | "rejected";
+	visibility: "public" | "private";
 }
 
-export interface DBMarketplaceEntry<T = object> {
+export interface DBMarketplaceStatistics {
+	/** How many times this marketplace entry has been used */
+	uses: number;
+}
+
+export interface DBMarketplaceEntry<T = Record<string, any>> {
 	/** Uniuqe ID of the entry */
 	id: string;
 
@@ -55,6 +36,9 @@ export interface DBMarketplaceEntry<T = object> {
 
 	/** Current moderation status of the entry */
 	status: DBMarketplaceStatus;
+
+	/** Statistics of this marketplace entry */
+	stats: DBMarketplaceStatistics;
 
 	/** Various data about the entry */
 	data: T;

@@ -3,7 +3,7 @@ import { MessageComponentTypes, ButtonStyles, type ActionRow, type Embed, Button
 import type { CampaignDisplay, CampaignRender, DBCampaign } from "../db/types/campaign.js";
 import type { DBEnvironment } from "../db/types/mod.js";
 
-import { DBRole, DBUserType } from "../db/types/user.js";
+import { DBUserType } from "../db/types/user.js";
 import { EmbedColor } from "./utils/response.js";
 import { bot } from "./mod.js";
 
@@ -33,7 +33,7 @@ export function getCampaign(id: string) {
 /** Pick a random campaign to display, increment its views & format it accordingly. */
 export async function pickAdvertisement(env: DBEnvironment): Promise<CampaignDisplay | null> {
 	/* Type of the user, e.g. "voter" or just "user" */
-	const type = env.user.roles.includes(DBRole.Owner) ? "user" : bot.db.type(env);
+	const type = bot.db.type(env);
 	if (COUNTER_LIMITS[type] === null) return null;
 
 	/* Current advertisement counter */

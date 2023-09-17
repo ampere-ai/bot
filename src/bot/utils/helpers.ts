@@ -14,9 +14,14 @@ export function truncate(content: string, length: number, suffix = "...") {
 		: content;
 }
 
-
-
 export function emojiToString(emoji: ComponentEmoji) {
 	if (!emoji.id) return emoji.name;
 	return `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`;
+}
+
+export function stringToEmoji(content: string): ComponentEmoji {
+	/* TODO: Actually implement */
+	return {
+		name: content
+	};
 }

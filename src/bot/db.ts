@@ -64,6 +64,10 @@ export async function createDB(bot: Bot) {
 		await execute("clearCache");
 	};
 
+	const flush = async (): Promise<void> => {
+		await execute("flush");
+	};
+
 	const premium = (env: DBEnvironment): { type: "subscription" | "plan", location: "guild" | "user" } | null => {
 		/* In which order to use the plans in */
 		const locationPriority: "guild" | "user" = getSettingsValue(bot, env, "user", "premium:location_priority");
@@ -77,8 +81,7 @@ export async function createDB(bot: Bot) {
 			subscription: entry => {
 				/* Give all moderators access to Premium. */
 				if (
-					(entry as DBUser).voted !== undefined
-					&& (entry as DBUser).roles.includes(DBRole.Moderator)
+					(entry as DBUser).roles && (entry as DBUser).roles.includes(DBRole.Moderator)
 				) return true;
 
 				return entry.subscription !== null && Date.now() < entry.subscription.expires;
@@ -130,7 +133,7 @@ export async function createDB(bot: Bot) {
 	};
 
 	return { 
-		rpc, execute, get, fetch, update, premium, voted, types, all, count, clearCache,
+		rpc, execute, get, fetch, update, premium, voted, types, all, count, clearCache, flush,
 
 		env: async (user: bigint, guild?: bigint): Promise<DBEnvironment> => {
 			const data: Partial<DBEnvironment> = {};

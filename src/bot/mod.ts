@@ -1,8 +1,8 @@
-import { type Bot, createBot, createRestManager } from "@discordeno/bot";
+import { type Bot, createBot } from "@discordeno/bot";
 import { createLogger } from "@discordeno/utils";
 import RabbitMQ from "rabbitmq-client";
 
-import { INTENTS, REST_URL, BOT_TOKEN, HTTP_AUTH, RABBITMQ_URI } from "../config.js";
+import { INTENTS, BOT_TOKEN, RABBITMQ_URI, HTTP_AUTH, REST_URL } from "../config.js";
 import { GatewayMessage } from "../gateway/types/worker.js";
 
 import { setupTransformers } from "./transformers/mod.js";
@@ -27,18 +27,16 @@ export const bot = await customizeBot(
 	createBot({
 		token: BOT_TOKEN,
 		intents: INTENTS,
-		events: {}
+		events: {},
+
+		rest: {
+			proxy: {
+				authorization: HTTP_AUTH,
+				baseUrl: REST_URL
+			}
+		}
 	})
 );
-
-bot.rest = createRestManager({
-	token: BOT_TOKEN,
-
-	proxy: {
-		authorization: HTTP_AUTH,
-		baseUrl: REST_URL
-	}
-});
 
 async function handleGatewayMessage({ payload, shard }: GatewayMessage) {
 	if (payload.t && payload.t !== "RESUMED") {

@@ -33,20 +33,18 @@ export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTar
 			color: EmbedColor.Orange
 		});
 
-		response.components = [
-			{
-				type: MessageComponentTypes.ActionRow,
+		response.components = [ {
+			type: MessageComponentTypes.ActionRow,
 
-				components: [
-					{
-						type: MessageComponentTypes.Button,
-						label: "Upgrade to Premium", emoji: { name: "💸" },
-						customId: "premium:purchase",
-						style: ButtonStyles.Success
-					}
-				]
-			}
-		];
+			components: [
+				{
+					type: MessageComponentTypes.Button,
+					label: "Upgrade to Premium", emoji: { name: "💸" },
+					customId: "premium:purchase",
+					style: ButtonStyles.Success
+				}
+			]
+		} ];
 	}
 
 	response.embeds = embeds;

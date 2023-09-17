@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { Collection, createBot, createGatewayManager, createRestManager } from "@discordeno/bot";
+import { Collection, createBot, createGatewayManager } from "@discordeno/bot";
 import { createLogger } from "@discordeno/utils";
 import { setTimeout } from "timers/promises";
 import { Worker } from "worker_threads";
@@ -11,7 +11,7 @@ import express from "express";
 import { type WorkerCreateData, type WorkerMessage, type WorkerInfo, WorkerShardInfo } from "./types/worker.js";
 import type { ManagerHTTPRequest, ManagerMessage } from "./types/manager.js";
 
-import { BOT_TOKEN, INTENTS, HTTP_AUTH, REST_URL, SHARDS_PER_WORKER, TOTAL_WORKERS, GATEWAY_PORT } from "../config.js";
+import { BOT_TOKEN, INTENTS, HTTP_AUTH, SHARDS_PER_WORKER, TOTAL_WORKERS, GATEWAY_PORT, REST_URL } from "../config.js";
 
 const logger = createLogger({ name: "[MANAGER]" });
 
@@ -32,15 +32,13 @@ app.use(express.json());
 
 const bot = createBot({
 	token: BOT_TOKEN,
-	events: {}
-});
+	events: {},
 
-bot.rest = createRestManager({
-	token: BOT_TOKEN,
-
-	proxy: {
-		authorization: HTTP_AUTH,
-		baseUrl: REST_URL
+	rest: {
+		proxy: {
+			authorization: HTTP_AUTH,
+			baseUrl: REST_URL
+		}
 	}
 });
 

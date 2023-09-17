@@ -9,21 +9,21 @@ export async function mergeImages({ result, size }: Pick<ImageFormatOptions, "re
 	);
 
 	/* How many images to display per row, maximum */
-	const perRow: number = result.results.length > 4 ? 4 : 2;
-	const rows: number = Math.ceil(result.results.length / perRow);
+	const perRow = result.results.length > 4 ? 4 : 2;
+	const rows = Math.ceil(result.results.length / perRow);
 
 	/* Width & height of the canvas */
-	const width: number = size.width * perRow;
-	const height: number = rows * size.height;
+	const width = size.width * perRow;
+	const height = rows * size.height;
 
 	const canvas = createCanvas(width, height);
 	const context = canvas.getContext("2d");
 
 	result.results.forEach((result, index) => {
-		const x: number = (index % perRow) * size.width;
-		const y: number = Math.floor(index / perRow) * size.height;
+		const x = (index % perRow) * size.width;
+		const y = Math.floor(index / perRow) * size.height;
 
-		const image: Image = new Image();
+		const image = new Image();
 		image.src = Buffer.from(result.data, "base64");
 
 		context.drawImage(
@@ -31,5 +31,5 @@ export async function mergeImages({ result, size }: Pick<ImageFormatOptions, "re
 		);
 	});
 
-	return await canvas.encode("png");
+	return canvas.encode("png");
 }

@@ -21,7 +21,7 @@ import { pickAdvertisement } from "../campaign.js";
 import { getSettingsValue } from "../settings.js";
 import { IMAGE_MODELS } from "../image/models.js";
 import { BRANDING_COLOR } from "../../config.js";
-import { mergeImages } from "../utils/merge.js";
+import { mergeImages } from "../utils/image.js";
 import { Emitter } from "../utils/event.js";
 import { charge } from "../premium.js";
 

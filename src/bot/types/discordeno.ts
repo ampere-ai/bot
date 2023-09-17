@@ -1,4 +1,4 @@
-import type { createLogger } from "@discordeno/bot";
+import type { InteractionCallbackData, createLogger } from "@discordeno/bot";
 import type RabbitMQ from "rabbitmq-client";
 
 import type { MessageResponse } from "../utils/response.js";
@@ -26,6 +26,9 @@ declare module "@discordeno/bot" {
 	
 		/** Defer an update, meaning that the interaction is silently acknowledged. */
 		deferUpdate: () => Promise<void>;
+		
+		/** Show a modal to the user. */
+		showModal: (response: Required<Pick<InteractionCallbackData, "title" | "customId" | "components">>) => Promise<void>;
 	
 		/** Send a reply to an interaction. */
 		reply: (response: MessageResponse) => Promise<void>;

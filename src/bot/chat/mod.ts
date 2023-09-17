@@ -80,7 +80,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 		await getMarketplaceSetting<MarketplaceIndicator>(bot, env, "indicator")
 	).data;
 
-	const personality: MarketplacePersonality = await getMarketplaceSetting(bot, env, "personality");
+	const personality = await getMarketplaceSetting<MarketplacePersonality>(bot, env, "personality");
 	const model = getModel(bot, env);
 
 	/* Event emitter, to receive partial results */
@@ -253,7 +253,7 @@ async function format(
 ) {
 	const response: MessageResponse = {
 		/* Disable @everyone and @here pings. */
-		mentions: { parse: [],repliedUser: true }
+		mentions: { parse: [], repliedUser: true }
 	};
 
 	let content = result.message.content.trim();
@@ -323,10 +323,7 @@ async function format(
 
 /** Reset the user's conversation. */
 export async function resetConversation(bot: Bot, env: DBEnvironment) {
-	const conversation = await bot.db.fetch<Conversation>("conversations", env.user.id);
-	if (conversation.history.length === 0) return;
-
-	await bot.db.update("conversations", conversation, {
+	await bot.db.update("conversations", env.user.id, {
 		history: []
 	});
 }
