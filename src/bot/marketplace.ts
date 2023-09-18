@@ -345,11 +345,14 @@ function buildEntryPreview(entry: DBMarketplaceEntry): SelectOption {
 
 /** Build a full overview of an entry. */
 async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketplaceEntry): Promise<MessageResponse> {
-	const creator = await bot.helpers.getUser(entry.creator);
 
 	/* Current setting for this marketplace type */
 	const category = getMarketplaceCategory(entry.type);
 	const currentID: string | null = getSettingsValue(bot, env, "user", category.key);
+
+	const creator = !entry.status.builtIn
+		? await bot.helpers.getUser(entry.creator)
+		: null;
 
 	const buttons: ButtonComponent[] = [
 		{
@@ -390,7 +393,10 @@ async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketp
 	return {
 		embeds: [
 			{
-				author: { name: creator.username, iconUrl: avatarUrl(creator.id, creator.discriminator, { format: "png", avatar: creator.avatar }) },
+				author: creator
+					? { name: creator.username, iconUrl: avatarUrl(creator.id, creator.discriminator, { format: "png", avatar: creator.avatar }) }
+					: undefined,
+
 				footer: { text: `Used ${new Intl.NumberFormat("en-US").format(entry.stats.uses)} time${entry.stats.uses !== 1 ? "s" : ""}` },
 				title: `${entry.name} ${emojiToString(entry.emoji)}`,
 				description: entry.description ? `*${entry.description}*` : undefined
