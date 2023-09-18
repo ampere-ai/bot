@@ -141,7 +141,6 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 					? component.value : null;
 
 				if (settings.validate && fields[component.customId]) {
-					console.log(component.customId, fields[component.customId]);
 					const result = settings.validate(fields[component.customId]!);
 					
 					if (result) return { embeds: {
@@ -170,7 +169,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 			if (action === "edit" && id) {
 				entry = await bot.db.update<DBMarketplaceEntry>("marketplace", entry, {
 					name: fields["name"] ?? undefined, emoji,
-					description: fields["description"] ?? undefined,
+					description: fields["description"] ?? null,
 					data: { ...entry.data, ...data }
 				});
 
@@ -428,7 +427,7 @@ function buildCreationModal(
 						? field.parse(entry) ?? undefined
 						: undefined,
 
-					required: type === "edit" ? false : !field.optional,
+					required: !field.optional,
 					minLength: field.minLength, maxLength: field.maxLength
 				} ]
 			}))
