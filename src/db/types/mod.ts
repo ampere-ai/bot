@@ -21,7 +21,7 @@ export interface DBEnvironment {
 	guild: DBGuild | null;
 }
 
-export type DBRequestType = "get" | "fetch" | "update" | "delete" | "all" | "clearCache" | "count" | "flush";
+export type DBRequestType = "get" | "fetch" | "update" | "remove" | "all" | "clearCache" | "count" | "flush";
 
 export type DBRequestData =
 	DBRequestGet | DBRequestFetch | DBRequestUpdate |

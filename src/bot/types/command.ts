@@ -19,19 +19,19 @@ interface BaseCommandOption<T extends ApplicationCommandOptionTypes> {
 
 type BaseCommandOptionWithChoices<T extends ApplicationCommandOptionTypes> = BaseCommandOption<T> & {
 	choices?: ApplicationCommandOptionChoice[];
-}
+};
 
 type CommandStringOption = BaseCommandOptionWithChoices<ApplicationCommandOptionTypes.String> & {
 	minLength?: number;
 	maxLength?: number;
-}
+};
 
 type CommandNumberOption = BaseCommandOptionWithChoices<ApplicationCommandOptionTypes.Number | ApplicationCommandOptionTypes.Integer> & {
 	min?: number;
 	max?: number;
-}
+};
 
-type CommandBooleanOption = BaseCommandOptionWithChoices<ApplicationCommandOptionTypes.Boolean>
+type CommandBooleanOption = BaseCommandOptionWithChoices<ApplicationCommandOptionTypes.Boolean>;
 
 export type CommandOption = CommandStringOption | CommandNumberOption | CommandBooleanOption;
 

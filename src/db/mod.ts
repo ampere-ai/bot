@@ -140,17 +140,23 @@ async function fetch<T extends DBObject = DBObject>(collection: CollectionName, 
 }
 
 async function remove(collection: CollectionName, id: string): Promise<void> {
-	await db.from(collection)
-		.delete().eq("id", id);
-	
-	await removeFromCache(collectionKey(collection, id));
+	delete queue[collection][id];
+
+	await Promise.all([
+		db.from(collection).delete().eq("id", id),
+		removeFromCache(collectionKey(collection, id))
+	]);
 }
 
 async function all<T extends DBObject = DBObject>(collection: CollectionName): Promise<T[]> {
-	const { data } = await db.from(collection)
-		.select("*");
+	const { data: raw } = await db.from(collection).select("*");
+	if (!raw) throw new Error("Couldn't get entries");
 
-	return data as T[];
+	const data: { id: string; }[] = raw;
+
+	return Promise.all(
+		data.map(({ id }) => fetch<T>(collection, id))
+	);
 }
 
 async function count(collection: CollectionName) {

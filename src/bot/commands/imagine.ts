@@ -461,7 +461,7 @@ async function displayFields(options: ImageStartOptions) {
 
 	if (options.prompt.style) {
 		const style = await fetchMarketplaceEntry<MarketplaceStyle>(options.bot, options.prompt.style);
-		fields.push({ name: "Style", value: `${style.name} ${style.emoji}` });
+		fields.push({ name: "Style", value: `${style.name} ${emojiToString(style.emoji)}` });
 	}
 
 	return fields.map(field => ({ ...field, inline: true }));

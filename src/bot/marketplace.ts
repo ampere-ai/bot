@@ -1,15 +1,15 @@
-import { ActionRow, Bot, ButtonComponent, ButtonStyles, InteractionCallbackData, InteractionTypes, MessageComponentTypes, SelectOption, TextStyles, avatarUrl } from "@discordeno/bot";
+import { ActionRow, Bot, ButtonComponent, ButtonStyles, ComponentEmoji, InteractionCallbackData, InteractionTypes, MessageComponentTypes, SelectOption, TextStyles, avatarUrl } from "@discordeno/bot";
+import { randomUUID } from "crypto";
 
 import type { InteractionHandlerOptions } from "./types/interaction.js";
 import type { DBEnvironment } from "../db/types/mod.js";
 
 import { type MarketplaceFilterOptions, type MarketplacePage, MARKETPLACE_CATEGORIES, MARKETPLACE_BASE_FIELDS, MarketplaceCategory } from "./types/marketplace.js";
 import { type DBMarketplaceEntry, type DBMarketplaceType, DBMarketplaceStatistics } from "../db/types/marketplace.js";
+import { emojiToString, emojiToUnicode, stringToEmoji, titleCase } from "./utils/helpers.js";
 import { type MessageResponse, EmbedColor } from "./utils/response.js";
 import { getSettingsValue, updateSettings } from "./settings.js";
-import { emojiToString, emojiToUnicode, stringToEmoji, titleCase } from "./utils/helpers.js";
 import { DBRole } from "../db/types/user.js";
-import { randomUUID } from "crypto";
 
 /** How many marketplace entries can be on a single page, max. 25 */
 const MARKETPLACE_PAGE_SIZE = 25;
@@ -54,8 +54,8 @@ export function fetchMarketplaceEntry<T extends DBMarketplaceEntry = DBMarketpla
 	return bot.db.fetch<T>("marketplace", id);
 }
 
-function getMarketplaceCategory(type: string) {
-	return MARKETPLACE_CATEGORIES.find(category => category.type === type)!;
+function getMarketplaceCategory(type: string): MarketplaceCategory {
+	return MARKETPLACE_CATEGORIES.find(category => category.type === type)! as MarketplaceCategory;
 }
 
 async function incrementStatistics(bot: Bot, db: DBMarketplaceEntry, key: keyof DBMarketplaceStatistics) {
@@ -107,6 +107,13 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 			buildCreationModal(category, "edit", entry)
 		);
 
+	} else if (action === "remove") {
+		await bot.db.remove("marketplace", args.shift()!);
+
+		await interaction.update(await buildMarketplaceOverview(bot, env, {
+			type: "browse", page: 0
+		}));
+
 	} else if (action === "create") {
 		/* The creation modal was submitted */
 		if (interaction.type === InteractionTypes.ModalSubmit && interaction.data?.components) {
@@ -126,12 +133,15 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 			const fields: Record<string, string | null> = {};
 
 			for (const component of components) {
-				const settings = category.creator.fields[component.customId] ?? MARKETPLACE_BASE_FIELDS[component.customId];
+				const settings =
+					category.creator.fields[component.customId]
+					?? MARKETPLACE_BASE_FIELDS[component.customId as keyof typeof MARKETPLACE_BASE_FIELDS];
 
 				fields[component.customId] = component.value && component.value.length > 0
 					? component.value : null;
 
 				if (settings.validate && fields[component.customId]) {
+					console.log(component.customId, fields[component.customId]);
 					const result = settings.validate(fields[component.customId]!);
 					
 					if (result) return { embeds: {
@@ -146,34 +156,34 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 				? await bot.db.fetch("marketplace", id)
 				: null!;
 
+			/* Parsed emoji for the entry */
+			const emoji: ComponentEmoji | undefined = fields["emoji"] !== null
+				? bot.rest.changeToDiscordFormat(stringToEmoji(emojiToUnicode(
+					fields["emoji"]
+				)!)!)
+				: undefined;
+
+			/* Updated entry data */
+			const data = category.creator.create(fields as any, bot);
+
 			/* Edit an existing entry */
 			if (action === "edit" && id) {
 				entry = await bot.db.update<DBMarketplaceEntry>("marketplace", entry, {
-					name: fields["name"] ?? undefined,
+					name: fields["name"] ?? undefined, emoji,
 					description: fields["description"] ?? undefined,
-					
-					emoji: fields["emoji"] ? stringToEmoji(emojiToUnicode(
-						fields["emoji"]
-					)!) : undefined,
-
-					data: {
-						...entry.data, ...category.creator.create(fields, bot)
-					}
+					data: { ...entry.data, ...data }
 				});
 
 			/* Create a new entry */
 			} else if (action === "new") {
+				if (!emoji) return;
+
 				entry = await createEntry(bot, {
 					creator: interaction.user.id.toString(),
 					type, name: fields["name"]!,
 					description: fields["description"]!,
-
-					emoji: stringToEmoji(emojiToUnicode(
-						fields["emoji"]!
-					)!),
-					
 					status: { type: "approved", visibility: "public" },
-					data: category.creator.create(fields, bot)
+					emoji, data
 				});
 			}
 
@@ -182,10 +192,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		/* Which type to create was selected */
 		} else if (interaction.data?.componentType === MessageComponentTypes.SelectMenu) {
 			const category = getMarketplaceCategory(interaction.data!.values![0]);
-
-			await interaction.showModal(
-				buildCreationModal(category, "new")
-			);
+			await interaction.showModal(buildCreationModal(category, "new"));
 
 		/* The creation button was pressed in the dashboard */
 		} else if (interaction.data?.componentType === MessageComponentTypes.Button) {
@@ -330,8 +337,9 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 /** Build a small preview of an entry, as an embed field. */
 function buildEntryPreview(entry: DBMarketplaceEntry): SelectOption {
 	return {
-		label: entry.name, emoji: entry.emoji,
+		label: entry.status.builtIn ? `${entry.name} ⭐` : entry.name,
 		description: entry.description ?? undefined,
+		emoji: entry.emoji,
 		value: entry.id
 	};
 }
@@ -366,7 +374,7 @@ async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketp
 			{
 				type: MessageComponentTypes.Button,
 				style: ButtonStyles.Danger,
-				customId: `market:delete:${entry.id}`,
+				customId: `market:remove:${entry.id}`,
 				emoji: { name: "trash", id: 1153010959590375624n }
 			}
 		);
@@ -413,12 +421,9 @@ function buildCreationModal(
 					type: MessageComponentTypes.InputText,
 					customId: id, label: field.name,
 					style: field.style ?? TextStyles.Short,
+					placeholder: field.placeholder,
 
-					placeholder: type === "edit" && entry && field.builtIn
-						? field.parse(entry) ?? undefined
-						: field.placeholder,
-
-					value: type === "edit" && entry && !field.builtIn
+					value: type === "edit" && entry
 						? field.parse(entry) ?? undefined
 						: undefined,
 

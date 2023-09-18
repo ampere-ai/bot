@@ -1,6 +1,7 @@
 import { type Bot, type ComponentEmoji, TextStyles } from "@discordeno/bot";
+
 import type { DBMarketplaceEntry, DBMarketplaceType } from "../../db/types/marketplace.js";
-import { emojiToUnicode } from "../utils/helpers.js";
+import { emojiToString, emojiToUnicode, stringToEmoji } from "../utils/helpers.js";
 
 export interface MarketplaceFilterOptions {
 	type: "browse" | "create";
@@ -47,7 +48,7 @@ interface MarketplaceCreatorField {
 	parse: (entry: DBMarketplaceEntry) => string | null;
 }
 
-export const MARKETPLACE_BASE_FIELDS: Record<string, MarketplaceCreatorField> = {
+export const MARKETPLACE_BASE_FIELDS: Record<"name" | "emoji" | "description", MarketplaceCreatorField> = {
 	name: {
 		name: "Name", builtIn: true,
 		minLength: 1, maxLength: 32,
@@ -60,10 +61,10 @@ export const MARKETPLACE_BASE_FIELDS: Record<string, MarketplaceCreatorField> = 
 		minLength: 1, maxLength: 32,
 		style: TextStyles.Short,
 		placeholder: ":flushed:, flushed, 😳",
-		parse: entry => entry.emoji.name,
+		parse: entry => emojiToString(entry.emoji),
 
 		validate: input => {
-			if (!emojiToUnicode(input)) return {
+			if (!stringToEmoji(emojiToUnicode(input))) return {
 				message: "Invalid emoji"
 			};
 		}
@@ -78,40 +79,34 @@ export const MARKETPLACE_BASE_FIELDS: Record<string, MarketplaceCreatorField> = 
 	}
 };
 
-interface MarketplaceCreator<T extends Record<string, MarketplaceCreatorField>> {
-	/** All fields that the user can specify for this type */
-	fields: T;
+type FieldsWithRequiredProperty<T extends Record<string, MarketplaceCreatorField>> = {
+	[K in keyof T]: T[K]["optional"] extends true
+		? string | null : string;
+};
 
-	/** Fields -> marketplace entry data converter */
-	create: (fields: Record<keyof T, string | null>, bot: Bot) => object;
+interface MarketplaceCreator<Fields extends Record<string, MarketplaceCreatorField>> {
+	fields: Fields;
+	create: (fields: FieldsWithRequiredProperty<Fields> & FieldsWithRequiredProperty<typeof MARKETPLACE_BASE_FIELDS>, bot: Bot) => object;
 }
 
-export interface MarketplaceCategory<Fields extends Record<string, MarketplaceCreatorField> = Record<string, MarketplaceCreatorField>> {
-	/** Which type this category corresponds to */
+export interface MarketplaceCategory<
+	Fields extends Record<string, MarketplaceCreatorField> = Record<string, MarketplaceCreatorField>
+> {
 	type: DBMarketplaceType;
-
-	/** Fitting emoji for this category */
 	emoji: ComponentEmoji;
-
-	/** Display name of the category */
 	name?: string;
-
-	/** Which settings key this category corresponds to */
 	key: string;
-
-	/** ID of the default entry of this category */
 	default: string;
-
-	/** Information about how an entry for this category is created */
 	creator?: MarketplaceCreator<Fields>;
 }
 
-function createCategory<
-	Fields extends Record<string, MarketplaceCreatorField>
->(category: MarketplaceCategory<Fields>) {
+function createCategory<Fields extends Record<string, MarketplaceCreatorField>>(
+	category: MarketplaceCategory<Fields>
+) {
 	return category;
 }
-export const MARKETPLACE_CATEGORIES: MarketplaceCategory[]  = [
+
+export const MARKETPLACE_CATEGORIES = [
 	createCategory({
 		type: "personality", emoji: { name: "😊" },
 		key: "chat:personality", default: "personality-neutral",
@@ -153,6 +148,15 @@ export const MARKETPLACE_CATEGORIES: MarketplaceCategory[]  = [
 
 	createCategory({
 		type: "indicator", emoji: { name: "🔄" }, name: "loading indicator",
-		key: "general:indicator", default: "indicator-orb"
+		key: "general:indicator", default: "indicator-orb",
+
+		creator: {
+			fields: {},
+
+			create: (fields, bot) => 
+				bot.rest.changeToDiscordFormat(stringToEmoji(emojiToUnicode(
+					fields.emoji
+				)!)!)
+		}
 	})
 ];

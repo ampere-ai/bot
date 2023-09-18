@@ -37,6 +37,9 @@ interface ExecuteOptions {
 /** Set of currently running generations */
 export const runningGenerations = new Set<bigint>();
 
+/** How often to update the partial message, if that setting is enabled */
+const MESSAGE_EDIT_INTERVAL = 5 * 1000;
+
 export async function handleMessage(bot: Bot, message: Message) {
 	if (message.author.id === bot.id || message.content.length === 0) return;
 	if (!mentions(bot, message)) return;
@@ -138,7 +141,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 			bot.helpers.triggerTypingIndicator(message.channelId),
 
 			bot.helpers.addReaction(
-				message.channelId, message.id, `${indicator.name}:${indicator.id}`
+				message.channelId, message.id, emojiToString(indicator)
 			)
 		]);
 
@@ -174,7 +177,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 		
 	} finally {
 		await bot.helpers.deleteOwnReaction(
-			message.channelId, message.id, `${indicator.name}:${indicator.id}`
+			message.channelId, message.id, emojiToString(indicator)
 		).catch(() => {});
 
 		runningGenerations.delete(message.author.id);
@@ -205,7 +208,7 @@ async function execute(options: ExecuteOptions): Promise<ConversationResult> {
 	emitter.on(data => {
 		if (data.content.trim().length === 0) return;
 
-		if (!data.done && Date.now() - lastEvent > 5 * 1000) {
+		if (!data.done && Date.now() - lastEvent > MESSAGE_EDIT_INTERVAL) {
 			options.emitter.emit(formatResult(data, id));
 			lastEvent = Date.now();
 		}

@@ -19,13 +19,37 @@ export function emojiToString(emoji: ComponentEmoji) {
 	return `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`;
 }
 
-export function stringToEmoji(content: string): ComponentEmoji {
-	/* TODO: Actually implement */
-	return {
-		name: content
-	};
+export function stringToEmoji(content: string): ComponentEmoji | null {
+	const UNICODE_REGEXP = /\p{Emoji_Presentation}/gu;
+	const DISCORD_REGEXP = /<(a)?:([a-zA-Z0-9_]+):([0-9]+)>/g;
+
+	/* Regular Unicode emoji */
+	if(UNICODE_REGEXP.test(content)) {
+		return {
+			name: content.match(UNICODE_REGEXP)![0]
+		};
+	}
+  
+	/* Custom Discord emoji, animated or static */
+	if(DISCORD_REGEXP.test(content)) {
+		/**
+		 * matches[1] will be "a" for animated emojis, undefined for static
+		 * matches[2] will be the emoji name
+		 * matches[3] will be the emoji ID
+		 */
+		DISCORD_REGEXP.lastIndex = 0;
+		const matches = DISCORD_REGEXP.exec(content)!;
+
+		return {
+			id: BigInt(matches[3]),
+			name: matches[2],
+			animated: !!matches[1]
+		};
+	}
+
+	return null;
 }
 
-export function emojiToUnicode(content: string): string | null {
-	return EmojiMap.get(content) ?? null;
+export function emojiToUnicode(content: string) {
+	return EmojiMap.get(content) ?? content;
 }

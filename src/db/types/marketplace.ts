@@ -3,6 +3,7 @@ import type { ComponentEmoji } from "@discordeno/bot";
 export type DBMarketplaceType = "personality" | "style" | "indicator";
 
 export interface DBMarketplaceStatus {
+	builtIn?: boolean;
 	type: "approved" | "pending" | "rejected";
 	visibility: "public" | "private";
 }

@@ -68,7 +68,7 @@ export function setCooldown(bot: Bot, env: DBEnvironment, target: CooldownTarget
 	if (env.user.roles.includes(DBRole.Owner)) return;
 	
 	const premium = bot.db.premium(env);
-	if (premium && premium.type === "plan") return;
+	if (premium?.type === "plan") return;
 
 	cooldowns.set(cooldownKey(target), Date.now() + duration);
 }

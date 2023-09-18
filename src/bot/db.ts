@@ -48,6 +48,12 @@ export async function createDB(bot: Bot) {
 		} as DBRequestUpdate);
 	};
 
+	const remove = async (collection: CollectionName, id: string | bigint | DBObject): Promise<void> => {
+		await execute("remove", {
+			collection, id: typeof id === "bigint" ? id.toString() : id
+		} as DBRequestUpdate);
+	};
+
 	const all = <T = DBType>(collection: CollectionName): Promise<T[]> => {
 		return execute("all", {
 			collection
@@ -133,7 +139,8 @@ export async function createDB(bot: Bot) {
 	};
 
 	return { 
-		rpc, execute, get, fetch, update, premium, voted, types, all, count, clearCache, flush,
+		rpc, execute, get, fetch, update, remove, all, count, clearCache, flush,
+		premium, voted, types,
 
 		env: async (user: bigint, guild?: bigint): Promise<DBEnvironment> => {
 			const data: Partial<DBEnvironment> = {};
