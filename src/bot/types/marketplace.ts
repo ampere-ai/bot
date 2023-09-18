@@ -58,7 +58,7 @@ export const MARKETPLACE_BASE_FIELDS: Record<"name" | "emoji" | "description", M
 
 	emoji: {
 		name: "Fitting emoji", builtIn: true,
-		minLength: 1, maxLength: 32,
+		minLength: 1, maxLength: 64,
 		style: TextStyles.Short,
 		placeholder: ":flushed:, flushed, 😳",
 		parse: entry => emojiToString(entry.emoji),
