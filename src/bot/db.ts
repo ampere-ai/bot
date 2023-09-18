@@ -1,7 +1,7 @@
 import RabbitMQ from "rabbitmq-client";
 import { Bot } from "@discordeno/bot";
 
-import type { CollectionName, DBEnvironment, DBObject, DBRequestAll, DBRequestCount, DBRequestData, DBRequestFetch, DBRequestGet, DBRequestType, DBRequestUpdate, DBResponse, DBType } from "../db/types/mod.js";
+import type { CollectionName, DBEnvironment, DBObject, DBQueueResult, DBRequestAll, DBRequestCount, DBRequestData, DBRequestFetch, DBRequestGet, DBRequestType, DBRequestUpdate, DBResponse, DBType } from "../db/types/mod.js";
 import type { DBGuild } from "../db/types/guild.js";
 
 import { DBRole, DBUserType, type DBUser } from "../db/types/user.js";
@@ -30,32 +30,32 @@ export async function createDB(bot: Bot) {
 		return response.data;
 	};
 
-	const get = async<T = DBType> (collection: CollectionName, id: string | bigint): Promise<T | null> => {
-		return await execute("get", {
+	const get = <T = DBType>(collection: CollectionName, id: string | bigint): Promise<T | null> => {
+		return execute("get", {
 			collection, id: id.toString()
 		} as DBRequestGet);
 	};
 
-	const fetch = async<T = DBType> (collection: CollectionName, id: string | bigint): Promise<T> => {
-		return await execute("fetch", {
+	const fetch = <T = DBType>(collection: CollectionName, id: string | bigint): Promise<T> => {
+		return execute("fetch", {
 			collection, id: id.toString()
 		} as DBRequestFetch);
 	};
 
-	const update = async<T = DBType> (collection: CollectionName, id: string | bigint | DBObject, updates: Partial<Omit<T, "id">>): Promise<T> => {
-		return await execute("update", {
+	const update = <T = DBType>(collection: CollectionName, id: string | bigint | DBObject, updates: Partial<Omit<T, "id">>): Promise<T> => {
+		return execute("update", {
 			collection, id: typeof id === "bigint" ? id.toString() : id, updates
 		} as DBRequestUpdate);
 	};
 
-	const all = async<T = DBType> (collection: CollectionName): Promise<T[]> => {
-		return await execute("all", {
+	const all = <T = DBType>(collection: CollectionName): Promise<T[]> => {
+		return execute("all", {
 			collection
 		} as DBRequestAll);
 	};
 
-	const count = async (collection: CollectionName): Promise<number> => {
-		return await execute("count", {
+	const count = (collection: CollectionName): Promise<number> => {
+		return execute("count", {
 			collection
 		} as DBRequestCount);
 	};
@@ -64,8 +64,8 @@ export async function createDB(bot: Bot) {
 		await execute("clearCache");
 	};
 
-	const flush = async (): Promise<void> => {
-		await execute("flush");
+	const flush = (): Promise<DBQueueResult> => {
+		return execute("flush");
 	};
 
 	const premium = (env: DBEnvironment): { type: "subscription" | "plan", location: "guild" | "user" } | null => {

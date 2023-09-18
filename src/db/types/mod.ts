@@ -1,3 +1,5 @@
+import type { PostgrestError } from "@supabase/supabase-js";
+
 import type { Conversation } from "../../bot/types/conversation.js";
 import type { DBDatasetEntry } from "./dataset.js";
 import type { DBCampaign } from "./campaign.js";
@@ -77,4 +79,9 @@ export type DBResponse = {
 	success: boolean;
 	error?: string;
 	data: any;
+}
+
+export interface DBQueueResult {
+	errors: PostgrestError[];
+	amount: number;
 }

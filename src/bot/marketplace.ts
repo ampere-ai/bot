@@ -1,5 +1,4 @@
 import { ActionRow, Bot, ButtonComponent, ButtonStyles, InteractionCallbackData, InteractionTypes, MessageComponentTypes, SelectOption, TextStyles, avatarUrl } from "@discordeno/bot";
-import { EmojiConvertor } from "emoji-js";
 
 import type { InteractionHandlerOptions } from "./types/interaction.js";
 import type { DBEnvironment } from "../db/types/mod.js";
@@ -8,18 +7,12 @@ import { type MarketplaceFilterOptions, type MarketplacePage, MARKETPLACE_CATEGO
 import { type DBMarketplaceEntry, type DBMarketplaceType, DBMarketplaceStatistics } from "../db/types/marketplace.js";
 import { type MessageResponse, EmbedColor } from "./utils/response.js";
 import { getSettingsValue, updateSettings } from "./settings.js";
-import { emojiToString, stringToEmoji, titleCase } from "./utils/helpers.js";
+import { emojiToString, emojiToUnicode, stringToEmoji, titleCase } from "./utils/helpers.js";
 import { DBRole } from "../db/types/user.js";
 import { randomUUID } from "crypto";
 
 /** How many marketplace entries can be on a single page, max. 25 */
 const MARKETPLACE_PAGE_SIZE = 25;
-
-/** Emoji converter */
-const EMOJI_CONVERTER = new EmojiConvertor();
-
-EMOJI_CONVERTER.replace_mode = "unified";
-EMOJI_CONVERTER.allow_native = true;
 
 async function createEntry(bot: Bot, data: Omit<DBMarketplaceEntry, "id" | "created" | "stats">): Promise<DBMarketplaceEntry> {
 	const id = randomUUID();
@@ -53,7 +46,11 @@ async function pageCount(map: Record<DBMarketplaceType, MarketplacePage>): Promi
 	return Math.max(...Object.values(map).map(page => page.count));
 }
 
-export function getMarketplaceEntry<T extends DBMarketplaceEntry | null = DBMarketplaceEntry>(bot: Bot, id: string): Promise<T> {
+export function getMarketplaceEntry<T extends DBMarketplaceEntry | null = DBMarketplaceEntry | null>(bot: Bot, id: string) {
+	return bot.db.get<T>("marketplace", id);
+}
+
+export function fetchMarketplaceEntry<T extends DBMarketplaceEntry = DBMarketplaceEntry>(bot: Bot, id: string) {
 	return bot.db.fetch<T>("marketplace", id);
 }
 
@@ -70,15 +67,16 @@ async function incrementStatistics(bot: Bot, db: DBMarketplaceEntry, key: keyof 
 	});
 }
 
-export async function getMarketplaceSetting<T extends DBMarketplaceEntry | null>(
+export async function getMarketplaceSetting<T extends DBMarketplaceEntry>(
 	bot: Bot, env: DBEnvironment, type: DBMarketplaceType
 ): Promise<T> {
-	/* Which settings key corresponds to the category */
-	const key = getMarketplaceCategory(type).key;
-
-	/* Get the configured marketplace entry's ID. */
+	const { key, default: defaultID } = getMarketplaceCategory(type);
 	const id: string = getSettingsValue(bot, env, "user", key);
-	const entry = await getMarketplaceEntry<T>(bot, id);
+
+	/* First, try getting the actual specified marketplace entry ID. If that doesn't exist, use the given default ID. */
+	const entry =
+		await getMarketplaceEntry<T>(bot, id)
+		?? await fetchMarketplaceEntry<T>(bot, defaultID);
 
 	return entry;
 }
@@ -87,7 +85,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 	const action = args.shift()!;
 
 	if (action === "use") {
-		let entry = await getMarketplaceEntry(bot, args.shift()!);
+		let entry = await fetchMarketplaceEntry(bot, args.shift()!);
 		const category = getMarketplaceCategory(entry.type);
 
 		env.user = await updateSettings(bot, env, "user", {
@@ -98,11 +96,11 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		await interaction.update(await buildEntryOverview(bot, env, entry));
 
 	} else if (action === "view") {
-		const entry = await getMarketplaceEntry(bot, interaction.data!.values![0]);
+		const entry = await fetchMarketplaceEntry(bot, interaction.data!.values![0]);
 		await interaction.update(await buildEntryOverview(bot, env, entry));
 		
 	} else if (action === "edit") {
-		const entry = await getMarketplaceEntry(bot, args.shift()!);
+		const entry = await fetchMarketplaceEntry(bot, args.shift()!);
 		const category = getMarketplaceCategory(entry.type);
 
 		await interaction.showModal(
@@ -128,8 +126,19 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 			const fields: Record<string, string | null> = {};
 
 			for (const component of components) {
+				const settings = category.creator.fields[component.customId] ?? MARKETPLACE_BASE_FIELDS[component.customId];
+
 				fields[component.customId] = component.value && component.value.length > 0
 					? component.value : null;
+
+				if (settings.validate && fields[component.customId]) {
+					const result = settings.validate(fields[component.customId]!);
+					
+					if (result) return { embeds: {
+						description: `The field **${settings.name}** was given an invalid value » **${result.message}**`,
+						color: EmbedColor.Red
+					}, ephemeral: true };
+				}
 			}
 
 			/* Marketplace entry */
@@ -137,14 +146,15 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 				? await bot.db.fetch("marketplace", id)
 				: null!;
 
-			if (fields["emoji"]) fields["emoji"] = EMOJI_CONVERTER.replace_colons(fields["emoji"]);
-
 			/* Edit an existing entry */
 			if (action === "edit" && id) {
 				entry = await bot.db.update<DBMarketplaceEntry>("marketplace", entry, {
 					name: fields["name"] ?? undefined,
 					description: fields["description"] ?? undefined,
-					emoji: fields["emoji"] ? stringToEmoji(fields["emoji"]) : undefined,
+					
+					emoji: fields["emoji"] ? stringToEmoji(emojiToUnicode(
+						fields["emoji"]
+					)!) : undefined,
 
 					data: {
 						...entry.data, ...category.creator.create(fields, bot)
@@ -157,13 +167,17 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 					creator: interaction.user.id.toString(),
 					type, name: fields["name"]!,
 					description: fields["description"]!,
-					emoji: stringToEmoji(fields["emoji"]!),
+
+					emoji: stringToEmoji(emojiToUnicode(
+						fields["emoji"]!
+					)!),
+					
 					status: { type: "approved", visibility: "public" },
 					data: category.creator.create(fields, bot)
 				});
 			}
 
-			return buildEntryOverview(bot, env, entry);
+			await interaction.update(await buildEntryOverview(bot, env, entry));
 
 		/* Which type to create was selected */
 		} else if (interaction.data?.componentType === MessageComponentTypes.SelectMenu) {
@@ -369,9 +383,9 @@ async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketp
 		embeds: [
 			{
 				author: { name: creator.username, iconUrl: avatarUrl(creator.id, creator.discriminator, { format: "png", avatar: creator.avatar }) },
+				footer: { text: `Used ${new Intl.NumberFormat("en-US").format(entry.stats.uses)} time${entry.stats.uses !== 1 ? "s" : ""}` },
 				title: `${entry.name} ${emojiToString(entry.emoji)}`,
-				description: entry.description ? `*${entry.description}*` : undefined,
-				footer: { text: `Used ${new Intl.NumberFormat("en-US").format(entry.stats.uses)} time${entry.stats.uses !== 1 ? "s" : ""}` }
+				description: entry.description ? `*${entry.description}*` : undefined
 			},
 		],
 
@@ -399,10 +413,17 @@ function buildCreationModal(
 					type: MessageComponentTypes.InputText,
 					customId: id, label: field.name,
 					style: field.style ?? TextStyles.Short,
-					placeholder: field.placeholder,
-					required: type !== "edit" ? !field.optional : false,
-					minLength: field.minLength, maxLength: field.maxLength,
-					value: type === "edit" && entry ? field.parse(entry) ?? undefined : undefined
+
+					placeholder: type === "edit" && entry && field.builtIn
+						? field.parse(entry) ?? undefined
+						: field.placeholder,
+
+					value: type === "edit" && entry && !field.builtIn
+						? field.parse(entry) ?? undefined
+						: undefined,
+
+					required: type === "edit" ? false :  !field.optional,
+					minLength: field.minLength, maxLength: field.maxLength
 				} ]
 			}))
 	};

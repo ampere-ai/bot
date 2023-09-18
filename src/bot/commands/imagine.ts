@@ -8,8 +8,8 @@ import type { DBEnvironment } from "../../db/types/mod.js";
 import type { DBImage } from "../../db/types/image.js";
 
 import { findBestSize, generate, interrogate, validRatio } from "../image/mod.js";
+import { fetchMarketplaceEntry, getMarketplaceSetting } from "../marketplace.js";
 import { type ImageGenerationResult, IMAGE_SAMPLERS } from "../types/image.js";
-import { getMarketplaceEntry, getMarketplaceSetting } from "../marketplace.js";
 import { EmbedColor, MessageResponse } from "../utils/response.js";
 import { moderate, moderationNotice } from "../moderation/mod.js";
 import { ModerationSource } from "../moderation/types/mod.js";
@@ -138,7 +138,7 @@ export default createCommand({
 		const model = IMAGE_MODELS.find(m => m.id === modelID)!;
 	
 		/* Which style to apply additionally */
-		const style: MarketplaceStyle | null = await getMarketplaceSetting(bot, env, "style");
+		const style: MarketplaceStyle = await getMarketplaceSetting(bot, env, "style");
 
 		if (model.settings?.forcedSize && ratio !== "1:1") throw new ResponseError({
 			message: `**${model.name}** has a fixed resolution of \`${model.settings.forcedSize.width}×${model.settings.forcedSize.height}\`; *you cannot modify the aspect ratio*`
@@ -157,7 +157,7 @@ export default createCommand({
 
 				prompt: {
 					prompt: prompt, negative: negativePrompt,
-					style: style ? style.id : undefined
+					style: style.id
 				}
 			});
 
@@ -460,7 +460,7 @@ async function displayFields(options: ImageStartOptions) {
 	});
 
 	if (options.prompt.style) {
-		const style = await getMarketplaceEntry<MarketplaceStyle>(options.bot, options.prompt.style);
+		const style = await fetchMarketplaceEntry<MarketplaceStyle>(options.bot, options.prompt.style);
 		fields.push({ name: "Style", value: `${style.name} ${style.emoji}` });
 	}
 

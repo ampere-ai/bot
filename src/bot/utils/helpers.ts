@@ -1,5 +1,5 @@
 import type { ComponentEmoji } from "@discordeno/bot";
-
+import EmojiMap from "emoji-name-map";
 
 export function titleCase(content: string) {
 	return content
@@ -24,4 +24,8 @@ export function stringToEmoji(content: string): ComponentEmoji {
 	return {
 		name: content
 	};
+}
+
+export function emojiToUnicode(content: string): string | null {
+	return EmojiMap.get(content) ?? null;
 }

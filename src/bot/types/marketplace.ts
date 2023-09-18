@@ -1,5 +1,6 @@
 import { type Bot, type ComponentEmoji, TextStyles } from "@discordeno/bot";
 import type { DBMarketplaceEntry, DBMarketplaceType } from "../../db/types/marketplace.js";
+import { emojiToUnicode } from "../utils/helpers.js";
 
 export interface MarketplaceFilterOptions {
 	type: "browse" | "create";
@@ -32,12 +33,15 @@ interface MarketplaceCreatorField {
 	/** Whether this field is optional */
 	optional?: boolean;
 
+	/** Whether this is a built-in field & always present in the modal */
+	builtIn?: boolean;
+
 	/** Minimum & maximum length of this field */
 	minLength?: number;
 	maxLength?: number;
 
 	/** Validator of this field */
-	validate?: (input: string) => MarketplaceCreatorError | null;
+	validate?: (input: string) => MarketplaceCreatorError | null | void;
 
 	/** Marketplace entry -> field converter */
 	parse: (entry: DBMarketplaceEntry) => string | null;
@@ -45,22 +49,29 @@ interface MarketplaceCreatorField {
 
 export const MARKETPLACE_BASE_FIELDS: Record<string, MarketplaceCreatorField> = {
 	name: {
-		name: "Name",
+		name: "Name", builtIn: true,
 		minLength: 1, maxLength: 32,
 		style: TextStyles.Short,
 		parse: entry => entry.name
 	},
 
 	emoji: {
-		name: "Fitting emoji",
+		name: "Fitting emoji", builtIn: true,
 		minLength: 1, maxLength: 32,
 		style: TextStyles.Short,
 		placeholder: ":flushed:, flushed, 😳",
-		parse: entry => entry.emoji.name
+		parse: entry => entry.emoji.name,
+
+		validate: input => {
+			if (!emojiToUnicode(input)) return {
+				message: "Invalid emoji"
+			};
+		}
 	},
 
 	description: {
-		name: "Description", optional: true,
+		name: "Description",
+		builtIn: true, optional: true,
 		minLength: 1, maxLength: 100,
 		style: TextStyles.Short,
 		parse: entry => entry.description
@@ -88,6 +99,9 @@ export interface MarketplaceCategory<Fields extends Record<string, MarketplaceCr
 	/** Which settings key this category corresponds to */
 	key: string;
 
+	/** ID of the default entry of this category */
+	default: string;
+
 	/** Information about how an entry for this category is created */
 	creator?: MarketplaceCreator<Fields>;
 }
@@ -99,7 +113,8 @@ function createCategory<
 }
 export const MARKETPLACE_CATEGORIES: MarketplaceCategory[]  = [
 	createCategory({
-		type: "personality", emoji: { name: "😊" }, key: "chat:personality",
+		type: "personality", emoji: { name: "😊" },
+		key: "chat:personality", default: "personality-neutral",
 
 		creator: {
 			fields: {
@@ -117,7 +132,8 @@ export const MARKETPLACE_CATEGORIES: MarketplaceCategory[]  = [
 	}),
 
 	createCategory({
-		type: "style", emoji: { name: "🖌️" }, key: "image:style",
+		type: "style", emoji: { name: "🖌️" },
+		key: "image:style", default: "style-none",
 
 		creator: {
 			fields: {
@@ -136,6 +152,7 @@ export const MARKETPLACE_CATEGORIES: MarketplaceCategory[]  = [
 	}),
 
 	createCategory({
-		type: "indicator", emoji: { name: "🔄" }, name: "loading indicator", key: "general:indicator"
+		type: "indicator", emoji: { name: "🔄" }, name: "loading indicator",
+		key: "general:indicator", default: "indicator-orb"
 	})
 ];

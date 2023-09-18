@@ -1,4 +1,4 @@
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { PostgrestError, createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient as createRedisClient } from "redis";
 import { createLogger } from "@discordeno/utils";
 import RabbitMQ from "rabbitmq-client";
@@ -9,7 +9,7 @@ import type { DBGuild } from "./types/guild.js";
 import type { DBUser } from "./types/user.js";
 
 import { DB_KEY, DB_QUEUE_INTERVAL, DB_URL, RABBITMQ_URI, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USER } from "../config.js";
-import { CollectionNames, type CollectionName, type DBObject, type DBRequestData } from "./types/mod.js";
+import { CollectionNames, type CollectionName, type DBObject, type DBRequestData, DBQueueResult } from "./types/mod.js";
 
 const logger = createLogger({ name: "[DB]" });
 
@@ -98,17 +98,15 @@ async function update<T extends DBObject = DBObject>(
 	let updated: T;
 
 	if (typeof obj === "string") {
-		const existing = await get<T>(collection, id)!;
-		updated = { ...existing, ...queued, ...updates as T };
+		const existing = await get<T>(collection, id);
+		updated = { ...existing ?? {}, ...queued ?? {}, ...updates, id };
 	} else {
-		updated = { ...obj, ...queued, ...updates as T };
+		updated = { ...obj, ...queued ?? {}, ...updates, id };
 	}
 
-	queue[collection][id] = {
-		id, ...updates
-	} as DBObject;
-
+	queue[collection][id] = updated;
 	await setCache(collectionKey(collection, id), updated);
+	
 	return updated;
 }
 
@@ -131,7 +129,7 @@ async function fetch<T extends DBObject = DBObject>(collection: CollectionName, 
 	const existing = await get<T>(collection, id);
 	if (existing) return existing;
 
-	if (!CollectionTemplates[collection])  {
+	if (!CollectionTemplates[collection]) {
 		throw new Error(`No template available for collection '${collection}'`);
 	}
 
@@ -155,7 +153,7 @@ async function all<T extends DBObject = DBObject>(collection: CollectionName): P
 	return data as T[];
 }
 
-async function count(collection: CollectionName): Promise<number> {
+async function count(collection: CollectionName) {
 	const { count } = await db.from(collection)
 		.select("*", { count: "planned" });
 
@@ -201,7 +199,10 @@ connection.createConsumer({
 	}
 });
 
-async function workOnQueue() {
+async function workOnQueue(): Promise<DBQueueResult> {
+	const errors: PostgrestError[] = [];
+	let amount = 0;
+
 	for (const type of Object.keys(queue) as CollectionName[]) {
 		const queued: Record<string, DBObject> = queue[type];
 		const entries: [ string, DBObject ][] = Object.entries(queued);
@@ -210,7 +211,6 @@ async function workOnQueue() {
 		const changes: DBObject[] = entries.map(([ _, updated ]) => updated);
 		if (changes.length === 0) continue;
 
-		/* Apply the changes to the database. */
 		for (const [ index, entry ] of changes.entries()) {
 			const id: string = entries[index][0];
 
@@ -219,11 +219,17 @@ async function workOnQueue() {
 
 			if (error !== null) {
 				logger.error(`Failed to to save ${bold(id)} to collection ${bold(type)} ->`, error);
-			} else if (error === null) {
+				errors.push(error);
+			} else {
 				delete queue[type][id];
+				amount++;
 			}
 		}
 	}
+
+	return {
+		amount, errors
+	};
 }
 
 setInterval(async () => {

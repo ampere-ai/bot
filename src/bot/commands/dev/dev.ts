@@ -22,7 +22,31 @@ export default createCommand({
 			await bot.db.clearCache();
 			await fetchCampaigns();
 		} else if (sub === "flush") {
-			await bot.db.flush();
+			const result = await bot.db.flush();
+
+			if (result.errors.length > 0) {
+				return {
+					embeds: {
+						title: "It seems like some errors occured whilst saving the database 😬",
+						color: EmbedColor.Red,
+
+						fields: result.errors.slice(undefined, 25).map(err => ({
+							name: err.message,
+							value: `*${err.details}*`
+						}))
+					},
+		
+					ephemeral: true
+				};
+			}
+
+			return {
+				embeds: {
+					description: `Saved **${result.amount}** entries to the database 👍`, color: EmbedColor.Yellow
+				},
+	
+				ephemeral: true
+			};
 		}
 
 		return {
