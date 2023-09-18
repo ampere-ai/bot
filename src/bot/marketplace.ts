@@ -375,7 +375,8 @@ async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketp
 				type: MessageComponentTypes.Button,
 				style: ButtonStyles.Danger,
 				customId: `market:remove:${entry.id}`,
-				emoji: { name: "trash", id: 1153010959590375624n }
+				emoji: { name: "trash", id: 1153010959590375624n },
+				disabled: entry.status.builtIn
 			}
 		);
 	}
@@ -427,7 +428,7 @@ function buildCreationModal(
 						? field.parse(entry) ?? undefined
 						: undefined,
 
-					required: type === "edit" ? false :  !field.optional,
+					required: type === "edit" ? false : !field.optional,
 					minLength: field.minLength, maxLength: field.maxLength
 				} ]
 			}))
