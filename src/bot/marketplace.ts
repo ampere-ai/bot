@@ -311,7 +311,11 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 function buildEntryPreview(entry: DBMarketplaceEntry): SelectOption {
 	return {
 		label: entry.status.builtIn ? `${entry.name} ⭐` : entry.name,
-		description: entry.description ?? undefined,
+
+		description: entry.description
+			? entry.description.split("\n").length > 1 ? `${entry.description.split("\n")[0]} ...` : entry.description
+			: undefined,
+			
 		emoji: entry.emoji,
 		value: entry.id
 	};

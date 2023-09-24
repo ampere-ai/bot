@@ -72,9 +72,15 @@ export const MARKETPLACE_BASE_FIELDS: Record<"name" | "emoji" | "description", M
 	description: {
 		name: "Description",
 		builtIn: true, optional: true,
-		minLength: 1, maxLength: 100,
-		style: TextStyles.Short,
-		parse: entry => entry.description
+		minLength: 1, maxLength: 256,
+		style: TextStyles.Paragraph,
+		parse: entry => entry.description,
+
+		validate: input => {
+			if (input.split("\n").length > 4) return {
+				message: "Cannot be longer than 4 lines"
+			};
+		}
 	}
 };
 
@@ -115,6 +121,7 @@ export const MARKETPLACE_CATEGORIES = [
 				prompt: {
 					name: "Initial prompt, given to the AI model",
 					placeholder: "From now on, you must act as a ...",
+					style: TextStyles.Paragraph, maxLength: 2048,
 					parse: entry => entry.data.prompt
 				}
 			},
