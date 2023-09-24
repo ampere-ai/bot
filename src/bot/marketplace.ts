@@ -23,7 +23,7 @@ async function createEntry(bot: Bot, data: Omit<DBMarketplaceEntry, "id" | "crea
 	});
 }
 
-async function getEntries(bot: Bot, { type, page, creator }: MarketplaceFilterOptions): Promise<Record<DBMarketplaceType, MarketplacePage>> {
+async function getEntries(bot: Bot, { page, creator }: MarketplaceFilterOptions): Promise<Record<DBMarketplaceType, MarketplacePage>> {
 	const all = (await bot.db.all<DBMarketplaceEntry>("marketplace"));
 	const map: Record<DBMarketplaceType, MarketplacePage> = {} as any;
 
@@ -33,7 +33,7 @@ async function getEntries(bot: Bot, { type, page, creator }: MarketplaceFilterOp
 		map[category.type] = {
 			entries: entries
 				.slice(page * MARKETPLACE_PAGE_SIZE, (page * MARKETPLACE_PAGE_SIZE) + MARKETPLACE_PAGE_SIZE)
-				.filter(entry => type === "create" && creator ? entry.creator === creator : true),
+				.filter(entry => creator ? entry.creator === creator : true),
 
 			count: Math.ceil(entries.length / MARKETPLACE_PAGE_SIZE)
 		};
@@ -111,7 +111,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		await bot.db.remove("marketplace", args.shift()!);
 
 		await interaction.update(await buildMarketplaceOverview(bot, env, {
-			type: "browse", page: 0
+			page: 0
 		}));
 
 	} else if (action === "create") {
@@ -197,7 +197,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		} else if (interaction.data?.componentType === MessageComponentTypes.Button) {
 			return {
 				embeds: {
-					description: "Select which type of marketplace item you want to create, e.g. **Style** 🖌️ or **Personality** 😊.",
+					description: "Select which type of marketplace item you want to create.",
 					color: EmbedColor.Orange
 				},
 
@@ -223,26 +223,18 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 
 	} else if (action === "page") {
 		await interaction.update(await buildMarketplaceOverview(bot, env, {
-			type: args.shift()! as any, page: parseInt(args.shift()!)
+			page: parseInt(args.shift()!)
 		}));
 
 	} else if (action === "category") {
 		return buildMarketplaceOverview(bot, env, {
-			type: "browse", page: 0
+			page: 0
 		});
 	}}
 
 /** Build an overview of all marketplace entries, paginated. */
 export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, options: MarketplaceFilterOptions): Promise<MessageResponse> {
-	if (options.type === "create" && !canCreate(env)) return {
-		embeds: {
-			title: "You cannot create items in the marketplace 😔",
-			description: "*Try checking back again later.*",
-			color: EmbedColor.Red
-		},
-
-		ephemeral: true
-	};
+	const canCreate = canCreateInMarketplace(env);
 
 	const map = await getEntries(bot, options);
 	const pages = await pageCount(map);
@@ -260,9 +252,10 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 				type: MessageComponentTypes.SelectMenu, customId: `market:view:${category.type}`,
 				placeholder: `${titleCase(category.name ?? category.type)} ${emojiToString(category.emoji)}`,
 
-				options: page.entries
-					.filter(entry => !options.creator ? entry.status.visibility === "public" : true)
-					.map(entry => buildEntryPreview(entry))
+				options:
+					sortEntries(page.entries
+						.filter(entry => !options.creator ? entry.status.visibility === "public" : true)
+					).map(entry => buildEntryPreview(entry))
 			} ]
 		});
 	}
@@ -274,7 +267,7 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 			{
 				type: MessageComponentTypes.Button,
 				style: ButtonStyles.Secondary, emoji: { name: "◀️" },
-				customId: `market:page:${options.type}:${options.page - 1}`,
+				customId: `market:page:${options.page - 1}`,
 				disabled: options.page - 1 < 0
 			},
 	
@@ -282,20 +275,20 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 				type: MessageComponentTypes.Button,
 				style: ButtonStyles.Success,
 				label: `${options.page + 1} / ${pages}`,
-				customId: `market:current:${options.type}:${options.page}`,
+				customId: `market:current:${options.page}`,
 				disabled: true
 			},
 	
 			{
 				type: MessageComponentTypes.Button,
 				style: ButtonStyles.Secondary, emoji: { name: "▶️" },
-				customId: `market:page:${options.type}:${options.page + 1}`,
+				customId: `market:page:${options.page + 1}`,
 				disabled: options.page + 1 > pages - 1
 			}
 		]
 	});
 
-	if (options.type === "create") rows[rows.length - 1].components.unshift({
+	if (canCreate) rows[rows.length - 1].components.unshift({
 		type: MessageComponentTypes.Button,
 		style: ButtonStyles.Primary,
 		emoji: { name: "create", id: 1153016555374911618n },
@@ -303,37 +296,18 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 	});
 
 	return {
-		embeds: options.type === "browse"
-			? {
-				title: "Welcome to the marketplace! 📚",
-				description: "*Here you can find custom **user-made personalities & styles** to perfect your experience with the bot.*",
-				color: EmbedColor.Orange
-			}
-			
-			: {
-				title: "Welcome to the marketplace dashboard! ⚙️",
-				description: "*From here, you can manage all your marketplace creations & refine them as needed.*",
-				color: EmbedColor.Orange,
-
-				fields: [
-					{
-						name: "Creating an item in the marketplace",
-						value: "To create something in the marketplace, press the **<:create:1153016555374911618> Create** button below. Then, you will have to select which type of marketplace item you want to create, e.g. **Style** 🖌️ or **Personality** 😊."
-					},
-
-					{
-						name: "Updating an existing item in the marketplace",
-						value: "In case you want to update a creation of yours in the marketplace, simply go to its page & press the **<:edit:1153011486185230347> Edit** button at the bottom."
-					}
-				]
-			},
+		embeds: {
+			title: "Welcome to the marketplace! 📚",
+			description: "*Here you can find custom **user-made personalities & styles** to perfect your experience with the bot.*",
+			color: EmbedColor.Orange
+		},
 
 		components: rows,
 		ephemeral: true
 	};
 }
 
-/** Build a small preview of an entry, as an embed field. */
+/** Build a small preview of an entry, as a select option. */
 function buildEntryPreview(entry: DBMarketplaceEntry): SelectOption {
 	return {
 		label: entry.status.builtIn ? `${entry.name} ⭐` : entry.name,
@@ -386,7 +360,7 @@ async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketp
 	buttons.push({
 		type: MessageComponentTypes.Button,
 		style: ButtonStyles.Primary,
-		customId: "market:page:browse:0",
+		customId: "market:page:0",
 		emoji: { name: "home", id: 1152658440087425094n }
 	});
 
@@ -397,7 +371,7 @@ async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketp
 					? { name: creator.username, iconUrl: avatarUrl(creator.id, creator.discriminator, { format: "png", avatar: creator.avatar }) }
 					: undefined,
 
-				footer: { text: `Used ${new Intl.NumberFormat("en-US").format(entry.stats.uses)} time${entry.stats.uses !== 1 ? "s" : ""}` },
+				footer: { text: `${new Intl.NumberFormat("en-US").format(entry.stats.uses)} use${entry.stats.uses !== 1 ? "s" : ""}` },
 				title: `${entry.name} ${emojiToString(entry.emoji)}`,
 				description: entry.description ? `*${entry.description}*` : undefined
 			},
@@ -441,6 +415,17 @@ function buildCreationModal(
 }
 
 /** Check whether a user can create & manage entries in the marketplace. */
-function canCreate(env: DBEnvironment) {
+function canCreateInMarketplace(env: DBEnvironment) {
 	return env.user.roles.includes(DBRole.Tester);
+}
+
+/** Sort the given marketplace entries accordingly. */
+function sortEntries(entries: DBMarketplaceEntry[]): DBMarketplaceEntry[] {
+	return entries.sort((a, b) => {
+		/* Always show the default entry at the top. */
+		if (a.status.default) return -1;
+		if (b.status.default) return 1;
+
+		return b.stats.uses - a.stats.uses;
+	});
 }

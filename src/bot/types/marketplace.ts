@@ -4,7 +4,6 @@ import type { DBMarketplaceEntry, DBMarketplaceType } from "../../db/types/marke
 import { emojiToString, emojiToUnicode, stringToEmoji } from "../utils/helpers.js";
 
 export interface MarketplaceFilterOptions {
-	type: "browse" | "create";
 	creator?: string;
 	page: number;
 }

@@ -4,6 +4,7 @@ export type DBMarketplaceType = "personality" | "style" | "indicator";
 
 export interface DBMarketplaceStatus {
 	builtIn?: boolean;
+	default?: boolean;
 	type: "approved" | "pending" | "rejected";
 	visibility: "public" | "private";
 }

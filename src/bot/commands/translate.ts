@@ -4,9 +4,9 @@ import { moderate, moderationNotice } from "../moderation/mod.js";
 import { ModerationSource } from "../moderation/types/mod.js";
 import { USER_LANGUAGES } from "../../db/types/language.js";
 import { createCommand } from "../helpers/command.js";
+import { ResponseError } from "../errors/response.js";
 import { BRANDING_COLOR } from "../../config.js";
 import { APIError } from "../errors/api.js";
-import { ResponseError } from "../errors/response.js";
 
 export default createCommand({
 	name: "translate",

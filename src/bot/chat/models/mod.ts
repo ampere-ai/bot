@@ -49,7 +49,7 @@ interface ChatModelHandlerOptions {
 	emitter: Emitter<ChatModelResult>;
 }
 
-type ChatModelFinishReason = "stop" | "length"
+type ChatModelFinishReason = "stop" | "length";
 
 export interface ChatModelResult {
 	/** Result message */
