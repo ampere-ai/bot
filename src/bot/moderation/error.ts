@@ -28,7 +28,7 @@ export async function handleError(bot: Bot, { error }: HandleErrorOptions): Prom
 	return {
 		embeds: {
 			title: "Uh-oh... 😬",
-			description: `It seems like an error has occurred. *Feel free to join the **[support server](https://${SUPPORT_INVITE}), while waiting for the developers to fix the issue.*`,
+			description: `It seems like an error has occurred. *Feel free to join the **[support server](https://${SUPPORT_INVITE})**, while waiting for the developers to fix the issue.*`,
 			color: EmbedColor.Red
 		},
 
