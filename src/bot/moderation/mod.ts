@@ -160,8 +160,11 @@ export function infractionNotice(entry: DBGuild | DBUser, infraction: DBInfracti
 				title: `${location === "guild" ? "This server was" : "You were"} **${infraction.until ? "temporarily" : "permanently"}** banned from using the bot 😔`,
 				description: `_If you want to appeal or have questions about this ban, join our **[support server](https://${SUPPORT_INVITE})**_.`,
 				fields: buildInfractionInfo(infraction).fields,
+				footer: { text: SUPPORT_INVITE },
 				color: EmbedColor.Red
-			}
+			},
+
+			ephemeral: true
 		};
 
 	} else if (infraction.type === "unban") {
@@ -170,23 +173,29 @@ export function infractionNotice(entry: DBGuild | DBUser, infraction: DBInfracti
 				title: `${location === "guild" ? "Your server's" : "Your"} ban was revoked & you can use the bot again 🙌`,
 				description: `_If you have any further questions regarding this matter, join our **[support server](https://${SUPPORT_INVITE})**_.`,
 				fields: buildInfractionInfo(infraction).fields,
+				footer: { text: SUPPORT_INVITE },
 				color: EmbedColor.Yellow
-			}
+			},
+
+			ephemeral: true
 		};
 
 	} else if (infraction.type === "warn") {
 		return {
 			embeds: {
-				title: "Before you continue ...",
+				title: "Before you continue...",
 				description: `${location === "guild" ? "This server" : "You"} received a warning, as a consequence of ${location === "guild" ? "the" : "your"} interactions with our bot. *This is only a warning, you can continue to use the bot. If ${location === "guild" ? "your server" : "you"} however ${location === "guild" ? "keeps" : "keep"} violating our **usage policies**, we may have to take further moderative actions*.`,
 				fields: buildInfractionInfo(infraction).fields,
 				footer: { text: SUPPORT_INVITE },
-				color: EmbedColor.Yellow
-			}
+				color: EmbedColor.Orange
+			},
+
+			ephemeral: true
 		};
 	}
 
 	return {
-		embeds: buildInfractionInfo(infraction)
+		embeds: buildInfractionInfo(infraction),
+		ephemeral: true
 	};
 }

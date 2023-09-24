@@ -31,7 +31,7 @@ export interface ChatModel {
 	/** Cool-down for this model */
 	cooldown?: CommandCooldown;
 
-	/* Initial instructions to pass to the request */
+	/* Initial instructions to pass to the model */
 	initialPrompt?: ConversationMessage | ConversationMessage[];
 
 	/** Limits of the model, in terms of tokens */

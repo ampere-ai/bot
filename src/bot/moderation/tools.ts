@@ -72,9 +72,10 @@ export async function handleModerationInteraction({ bot, interaction, args }: In
 		/* The user selected an option from the list */
 		if (interaction.data?.componentType === MessageComponentTypes.SelectMenu) {
 			const quick = QUICK_ACTIONS.find(q => q.reason === interaction.data!.values![0])!;
+			const messageId = args[0] ? BigInt(args[0]) : null;
 
-			const messageId = BigInt(args.shift()!);
-			const original = await bot.helpers.getMessage(interaction.channelId!, messageId);
+			const original = messageId ? await bot.helpers.getMessage(interaction.channelId!, messageId)
+				.catch(() => null) : null;
 
 			if (action === "ban" || action === "unban") {
 				db = await banEntry(bot, db, {
@@ -99,24 +100,25 @@ export async function handleModerationInteraction({ bot, interaction, args }: In
 				color: EmbedColor.Yellow
 			};
 
-			await Promise.all([
-				bot.helpers.editMessage(interaction.channelId!, messageId, {
-					embeds: [ ...original.embeds!, embed ] as any, components: []
-				}),
+			if (original) original.edit({
+				embeds: [ ...original?.embeds ?? [], embed ], components: []
+			});
 
-				interaction.update({
-					embeds: embed, components: []
-				})
-			]);
+			await interaction.update({
+				embeds: embed, components: []
+			});
 
 		/** The user pressed either the `Ban` or `Warning` button */
 		} else {
+			/* Where this action originated from */
+			const type = args.shift()!;
+
 			const row: ActionRow = {
 				type: MessageComponentTypes.ActionRow,
 
 				components: [ {
 					type: MessageComponentTypes.SelectMenu,
-					customId: `mod:${action}:${location}:${id}:${interaction.message!.id}`,
+					customId: `mod:${action}:${location}:${id}${type === "flag" && interaction.message ? `:${interaction.message.id}` : ""}`,
 					placeholder: `Select ${action === "unban" ? "an" : "a"} ${action === "warn" ? "warning" : action === "unban" ? "un-ban" : "ban"} reason ${InfractionTypeToEmoji[action]}`,
 	
 					options: QUICK_ACTIONS
@@ -149,7 +151,7 @@ export function buildModerationToolbar(
 			type: MessageComponentTypes.Button,
 			style: ButtonStyles.Secondary,
 			label: type === "overview" ? label : undefined,
-			customId: `mod:${action}:${location}:${entry.id}`,
+			customId: `mod:${action}:${location}:${entry.id}:${type}`,
 			emoji: { name: emoji }
 		};
 	}
@@ -220,7 +222,7 @@ export async function buildModerationOverview(bot: Bot, location: "user" | "guil
 	if (flags.length > 0) embeds.push({
 		title: "Flags 👀", color: EmbedColor.Orange,
 
-		fields: flags.map(flag => {
+		fields: flags.sort((a, b) => b.when - a.when).map(flag => {
 			const action = flag.moderation!.auto
 				? MODERATION_FILTERS.find(filter => filter.name === flag.moderation!.auto!.filter)
 				: null;
@@ -239,7 +241,7 @@ export async function buildModerationOverview(bot: Bot, location: "user" | "guil
 	if (warnings.length > 0) embeds.push({
 		title: "Warnings ⚠️", color: EmbedColor.Yellow,
 
-		fields: warnings.map(w => ({
+		fields: warnings.sort((a, b) => b.when - a.when).map(w => ({
 			name: `· ${w.reason!}${!w.by ? " 🤖" : ""}`, inline: true,
 			value: `${w.by ? `<@${w.by}> · ` : ""}<t:${Math.floor(w.when / 1000)}:f>`
 		}))

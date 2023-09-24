@@ -3,6 +3,7 @@ import type { InteractionHandler } from "../types/interaction.js";
 
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../utils/cooldown.js";
 import { canUse, restrictionTypes } from "../utils/restriction.js";
+import { infractionNotice, isBanned } from "../moderation/mod.js";
 import { ResponseError } from "../errors/response.js";
 import { handleError } from "../moderation/error.js";
 import { EmbedColor } from "../utils/response.js";
@@ -18,12 +19,12 @@ export const HANDLERS: InteractionHandler[] = [
 	settings, premium, campaign, imagine, moderation, marketplace
 ];
 
-export const INTERACTION_SEP = ":";
+export const INTERACTION_ID_SEP = ":";
 
 export async function handleInteraction(bot: Bot, interaction: Interaction) {
 	if (!interaction.data || !interaction.data.customId) return;
 
-	const args = interaction.data.customId.split(INTERACTION_SEP);
+	const args = interaction.data.customId.split(INTERACTION_ID_SEP);
 	const name = args.shift()!;
 
 	const handler = HANDLERS.find(c => c.name === name) ?? null;
@@ -31,6 +32,10 @@ export async function handleInteraction(bot: Bot, interaction: Interaction) {
 
 	const env = await bot.db.env(interaction.user.id, interaction.guildId);
 	const type = bot.db.type(env);
+
+	if (isBanned(env.user)) return void await interaction.reply(
+		infractionNotice(env.user, isBanned(env.user)!)
+	);
 
 	if (handler.cooldown) {
 		if (hasCooldown(interaction)) {
