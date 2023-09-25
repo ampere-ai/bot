@@ -93,6 +93,11 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 		/* Tokens used for the entire history & prompt */
 		tokens = getChatMessageLength(...messages);
 
+		/* If the prompt itself exceeds the user-specific limit. */
+		if (maxContextLength - tokens <= 0 && conversation.history.length === 0) {
+			throw new ChatError(ChatErrorType.Length);
+		}
+
 		if (maxContextLength - tokens <= 0) conversation.history.shift();
 		else break;
 		
