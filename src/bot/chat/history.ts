@@ -79,8 +79,8 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 			});
 		}
 
-		/** Add the conversation's history. */
-		for (const entry of conversation.history) {
+		/** Add the conversation's history, if the tone didn't disable it intentionally. */
+		if (!personality.data.disableHistory) for (const entry of conversation.history) {
 			messages.push(
 				{ role: "user", content: entry.input.content },
 				{ role: "assistant", content: entry.output.content }
@@ -107,6 +107,8 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 	maxGenerationLength = Math.min(
 		model.maxTokens - tokens, maxGenerationLength
 	);
+
+	console.log(messages);
 
 	return {
 		maxTokens: maxGenerationLength, usedTokens: tokens, messages

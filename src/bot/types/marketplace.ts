@@ -91,7 +91,11 @@ type FieldsWithRequiredProperty<T extends Record<string, MarketplaceCreatorField
 
 interface MarketplaceCreator<Fields extends Record<string, MarketplaceCreatorField>> {
 	fields: Fields;
-	create: (fields: FieldsWithRequiredProperty<Fields> & FieldsWithRequiredProperty<typeof MARKETPLACE_BASE_FIELDS>, bot: Bot) => object;
+
+	create: (
+		fields: FieldsWithRequiredProperty<Fields> & FieldsWithRequiredProperty<typeof MARKETPLACE_BASE_FIELDS>,
+		bot: Bot
+	) => object;
 }
 
 export interface MarketplaceCategory<
@@ -123,11 +127,24 @@ export const MARKETPLACE_CATEGORIES = [
 					placeholder: "From now on, you must act as a ...",
 					style: TextStyles.Paragraph, maxLength: 2048,
 					parse: entry => entry.data.prompt
+				},
+
+				disableHistory: {
+					name: "Whether chat history should be disabled",
+					placeholder: "true / false",
+					style: TextStyles.Short, maxLength: 5,
+					parse: entry => Boolean(entry.data.disableHistory).toString(),
+					validate: input => {
+						if (![ "true", "false" ].includes(input)) return {
+							message: "Not a valid boolean"
+						};
+					}
 				}
 			},
 
 			create: fields => ({
-				prompt: fields.prompt
+				prompt: fields.prompt,
+				disableHistory: fields.disableHistory
 			})
 		}
 	}),

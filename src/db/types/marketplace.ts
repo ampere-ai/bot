@@ -48,6 +48,7 @@ export interface DBMarketplaceEntry<T = Record<string, any>> {
 
 export type MarketplacePersonality = DBMarketplaceEntry<{
 	prompt: string[] | string | null;
+	disableHistory?: boolean;
 }>;
 
 export type MarketplaceStyle = DBMarketplaceEntry<{
