@@ -19,7 +19,6 @@ export function setupVoteHandler(bot: Bot) {
 		const data: VoteData = message.body;
 
 		try {
-			/* Get the DM channel with the user. */
 			const channel = await bot.helpers.getDmChannel(data.id);
 	
 			await channel.send({

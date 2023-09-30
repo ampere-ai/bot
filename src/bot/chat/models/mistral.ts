@@ -1,8 +1,8 @@
 import { createChatModel } from "../../helpers/chat.js";
 
 export default createChatModel({
-	name: "LLaMA", description: "A foundational large language model, by Meta", id: "llama",
-	emoji: { name: "meta", id: 1151164065209651280n },
+	name: "Mistral", description: "Frontier AI in your hands", id: "mistral",
+	emoji: { name: "mistral", id: 1157006746603245628n },
 
 	maxTokens: 2048,
 	
@@ -11,15 +11,10 @@ export default createChatModel({
 		voter: 45 * 1000,
 		subscription: 10 * 1000
 	},
-
-	initialPrompt: {
-		role: "system",
-		content: "You are LLaMA, a foundational large language model, created by Meta."
-	},
-
+	
 	handler: async ({ bot, emitter, history }) => {
 		return bot.api.text.deepinfra({
-			model: "meta-llama/Llama-2-13b-chat-hf",
+			model: "mistralai/Mistral-7B-Instruct-v0.1",
 
 			messages: history.messages,
 			maxTokens: history.maxTokens,

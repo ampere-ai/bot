@@ -26,6 +26,9 @@ export interface HistoryData {
 	/** Amount of tokens used for the history */
 	usedTokens: number;
 
+	/** Which temperature to use; how creative the AI is */
+	temperature: number;
+
 	/** Messages in the history */
 	messages: ConversationMessage[];
 }
@@ -79,6 +82,11 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 			});
 		}
 
+		/* Map all of the system messages into a single one, to save tokens. */
+		if (messages.length > 0) messages = [ {
+			role: "system", content: messages.map(m => m.content).join("\n\n")
+		} ];
+
 		/** Add the conversation's history, if the tone didn't disable it intentionally. */
 		if (!personality.data.disableHistory) for (const entry of conversation.history) {
 			messages.push(
@@ -108,10 +116,8 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 		model.maxTokens - tokens, maxGenerationLength
 	);
 
-	console.log(messages);
-
 	return {
-		maxTokens: maxGenerationLength, usedTokens: tokens, messages
+		maxTokens: maxGenerationLength, usedTokens: tokens, temperature: 0.5, messages
 	};
 }
 

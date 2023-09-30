@@ -14,19 +14,34 @@ export const IMAGE_MODELS: ImageModel[] = [
 
 	{
 		name: "SDXL",
-		description: "Latest Stable Diffusion model",
+		description: "Latest Stable Diffusion model, more realism",
 		id: "sdxl",
-		path: "sh",
+		path: "deepinfra",
 
 		settings: {
 			forcedSize: { width: 1024, height: 1024 }
 		},
 
 		body: {
-			model: "SDXL_beta::stability.ai#6901", amount: 2
+			model: "stability-ai/sdxl"
 		}
 	},
 
+	{
+		name: "Stable Diffusion v2.1",
+		description: "Latent text-to-image Stable Diffusion model",
+		id: "sdxl",
+		path: "deepinfra",
+
+		settings: {
+			baseSize: { width: 768, height: 768 }
+		},
+
+		body: {
+			model: "stabilityai/stable-diffusion-2-1"
+		}
+	},
+	
 	{
 		name: "Project Unreal Engine 5",
 		description: "Trained to look like Unreal Engine 5 renders",

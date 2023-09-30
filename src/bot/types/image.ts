@@ -25,7 +25,7 @@ export interface ImageModel {
 	id: string;
 
 	/** Which path is used */
-	path: "sh" | "kandinsky";
+	path: "deepinfra" | "sh" | "kandinsky";
 
     /** Various settings for the model */
     settings?: ImageConfigModelSettings;

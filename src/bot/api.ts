@@ -124,13 +124,14 @@ class TextAPI extends BaseAPI {
 		});
 	}
 
-	public async llama(options: {
+	public async deepinfra(options: {
+		model: string;
 		messages: ConversationMessage[];
 		maxTokens?: number;
 		temperature?: number;
 	}, emitter: Emitter<ChatModelResult>): Promise<ChatModelResult> {
 		return this.fetch({
-			path: "text/llama", emitter, options, stream: true
+			path: "text/deepinfra", emitter, options, stream: true
 		});
 	}
 
@@ -176,6 +177,21 @@ class ImageAPI extends BaseAPI {
 	}, emitter?: Emitter<ImageGenerationResult>): Promise<ImageGenerationResult> {
 		return this.fetch({
 			path: "image/sh", emitter, options, stream: true
+		});
+	}
+
+	public async deepinfra(options: {
+		prompt: string;
+		negativePrompt?: string;
+		width?: number;
+		height?: number;
+		steps?: number;
+		guidance?: number;
+		amount?: number;
+		model?: string;
+	}, emitter?: Emitter<ImageGenerationResult>): Promise<ImageGenerationResult> {
+		return this.fetch({
+			path: "image/deepinfra", emitter, options, stream: true
 		});
 	}
 

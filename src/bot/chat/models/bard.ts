@@ -21,7 +21,7 @@ export default createChatModel({
 
 	handler: async ({ bot, emitter, history }) => {
 		return bot.api.text.google({
-			messages: history.messages
+			messages: history.messages, temperature: history.temperature
 		}, emitter);
 	}
 });

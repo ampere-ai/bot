@@ -20,7 +20,8 @@ export default createChatModel({
 	handler: async ({ bot, emitter, history }) => {
 		return bot.api.text.gpt({
 			messages: history.messages,
-			maxTokens: history.maxTokens
+			maxTokens: history.maxTokens,
+			temperature: history.temperature
 		}, emitter);
 	}
 });

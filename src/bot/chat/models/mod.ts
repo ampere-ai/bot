@@ -8,6 +8,7 @@ import type { Emitter } from "../../utils/event.js";
 import type { HistoryData } from "../history.js";
 
 import chatgpt from "./chatgpt.js";
+import mistral from "./mistral.js";
 import llama from "./llama.js";
 import gpt4 from "./gpt-4.js";
 import bard from "./bard.js";
@@ -66,5 +67,5 @@ export interface ChatModelResult {
 }
 
 export const CHAT_MODELS: ChatModel[] = [
-	chatgpt, gpt4, llama, bard
+	chatgpt, gpt4, llama, mistral, bard
 ];

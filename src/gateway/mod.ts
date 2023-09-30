@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { Collection, createBot, createGatewayManager } from "@discordeno/bot";
+import { Collection, createGatewayManager, createRestManager } from "@discordeno/bot";
 import { createLogger } from "@discordeno/utils";
 import { setTimeout } from "timers/promises";
 import { Worker } from "worker_threads";
@@ -30,15 +30,12 @@ app.use(
 
 app.use(express.json());
 
-const bot = createBot({
+const rest = createRestManager({
 	token: BOT_TOKEN,
-	events: {},
 
-	rest: {
-		proxy: {
-			authorization: HTTP_AUTH,
-			baseUrl: REST_URL
-		}
+	proxy: {
+		authorization: HTTP_AUTH,
+		baseUrl: REST_URL
 	}
 });
 
@@ -50,7 +47,7 @@ const gateway = createGatewayManager({
 
 	preferSnakeCase: true,
 
-	connection: await bot.rest.getSessionInfo(),
+	connection: await rest.getSessionInfo(),
 	events: {}
 });
 

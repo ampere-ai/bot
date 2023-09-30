@@ -21,6 +21,7 @@ export default createChatModel({
 		return bot.api.text.gpt({
 			messages: history.messages,
 			maxTokens: history.maxTokens,
+			temperature: history.temperature,
 			model: "gpt-4"
 		}, emitter);
 	}

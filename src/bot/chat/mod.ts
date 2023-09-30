@@ -242,7 +242,7 @@ async function execute(options: ExecuteOptions): Promise<ConversationResult> {
 function formatResult(result: ChatModelResult, id: string): ConversationResult {
 	return {
 		id, done: result.done,
-		message: { role: "assistant", content: result.content },
+		message: { role: "assistant", content: result.content.trim() },
 		cost: result.cost, finishReason: result.finishReason
 	};
 }
