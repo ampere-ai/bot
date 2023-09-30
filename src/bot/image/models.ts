@@ -30,7 +30,7 @@ export const IMAGE_MODELS: ImageModel[] = [
 	{
 		name: "Stable Diffusion v2.1",
 		description: "Latent text-to-image Stable Diffusion model",
-		id: "sdxl",
+		id: "sd21",
 		path: "deepinfra",
 
 		settings: {
@@ -41,7 +41,7 @@ export const IMAGE_MODELS: ImageModel[] = [
 			model: "stabilityai/stable-diffusion-2-1"
 		}
 	},
-	
+
 	{
 		name: "Project Unreal Engine 5",
 		description: "Trained to look like Unreal Engine 5 renders",
