@@ -80,8 +80,12 @@ class BaseAPI {
 	
 					onmessage: ({ data: raw }) => {
 						const data = JSON.parse(raw);
-						emitter.emit(data);
 
+						if (data.error && !data.success) {
+							throw new APIError(null, data);
+						}
+
+						emitter.emit(data);
 						if (data.done) resolve(data);
 					}
 				}).catch(reject);

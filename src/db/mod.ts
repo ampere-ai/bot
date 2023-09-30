@@ -2,6 +2,7 @@ import { PostgrestError, createClient as createSupabaseClient } from "@supabase/
 import { createClient as createRedisClient } from "redis";
 import { createLogger } from "@discordeno/utils";
 import RabbitMQ from "rabbitmq-client";
+import { randomUUID } from "crypto";
 import { bold } from "colorette";
 
 import type { Conversation } from "../bot/types/conversation.js";
@@ -36,7 +37,8 @@ const CollectionTemplates: Partial<Record<CollectionName, (id: string) => DBObje
 	}) as DBUser),
 
 	conversations: id => (({
-		id, history: []
+		id, uuid: randomUUID(),
+		history: []
 	}) as Conversation)
 };
 

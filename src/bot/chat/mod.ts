@@ -11,8 +11,8 @@ import type { DBEnvironment } from "../../db/types/mod.js";
 import { infractionNotice, isBanned, moderate, moderationNotice } from "../moderation/mod.js";
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../utils/cooldown.js";
 import { transformResponse, type MessageResponse, EmbedColor } from "../utils/response.js";
+import { type ModerationResult, ModerationSource } from "../moderation/types/mod.js";
 import { CHAT_MODELS, type ChatModel, type ChatModelResult } from "./models/mod.js";
-import { ModerationSource } from "../moderation/types/mod.js";
 import { getMarketplaceSetting } from "../marketplace.js";
 import { SettingsLocation } from "../types/settings.js";
 import { ResponseError } from "../errors/response.js";
@@ -101,9 +101,9 @@ export async function handleMessage(bot: Bot, message: Message) {
 			if (messageID === null) {
 				queued = true;
 
-				const reply = await message.reply(
-					await format({ env, model, personality, indicator, result })
-				);
+				const reply = await message.reply(await format({
+					env, model, personality, indicator, result, moderation
+				}));
 
 				messageID = reply.id;
 				queued = false;
@@ -112,7 +112,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 					message.channelId, messageID,
 					
 					transformResponse(await format({
-						env, model, personality, indicator, result
+						env, model, personality, indicator, result, moderation
 					}))
 				);
 			}
@@ -159,13 +159,13 @@ export async function handleMessage(bot: Bot, message: Message) {
 				message.channelId, messageID,
 				
 				transformResponse(await format({
-					env, model, personality, indicator, result
+					env, model, personality, indicator, result, moderation
 				}))
 			);
 		} else {
-			await message.reply(
-				await format({ env, model, personality, indicator, result })
-			);
+			await message.reply(await format({
+				env, model, personality, indicator, result, moderation
+			}));
 		} 
 
 	} catch (error) {
@@ -227,6 +227,7 @@ async function execute(options: ExecuteOptions): Promise<ConversationResult> {
 	});
 
 	/** Apply all updates to the conversation's history. */
+	await updateConversation(bot, options.conversation, options.conversation);
 	await bot.db.update("conversations", options.conversation.id, options.conversation);
 
 	/* Charge the user accordingly, if they're using the pay-as-you-go plan. */
@@ -249,14 +250,15 @@ function formatResult(result: ChatModelResult, id: string): ConversationResult {
 
 /** Format the chat model's response to be displayed nicely on Discord. */
 async function format(
-	{ env, result, model, personality, indicator }: Pick<ExecuteOptions, "env" | "model" | "personality"> & {
+	{ env, result, model, personality, indicator, moderation }: Pick<ExecuteOptions, "env" | "model" | "personality"> & {
 		result: ConversationResult;
 		indicator: ComponentEmoji;
+		moderation: ModerationResult;
 	}
 ) {
 	const response: MessageResponse = {
 		/* Disable @everyone and @here pings. */
-		mentions: { parse: [], repliedUser: true }
+		mentions: { parse: [], repliedUser: true },
 	};
 
 	let content = result.message.content.trim();
@@ -290,6 +292,10 @@ async function format(
 			embeds.push(ad.response.embed);
 		}
 	}
+
+	if (result.done && moderation.flagged) embeds.push(
+		moderationNotice({ result: moderation, small: true }).embeds as Embed
+	);
 
 	if (result.finishReason === "length") {
 		embeds.push({
@@ -325,10 +331,27 @@ async function format(
 }
 
 /** Reset the user's conversation. */
-export async function resetConversation(bot: Bot, env: DBEnvironment) {
-	await bot.db.update("conversations", env.user.id, {
-		history: []
+export async function resetConversation(bot: Bot, env: DBEnvironment, conversation: Conversation) {
+	/* Save the previous conversation to a dataset entry, if it's worth it. */
+	if (conversation.history.length > 1) {
+		const personality = await getMarketplaceSetting<MarketplacePersonality>(bot, env, "personality");
+		const model = getModel(bot, env);
+
+		await bot.api.dataset.add("conversation", conversation.uuid, {
+			model: model.id, personality: personality.id,
+			history: conversation.history
+		});
+	}
+
+	/* Clear the history & generate a new unique dataset identifier. */
+	await bot.db.update("conversations", conversation.id, {
+		uuid: randomUUID(), history: []
 	});
+}
+
+/** Update a user's conversation. */
+export async function updateConversation(bot: Bot, conversation: Conversation, updates: Partial<Conversation>) {
+	await bot.db.update("conversations", conversation, updates);
 }
 
 function getModel(bot: Bot, env: DBEnvironment) {

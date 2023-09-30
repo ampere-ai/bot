@@ -12,11 +12,11 @@ interface APIErrorOptions {
 export class APIError extends Error {
 	public readonly options: APIErrorOptions;
 
-	constructor(response: Response, body: any | null) {
+	constructor(response: Response | null, body: any | null) {
 		super();
 
 		this.options = {
-			code: response.status,
+			code: response?.status ?? 500,
 			data: body?.error ?? null
 		};
 

@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { SettingsCategory, SettingsLocation, SettingsOption, SettingsOptionType } from "./types/settings.js";
 
 import type { InteractionHandlerOptions } from "./types/interaction.js";
+import type { Conversation } from "./types/conversation.js";
 import type { DBEnvironment } from "../db/types/mod.js";
 import type { DBGuild } from "../db/types/guild.js";
 import type { DBUser } from "../db/types/user.js";
@@ -59,9 +60,9 @@ export const SettingsCategories: SettingsCategory[] = [
 					name: m.name, description: m.description, emoji: m.emoji, restrictions: m.restrictions, value: m.id
 				})),
 
-				handler: (bot, env) => {
-					return resetConversation(bot, env);
-				}
+				handler: async (bot, env) => {
+					const conversation = await bot.db.get<Conversation>("conversations", env.user.id);
+					if (conversation) await resetConversation(bot, env, conversation);				}
 			},
 
 			{
@@ -71,8 +72,9 @@ export const SettingsCategories: SettingsCategory[] = [
 				location: SettingsLocation.User,
 				hidden: true, default: "personality-neutral",
 
-				handler: (bot, env) => {
-					return resetConversation(bot, env);
+				handler: async (bot, env) => {
+					const conversation = await bot.db.get<Conversation>("conversations", env.user.id);
+					if (conversation) await resetConversation(bot, env, conversation);
 				}
 			},
 

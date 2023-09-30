@@ -20,7 +20,7 @@ export default createCommand({
 			message: "Wait for the current request in your conversation to finish", emoji: "😔"
 		});
 
-		await resetConversation(bot, env);
+		await resetConversation(bot, env, conversation);
 
 		return {
 			embeds: {
