@@ -48,7 +48,7 @@ class BaseAPI {
 			method: "GET", headers
 		});
 
-		if (!response.ok) throw new APIError(response, null);
+		if (!response.ok) throw new APIError(response, path, null);
 		return Buffer.from(await response.arrayBuffer());
 	}
 
@@ -70,7 +70,7 @@ class BaseAPI {
 	
 					onopen: async response => {
 						if (!response.ok) {
-							throw new APIError(response, await response.json());
+							throw new APIError(response, path, await response.json());
 						}
 					},
 					
@@ -82,7 +82,7 @@ class BaseAPI {
 						const data = JSON.parse(raw);
 
 						if (data.error && !data.success) {
-							throw new APIError(null, data);
+							throw new APIError(null, path, data);
 						}
 
 						emitter.emit(data);
@@ -102,7 +102,7 @@ class BaseAPI {
 			});
 
 			const data = await response.json();
-			if (!response.ok) throw new APIError(response, data);
+			if (!response.ok) throw new APIError(response, path, data);
 
 			return data;
 		}

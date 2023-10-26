@@ -6,7 +6,7 @@ import type { DBEnvironment } from "../db/types/mod.js";
 
 import { type MarketplaceFilterOptions, type MarketplacePage, MARKETPLACE_CATEGORIES, MARKETPLACE_BASE_FIELDS, MarketplaceCategory } from "./types/marketplace.js";
 import { type DBMarketplaceEntry, type DBMarketplaceType, DBMarketplaceStatistics } from "../db/types/marketplace.js";
-import { emojiToString, emojiToUnicode, stringToEmoji, titleCase } from "./utils/helpers.js";
+import { emojiToString, stringToEmoji, titleCase } from "./utils/helpers.js";
 import { type MessageResponse, EmbedColor } from "./utils/response.js";
 import { getSettingsValue, updateSettings } from "./settings.js";
 import { DBRole } from "../db/types/user.js";
@@ -19,7 +19,8 @@ async function createEntry(bot: Bot, data: Omit<DBMarketplaceEntry, "id" | "crea
 
 	return bot.db.update("marketplace", id, {
 		created: new Date().toISOString(),
-		stats: { uses: 0 }, ...data
+		stats: { uses: 0, views: 0 },
+		...data
 	});
 }
 
@@ -96,7 +97,9 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		await interaction.update(await buildEntryOverview(bot, env, entry));
 
 	} else if (action === "view") {
-		const entry = await fetchMarketplaceEntry(bot, interaction.data!.values![0]);
+		let entry = await fetchMarketplaceEntry(bot, interaction.data!.values![0]);
+
+		entry = await incrementStatistics(bot, entry, "views");
 		await interaction.update(await buildEntryOverview(bot, env, entry));
 		
 	} else if (action === "edit") {
@@ -157,9 +160,9 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 
 			/* Parsed emoji for the entry */
 			const emoji: ComponentEmoji | undefined = fields["emoji"] !== null
-				? bot.rest.changeToDiscordFormat(stringToEmoji(emojiToUnicode(
+				? bot.rest.changeToDiscordFormat(stringToEmoji(
 					fields["emoji"]
-				)!)!)
+				)!)
 				: undefined;
 
 			/* Updated entry data */
@@ -197,7 +200,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		} else if (interaction.data?.componentType === MessageComponentTypes.Button) {
 			return {
 				embeds: {
-					description: "Select which type of marketplace item you want to create.",
+					description: "Select which type of marketplace item you want to create ✏️",
 					color: EmbedColor.Orange
 				},
 
@@ -375,7 +378,7 @@ async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketp
 					? { name: creator.username, iconUrl: avatarUrl(creator.id, creator.discriminator, { format: "png", avatar: creator.avatar }) }
 					: undefined,
 
-				footer: { text: `${new Intl.NumberFormat("en-US").format(entry.stats.uses)} use${entry.stats.uses !== 1 ? "s" : ""}` },
+				footer: { text: `${new Intl.NumberFormat("en-US").format(entry.stats.views)} view${entry.stats.views !== 1 ? "s" : ""} • ${new Intl.NumberFormat("en-US").format(entry.stats.uses)} use${entry.stats.uses !== 1 ? "s" : ""}` },
 				title: `${entry.name} ${emojiToString(entry.emoji)}`,
 				description: entry.description ? `*${entry.description}*` : undefined
 			},
@@ -426,7 +429,7 @@ function canCreateInMarketplace(env: DBEnvironment) {
 /** Sort the given marketplace entries accordingly. */
 function sortEntries(entries: DBMarketplaceEntry[]): DBMarketplaceEntry[] {
 	return entries.sort((a, b) => {
-		/* Always show the default entry at the top. */
+		/* Show default entries at the top. */
 		if (a.status.default) return -1;
 		if (b.status.default) return 1;
 

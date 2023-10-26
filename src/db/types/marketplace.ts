@@ -12,6 +12,9 @@ export interface DBMarketplaceStatus {
 export interface DBMarketplaceStatistics {
 	/** How many times this marketplace entry has been used */
 	uses: number;
+
+	/** How many times this marketplace entry has been viewed */
+	views: number;
 }
 
 export interface DBMarketplaceEntry<T = Record<string, any>> {

@@ -41,7 +41,7 @@ export const runningGenerations = new Set<bigint>();
 const MESSAGE_EDIT_INTERVAL = 5 * 1000;
 
 export async function handleMessage(bot: Bot, message: Message) {
-	if (message.author.id === bot.id || message.content.length === 0) return;
+	if (message.author.bot || message.author.id === bot.id || message.content.length === 0) return;
 	if (!mentions(bot, message)) return;
 
 	if (runningGenerations.has(message.author.id)) throw new ResponseError({

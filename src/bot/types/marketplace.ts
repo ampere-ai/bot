@@ -1,7 +1,7 @@
 import { type Bot, type ComponentEmoji, TextStyles } from "@discordeno/bot";
 
 import type { DBMarketplaceEntry, DBMarketplaceType } from "../../db/types/marketplace.js";
-import { emojiToString, emojiToUnicode, stringToEmoji } from "../utils/helpers.js";
+import { emojiToString, stringToEmoji } from "../utils/helpers.js";
 
 export interface MarketplaceFilterOptions {
 	creator?: string;
@@ -63,7 +63,7 @@ export const MARKETPLACE_BASE_FIELDS: Record<"name" | "emoji" | "description", M
 		parse: entry => emojiToString(entry.emoji),
 
 		validate: input => {
-			if (!stringToEmoji(emojiToUnicode(input))) return {
+			if (!stringToEmoji(input)) return {
 				message: "Invalid emoji"
 			};
 		}
@@ -177,9 +177,9 @@ export const MARKETPLACE_CATEGORIES = [
 			fields: {},
 
 			create: (fields, bot) => 
-				bot.rest.changeToDiscordFormat(stringToEmoji(emojiToUnicode(
+				bot.rest.changeToDiscordFormat(stringToEmoji(
 					fields.emoji
-				)!)!)
+				)!)
 		}
 	})
 ];

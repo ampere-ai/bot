@@ -1,7 +1,7 @@
-import type { ActionRow, Embed } from "@discordeno/bot";
+import type { ComponentEmoji } from "@discordeno/bot";
 import type { EmbedColor } from "../../bot/utils/response.js";
 
-type DBCampaignButton = DBCampaignLinkButton | DBCampaignIDButton
+type DBCampaignButton = DBCampaignLinkButton | DBCampaignIDButton;
 
 interface DBCampaignLinkButton {
 	type: "Link";
@@ -13,17 +13,17 @@ interface DBCampaignLinkButton {
 	label?: string;
 }
 
-interface DBCampaignIDButton {
+export interface DBCampaignIDButton {
 	type: "Primary" | "Secondary" | "Success" | "Danger";
 
 	/** Label of the button */
 	label: string;
 
 	/** Emoji of the button */
-	emoji?: string;
+	emoji?: ComponentEmoji;
 
 	/** Custom ID of the button */
-	id?: string;
+	id: string;
 }
 
 interface DBCampaignSettings {
@@ -43,7 +43,7 @@ interface DBCampaignSettings {
     thumbnail?: string;
 }
 
-interface DBCampaignStatistics {
+export interface DBCampaignStatistics {
     clicks: {
         /** Total amount of clicks to this campaign */
         total: number;
@@ -55,7 +55,7 @@ interface DBCampaignStatistics {
     };
 }
 
-export type DBCampaignBudgetType = "click" | "view" | "none"
+export type DBCampaignBudgetType = "click" | "view" | "none";
 
 export interface DBCampaignBudget {
     /** The total budget of the campaign */
@@ -98,14 +98,4 @@ export interface DBCampaign {
 
     /** Statistics of the campaign, e.g. how many clicks */
     stats: DBCampaignStatistics;
-}
-
-export interface CampaignRender {
-	row: ActionRow;
-    embed: Embed;
-}
-
-export interface CampaignDisplay {
-	response: CampaignRender;
-    campaign: DBCampaign;
 }

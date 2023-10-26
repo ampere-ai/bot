@@ -1,4 +1,4 @@
-import { Collection, type Interaction, type Embed, type Bot, MessageComponentTypes, ButtonStyles } from "@discordeno/bot";
+import { type Interaction, type Embed, type Bot, Collection, MessageComponentTypes, ButtonStyles } from "@discordeno/bot";
 
 import type { Conversation } from "../types/conversation.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
@@ -11,7 +11,7 @@ type CooldownTarget = Conversation | Interaction;
 /** Global command cool-downs */
 const cooldowns: Collection<string, number> = new Collection();
 
-export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTarget): MessageResponse {
+export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTarget) {
 	const cooldown = getCooldown(target);
 	const premium = bot.db.premium(env);
 

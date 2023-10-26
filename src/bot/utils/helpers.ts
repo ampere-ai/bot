@@ -14,6 +14,17 @@ export function truncate(content: string, length: number, suffix = "...") {
 		: content;
 }
 
+export function chunk<T>(arr: T[], size: number): T[][] {
+	const chunks: T[][] = [];
+
+	for (let i = 0; i < arr.length; i += size) {
+		const chunk = arr.slice(i, i + size);
+		chunks.push(chunk);
+	}
+
+	return chunks;
+}
+
 export function emojiToString(emoji: ComponentEmoji) {
 	if (!emoji.id) return emoji.name;
 	return `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`;
@@ -24,9 +35,9 @@ export function stringToEmoji(content: string): ComponentEmoji | null {
 	const DISCORD_REGEXP = /<(a)?:([a-zA-Z0-9_]+):([0-9]+)>/g;
 
 	/* Regular Unicode emoji */
-	if(UNICODE_REGEXP.test(content)) {
+	if(UNICODE_REGEXP.test(emojiToUnicode(content))) {
 		return {
-			name: content.match(UNICODE_REGEXP)![0]
+			name: emojiToUnicode(content).match(UNICODE_REGEXP)![0]
 		};
 	}
   
@@ -50,6 +61,6 @@ export function stringToEmoji(content: string): ComponentEmoji | null {
 	return null;
 }
 
-export function emojiToUnicode(content: string) {
+function emojiToUnicode(content: string) {
 	return EmojiMap.get(content) ?? content;
 }
