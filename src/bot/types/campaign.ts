@@ -260,8 +260,6 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 				validate: ({ value }) => {
 					if (value.length === 0) return true;
 
-					console.log(value);
-
 					if (stringToEmoji(value) === null) return {
 						message: "invalid emoji"
 					};

@@ -88,13 +88,13 @@ export async function pickAdvertisement(env: DBEnvironment): Promise<CampaignDis
 	/* Current advertisement counter */
 	const currentCounter = counters.get(env.user.id) ?? 0;
 
-	/* If an ad was requested to be displayed, but one was already shown too recently, increment the counter & return. */
+	/* If an ad was requested to be displayed but one was already shown too recently, increment the counter & return. */
 	if (COUNTER_LIMITS[type]! > currentCounter) {
 		counters.set(env.user.id, currentCounter + 1);
 		return null;
 	}
 
-	let campaign = pick();
+	let campaign = pickCampaign();
 	if (!campaign) return null;
 
 	/* Reset the counter, if an ad was displayed. */
@@ -105,14 +105,16 @@ export async function pickAdvertisement(env: DBEnvironment): Promise<CampaignDis
 }
 
 /** Choose a random campaign to display. */
-function pick() {
+function pickCampaign() {
 	const filtered = campaigns.filter(c => c.active && available(c));
+	if (filtered.length === 0) return null;
+
 	return filtered[Math.floor(Math.random() * filtered.length)];
 }
 
 /** Figure out whether a campaign can run, making sure that its budget is still under the limit. */
 function available(campaign: DBCampaign) {
-	return campaign.budget ? campaign.budget.total > campaign.budget.used : true;
+	return campaign.budget.type !== "none" ? campaign.budget.total > campaign.budget.used : true;
 }
 
 /** Format a campaign into a nice-looking embed. */

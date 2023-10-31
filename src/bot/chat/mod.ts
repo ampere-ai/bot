@@ -54,8 +54,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 	};
 
 	if (input.content.length === 0) {
-		await bot.helpers.addReaction(message.channelId, message.id, "👋");
-		return;
+		return await bot.helpers.addReaction(message.channelId, message.id, "👋");
 	}
 
 	const conversation: Conversation = await bot.db.fetch("conversations", message.author.id);
