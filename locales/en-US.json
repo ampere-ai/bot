@@ -1,0 +1,396 @@
+{
+	"number": {
+		"min": "min. {{num}}",
+		"max": "max. {{num}}"
+	},
+
+	"image": {
+		"models": {
+			"kandinsky": {
+				"desc": "Multi-lingual latent diffusion model"
+			},
+
+			"sdxl": {
+				"desc": "Latest Stable Diffusion model, more realism"
+			},
+
+			"sd21": {
+				"desc": "Latent text-to-image Stable Diffusion model"
+			},
+
+			"ue5": {
+				"desc": "Trained to look like Unreal Engine 5 renders"
+			},
+
+			"dreamshaper": {
+				"desc": "A mix of several Stable Diffusion models"
+			},
+
+			"icbinp": {
+				"desc": "Highly photo-realistic Stable Diffusion model"
+			},
+
+			"anything": {
+				"desc": "Stable Diffusion-based model for generating anime"
+			}
+		},
+
+		"fields": {
+			"ratio": "Ratio",
+			"negative_prompt": "Negative",
+			"steps": "Steps",
+			"guidance": "Guidance",
+			"style": "Style"
+		},
+
+		"indicator": "Generating",
+
+		"errors": {
+			"fixed_res": "**{{model}}** has a fixed resolution of `{{width}}×{{height}}`; *you cannot modify the aspect ratio*",
+			"invalid_ratio": "You specified an **invalid** aspect ratio",
+			"all_nsfw": "All of the generated images were deemed as **not safe for work**"
+		}
+	},
+
+	"chat": {
+		"models": {
+			"bard": {
+				"desc": "Next-generation large language model by Google"
+			},
+
+			"chatgpt": {
+				"desc": "The usual ChatGPT"
+			},
+
+			"gpt-4": {
+				"desc": "OpenAI's newest GPT-4 model"
+			},
+
+			"llama": {
+				"desc": "A foundational large language model, by Meta"
+			},
+
+			"mistral": {
+				"desc": "Frontier AI in your hands"
+			}
+		}
+	},
+
+	"cooldown": {
+		"title": "Whoa-whoa... slow down ⌛",
+		"description": "This action is currently on cool-down; you can use it again <t:{{time}}:R>."
+	},
+	
+	"marketplace": {
+		"title": "Welcome to the marketplace! 📚",
+		"desc": "*Here you can find custom **user-made personalities & styles** to perfect your experience with the bot.*",
+
+		"manage": {
+			"create": "Create a",
+			"edit": "Edit this",
+			"select_type": "Select which type of marketplace item you want to create ✏️"
+		},
+
+		"counts": {
+			"views_one": "{{count}} view",
+			"views_other": "{{count}} views",
+
+			"uses_one": "{{count}} use",
+			"uses_other": "{{count}} uses"
+		},
+
+		"fields": {
+			"name": {
+				"name": "Name"
+			},
+
+			"emoji": {
+				"name": "Fitting emoji",
+				"placeholder": ":flushed:, flushed, 😳"
+			},
+
+			"description": {
+				"name": "Description"
+			},
+
+			"prompt": {
+				"name": "Initial prompt, given to the AI model",
+				"placeholder": "From now on, you must act as a ..."
+			},
+
+			"disableHistory": {
+				"name": "Whether chat history should be disabled",
+				"placeholder": "true / false"
+			},
+
+			"tags": {
+				"name": "List of tags, separated by newline",
+				"placeholder": "cinematic\nvignette\n4k rtx"
+			}
+		},
+
+		"categories": {
+			"personality": {
+				"name": "Personality"
+			},
+
+			"style": {
+				"name": "Style"
+			},
+
+			"indicator": {
+				"name": "Loading indicator"
+			}
+		},
+
+		"buttons": {
+			"use": "Use"
+		},
+
+		"errors": {
+			"invalid_value": "The field **{{name}}** was given an invalid value » **{{message}}**",
+			"invalid_emoji": "Invalid emoji",
+			"invalid_bool": "Not a valid boolean",
+			"too_long": "Cannot be longer than {{length}} lines"
+		}
+	},
+
+	"error": {
+		"title": "Uh-oh... 😬",
+		"desc": "It seems like an error has occurred. *[The developers have been notified](https://{{invite}}).*"
+	},
+
+	"vote": {
+		"title": "Vote for our bot <:topgg:1151514119749521468>",
+		"fields": [
+			{
+				"name": "Way lower cool-down ⏰",
+				"value": "The cool-down between messages can get a bit annoying. Once you've voted for the bot, it'll be reduced by a bit, so you can enjoy the bot even more."
+			},
+
+			{
+				"name": "Less annoying ads ‼️",
+				"value": "By voting for the bot, you will be shown less ads."
+			},
+
+			{
+				"name": "Support our bot 🙏",
+				"value": "If you vote, you'll help us grow even further, and give people access to **ChatGPT** and other language models for completely free."
+			}
+		]
+	},
+
+	"translate": {
+		"title": "Translated message 🌐",
+		"fields": {
+			"detected": "Detected language",
+			"into": "Translated into"
+		}
+	},
+
+	"info": {
+		"title": "Bot Statistics",
+		"fields": {
+			"servers": "Servers",
+			"users": "Users",
+			"cluster": "Cluster & Shard",
+			"latency": "Latency",
+			"memory": "RAM"
+		},
+		"buttons": {
+			"invite": "Add me to your server",
+			"support": "Support server"
+		}
+	},
+
+	"settings": {
+		"button": "Settings",
+		"none": "None",
+
+		"errors": {
+			"guild_only": "You can only view & change these settings on **servers**",
+			"missing_permissions": "You must have the `Manage Server` permission to view & change these settings"
+		},
+
+		"categories": {
+			"general": {
+				"name": "General",
+
+				"options": {
+					"language": { "name": "Language" },
+					"indicator": { "name": "Loading indicator" }
+				}
+			},
+
+			"chat": {
+				"name": "Chat",
+
+				"options": {
+					"partial_messages": { "name": "Partial messages" }
+				}
+			},
+
+			"image": {
+				"name": "Image",
+
+				"options": {
+					"model": { "name": "Image model" }
+				}
+			},
+
+			"premium": {
+				"name": "Premium",
+
+				"options": {
+					"type_priority": {
+						"name": "Type priority"
+					},
+
+					"location_priority": {
+						"name": "Location priority"
+					}
+				}
+			}
+		}
+	},
+
+	"premium": {
+		"purchase": {
+			"message": "You can buy a **Premium** subscription or **Premium pay-as-you-go** credits below.",
+			"title": "Thank you for purchasing {{type}} 🎉"
+		},
+
+		"buttons": {
+			"purchase": "Purchase",
+			"upgrade": "Upgrade to Premium",
+			"remove_ads": "Remove ads"
+		},
+
+		"overview": {
+			"title": {
+				"sub": {
+					"guild": "The server's Premium subscription ✨",
+					"user": "Your Premium subscription ✨"
+				},
+
+				"payg": {
+					"guild": "The server's pay-as-you-go plan 📊",
+					"user": "Your pay-as-you-go plan 📊"
+				}
+			},
+			"expenses": "Previous expenses",
+			"charges": "Previous charge-ups",
+			"using_gateway": "using **{{gateway}}**",
+			"out_of_credits": "_You ran out of credits for the **Pay-as-you-go** plan; re-charge credits using the button below_.",
+			"moderator": "*Due to being a moderator of the bot, you have access to **free Premium***."
+		},
+
+		"sub": {
+			"since": "Premium subscriber since",
+			"until": "Subscription active until"
+		},
+
+		"settings": {
+			"payg_priority": {
+				"name": "Pay-as-you-go plan",
+				"desc": "Use the credit-based pay-as-you-go plan first"
+			},
+
+			"subscription_priority": {
+				"name": "Subscription",
+				"desc": "Use the fixed subscription first"
+			},
+
+			"guild_priority": {
+				"name": "The server's Premium",
+				"desc": "Use the server's Premium before using your own"
+			},
+
+			"user_priority": {
+				"name": "My own Premium",
+				"desc": "Always use your own Premium, not regarding whether the server has Premium or not"
+			}
+		},
+
+		"cooldown": "By upgrading to **Premium** ✨, you will have practically **no cool-down** for **all features** throughout the bot. **Premium** ✨ also *removes* all annoying advertisements.",
+
+		"errors": {
+			"missing_permissions": "You must have the `Manage Server` permission to view & manage the server's plan"
+		}
+	},
+
+	"reset": {
+		"errors": {
+			"inactive": "You do not have an active conversation",
+			"pending_request": "Wait for the current request in your conversation to finish"
+		},
+
+		"desc": "Your conversation has been reset 😊"
+	},
+
+	"campaign": {
+		"create": {
+			"title": "Create a new campaign 📝",
+			"name": "Name",
+			"choose": "Choose a campaign ...",
+			"welcome": "## **Welcome, <@{{id}}> 👋**\n*To proceed, select a campaign you want to modify or create a new one.*",
+			"overview": "Overview for campaign `{{name}}`",
+			"edit_value": "Change the value 📝"
+		},
+
+		"stats": {
+			"active": "Active",
+			"members": "Members",
+			"views": "Views",
+			"clicks": "Clicks",
+			"budget": "Budget",
+			"cost": "Cost",
+			"rate": "Conversion rate"
+		},
+
+		"buttons": {
+			"home": "Home",
+			"preview": "Preview",
+			"toggle": {
+				"enable": "Enable",
+				"disable": "Disable"
+			}
+		},
+
+		"notice": "Sponsored advertisement"
+	},
+
+	"commands": {
+		"bot": {
+			"desc": "View information & statistics about the bot"
+		},
+
+		"imagine": {
+			"desc": "Generate beautiful images using AI"
+		},
+
+		"marketplace": {
+			"desc": "Browse the extensive marketplace"
+		},
+
+		"premium": {
+			"desc": "View information about Premium & your current subscription"
+		},
+
+		"reset": {
+			"desc": "Reset your conversation with the bot"
+		},
+
+		"translate": {
+			"desc": "Translate text using AI"
+		},
+
+		"vote": {
+			"desc": "Vote for our bot & get rewards"
+		},
+
+		"campaigns": {
+			"desc": "View & manage advertisement campaigns"
+		}
+	}
+}

@@ -1,0 +1,211 @@
+{
+    "image": {
+        "models": {
+            "sdxl": {
+                "desc": "Neuestes Stable Diffusion-Modell, mehr Realimus"
+            },
+            "dreamshaper": {
+                "desc": "Eine Kombination aus verschiedenen Stable Diffusion-Modellen"
+            },
+            "kandinsky": {
+                "desc": "Mehrsprachiges Diffusion-Modell"
+            },
+            "sd21": {
+                "desc": "Latentes Text-zu-Bild Stable Diffusion-Modell"
+            },
+            "icbinp": {
+                "desc": "Photorealistiches Stable Diffusion-Modell"
+            },
+            "anything": {
+                "desc": "Stable Diffusion-basiertes Modell für Anime"
+            },
+            "ue5": {
+                "desc": "Trainiert, um wie Unreal Engine 5-Renders auszusehen"
+            }
+        },
+        "fields": {
+            "negative_prompt": "Negative Prompt",
+            "ratio": "Seitenverhältnis",
+            "steps": "Schritte",
+            "style": "Stil"
+        },
+        "errors": {
+            "invalid_ratio": "Du hast ein **ungültiges** Seitenverhältnis angegeben",
+            "fixed_res": "**{{model}}** hat eine feste eine feste Auflösung von `{{width}}×{{height}}`; *du kannst das Seitenverhältnis nicht verändern*",
+            "all_nsfw": "Alle generierten Bilder wurden als **unsicher** eingeschätzt"
+        },
+        "indicator": "Generiere"
+    },
+    "info": {
+        "fields": {
+            "memory": "RAM",
+            "servers": "Server",
+            "users": "Benuter",
+            "cluster": "Cluster & Shard",
+            "latency": "Latenz"
+        },
+        "title": "Bot-Statistiken",
+        "buttons": {
+            "support": "Support-Server",
+            "invite": "Füg mich zu deinem Server hinzu"
+        }
+    },
+    "translate": {
+        "fields": {
+            "detected": "Erkannte Sprache",
+            "into": "Übersetzt in"
+        },
+        "title": "Übersetzte Nachricht 🌐"
+    },
+    "vote": {
+        "fields": [
+            {
+                "name": "Viel niedrigerer Cooldown ⏰",
+                "value": "Die Cooldown-Nachricht zwischen Chats kann ein bisschen nervig werden. Sobald du für den Bot gestimmt hast, wird dein Cooldown reduziert, so dass du den Bot noch mehr genießen kannst."
+            },
+            {
+                "name": "Weniger nervige Werbungen ‼️",
+                "value": "Indem du für unseren Bot stimmst, wird dir weniger Werbung gezeigt."
+            },
+            {
+                "name": "Unterstütze unseren Bot 🙏",
+                "value": "Indem du für uns abstimmst, hilfst du uns noch weiter zu wachen, damit wir Leuten die Möglichkeit geben können, **ChatGPT** und andere KI-Modelle zu nutzen."
+            }
+        ],
+        "title": "Stimme für unseren Bot <:topgg:1151514119749521468>"
+    },
+    "settings": {
+        "errors": {
+            "missing_permissions": "Du benötigst die `Server verwalten`-Berechtigung um diese EInstellungen anzuschauen & zu bearbeiten",
+            "guild_only": "Du kannst diese Einstellung nur auf **Servern** anschauen & bearbeiten"
+        },
+        "categories": {
+            "general": {
+                "name": "Allgemein",
+                "options": {
+                    "indicator": {
+                        "name": "Ladesymbol"
+                    },
+                    "language": {
+                        "name": "Sprache"
+                    }
+                }
+            },
+            "chat": {
+                "name": "Chat",
+                "options": {
+                    "partial_messages": {
+                        "name": "Unvollständige Antworten"
+                    }
+                }
+            },
+            "image": {
+                "options": {
+                    "model": {
+                        "name": "Bild-KI-Modell"
+                    }
+                },
+                "name": "Bild"
+            },
+            "premium": {
+                "name": "Premium",
+                "options": {
+                    "location_priority": {
+                        "name": "Standort-Priorität"
+                    },
+                    "type_priority": {
+                        "name": "Typ-Priorität"
+                    }
+                }
+            }
+        },
+        "button": "Einstellungen",
+        "none": "Nichts"
+    },
+    "marketplace": {
+        "fields": {
+            "description": {
+                "name": "Beschreibung"
+            },
+            "emoji": {
+                "name": "Passender Emoji",
+                "placeholder": ":flushed:, flushed, 😳"
+            },
+            "tags": {
+                "name": "Liste mit Tags, pro Zeile",
+                "placeholder": "cinematic\nvignette\n4k rtx"
+            },
+            "name": {
+                "name": "Name"
+            },
+            "disableHistory": {
+                "name": "Ob Chatverlauf deaktiviert werden soll",
+                "placeholder": "true / false"
+            },
+            "prompt": {
+                "placeholder": "Von jetzt an musst du als ein ...",
+                "name": "Eingangs-Prompt, die zur der KI gegeben wird"
+            }
+        },
+        "buttons": {
+            "use": "Benutzen"
+        },
+        "desc": "*Hier kannst du **user-generierte Persöhnlichkeiten & Stile** finden, um dein Erlebnis mit dem Bot zu perfektionieren.*",
+        "errors": {
+            "invalid_value": "Das Feld **{{name}}** hat einen ungültigen Wert » **{{message}}**",
+            "invalid_bool": "Kein gültiger Boolean",
+            "invalid_emoji": "Ungültiger Emoji",
+            "too_long": "Darf nicht länger als {{length}} Zeilen sein"
+        },
+        "counts": {
+            "uses_one": "{{count}} Benutzung",
+            "uses_other": "{{count}} Benutzungen",
+            "views_one": "{{count}} Aufruf",
+            "views_other": "{{count}} Aufrufe"
+        },
+        "title": "Willkommen zum Marktplatz! 📚",
+        "manage": {
+            "edit": "Bearbeite diesen",
+            "select_type": "Wähle aus, welche Art von Markplatz-Item du erstellen willst ✏️",
+            "create": "Erstelle ein"
+        },
+        "categories": {
+            "indicator": {
+                "name": "Ladesymbol"
+            },
+            "personality": {
+                "name": "Persöhnlichkeit"
+            },
+            "style": {
+                "name": "Stil"
+            }
+        }
+    },
+    "error": {
+        "desc": "Es scheint, als wäre etwas schiefgegangen. *[Die Entwickler wurden informiert](https://{{invite}}).*",
+        "title": "Ups... 😬"
+    },
+    "chat": {
+        "models": {
+            "llama": {
+                "desc": "Ein grundlegendes großes Sprachmodell, von Meta"
+            },
+            "mistral": {
+                "desc": "Frontier KI in deinen Händen"
+            },
+            "chatgpt": {
+                "desc": "Das gewöhnliche ChatGPT"
+            },
+            "bard": {
+                "desc": "Großes Sprachmodell der nächsten Generation von Google"
+            },
+            "gpt-4": {
+                "desc": "OpenAIs neuestes GPT-4 Modell"
+            }
+        }
+    },
+    "number": {
+        "min": "min. {{num}}",
+        "max": "max. {{num}}"
+    }
+}

@@ -1,6 +1,8 @@
 import { Bot } from "@discordeno/bot";
 import { bold } from "colorette";
 
+import type { DBEnvironment } from "../../db/types/mod.js";
+
 import { EmbedColor, MessageResponse, transformResponse } from "../utils/response.js";
 import { MOD_CHANNELS, SUPPORT_INVITE } from "../../config.js";
 
@@ -11,11 +13,11 @@ interface JSONError {
 }
 
 interface HandleErrorOptions {
+	env: DBEnvironment;
     error: Error | unknown;
-    guild: bigint | undefined;
 }
 
-export async function handleError(bot: Bot, { error }: HandleErrorOptions): Promise<MessageResponse> {
+export async function handleError(bot: Bot, { env, error }: HandleErrorOptions): Promise<MessageResponse> {
 	const data = errorToJSON(error as Error);
 	bot.logger.error(bold("An error occurred"), "->", data);
 
@@ -27,12 +29,12 @@ export async function handleError(bot: Bot, { error }: HandleErrorOptions): Prom
 
 	return {
 		embeds: {
-			title: "Uh-oh... 😬",
-			description: `It seems like an error has occurred. *[The developers have been notified](https://${SUPPORT_INVITE}).*`,
+			title: "error.title",
+			description: { key: "error.desc", data: { invite: SUPPORT_INVITE } },
 			color: EmbedColor.Red
 		},
 
-		ephemeral: true
+		ephemeral: true, env
 	};
 }
 

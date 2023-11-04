@@ -24,11 +24,11 @@ export function displayBar(options: BarDisplayOptions) {
 	};
 
 	/* Calculate how many full blocks to display. */
-	const blocks: number = Math.min(total - 1, Math.floor(percentage * total));
+	const blocks = Math.min(total - 1, Math.floor(percentage * total));
 
 	/* Which partial block to display, if any */
 	const remainder = percentage * total - blocks;
-	let partialBlock: string = "";
+	let partialBlock = "";
 
 	for (const [ num, block ] of Object.entries(ProgressBlocks)) {
 		if (remainder >= parseFloat(num)) partialBlock = block;

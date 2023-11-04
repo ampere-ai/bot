@@ -1,16 +1,22 @@
 import {
-	MessageFlags, type ActionRow, type CreateMessageOptions, type EditMessage, type Embed, type InteractionCallbackData, type Message, AllowedMentions
+	type ActionRow, type CreateMessageOptions, type EditMessage, type Embed, type InteractionCallbackData, type Message, AllowedMentions
 } from "@discordeno/bot";
 
+import { ToLocaleStrings, translateObject } from "../i18n.js";
+import type { DBEnvironment } from "../../db/types/mod.js";
+
 export interface MessageResponse {
+	/** Environment of the user, to allow for localization */
+	env?: DBEnvironment;
+
     /** Content of the message */
     content?: string;
 
     /** Embeds of the message */
-    embeds?: Embed | Embed[];
+    embeds?: ToLocaleStrings<Embed> | ToLocaleStrings<Embed>[];
 
 	/** Components of the message */
-	components?: ActionRow[];
+	components?: ToLocaleStrings<ActionRow>[];
 
 	/** Which file to upload */
 	file?: {
@@ -64,37 +70,37 @@ export enum EmbedColor {
 }
 
 export function transformResponse<T extends (CreateMessageOptions | EditMessage | InteractionCallbackData) & {
-    messageReference?: CreateMessageOptions["messageReference"];
+	messageReference?: CreateMessageOptions["messageReference"];
     ephemeral?: boolean;
 } = CreateMessageOptions>(
 	response: MessageResponse
 ): T {
 	return {
-		content: response.content,
+		...translateObject({
+			content: response.content,
 
-		embeds: response.embeds
-			? Array.isArray(response.embeds)
-				? response.embeds
-				: [ response.embeds ]
-			: undefined,
+			embeds: response.embeds
+				? Array.isArray(response.embeds)
+					? response.embeds
+					: [ response.embeds ]
+				: undefined,
 
-		flags: response.ephemeral ? MessageFlags.Ephemeral : undefined,
-		components: response.components,
-		
-		files: response.file ? [
-			{
-				name: response.file.name,
-				blob: new Blob([ Buffer.from(response.file.blob, "base64") ])
-			}
-		] : undefined,
+			flags: response.ephemeral ? 64 : undefined,
+			components: response.components,
 
-		allowedMentions: response.mentions,
+			allowedMentions: response.mentions,
 
-		messageReference: response.reference ? {
-			failIfNotExists: false,
-			channelId: response.reference.channelId.toString(),
-			guildId: response.reference.guildId?.toString(),
-			messageId: response.reference.id.toString()
-		} : undefined
+			messageReference: response.reference ? {
+				failIfNotExists: false,
+				channelId: response.reference.channelId.toString(),
+				guildId: response.reference.guildId?.toString(),
+				messageId: response.reference.id.toString()
+			} : undefined,
+		}, response.env),
+
+		files: response.file ? [ {
+			name: response.file.name,
+			blob: new Blob([ Buffer.from(response.file.blob, "base64") ])
+		} ] : undefined
 	} as T;
 }

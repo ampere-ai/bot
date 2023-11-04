@@ -12,6 +12,7 @@ import { BRANDING_COLOR } from "../config.js";
 import { chunk } from "./utils/helpers.js";
 import { bot } from "./mod.js";
 import { randomUUID } from "crypto";
+import { ToLocaleStrings, t, translateObject } from "./i18n.js";
 
 /** Ad display counters */
 const counters = new Map<string, number>();
@@ -135,7 +136,7 @@ function render(campaign: DBCampaign, preview = false): CampaignRender {
 			? { url: campaign.settings.thumbnail }
 			: undefined,
 
-		footer: !preview ? { text: "Sponsored advertisement" } : undefined
+		footer: !preview ? { text: "campaign.notice" } : undefined
 	};
 
 	const row: ActionRow = {
@@ -144,7 +145,7 @@ function render(campaign: DBCampaign, preview = false): CampaignRender {
 		components: [
 			{
 				type: MessageComponentTypes.Button,
-				label: "Remove ads", emoji: { name: "✨" },
+				label: "premium.buttons.remove_ads", emoji: { name: "✨" },
 				style: ButtonStyles.Secondary,
 				customId: "premium:ads"
 			}
@@ -178,7 +179,7 @@ function buildCampaignSelector(campaigns: DBCampaign[]): ActionRow {
 		components: [ {
 			type: MessageComponentTypes.SelectMenu,
 			customId: "campaign:ui:select",
-			placeholder: "Choose a campaign ...",
+			placeholder: "campaign.create.choose",
 	
 			options: campaigns.map(c => ({
 				label: c.name,
@@ -217,7 +218,7 @@ export function buildCampaignFinder(env: DBEnvironment): MessageResponse {
 
 	return {
 		embeds: {
-			description: `## **Welcome, <@${env.user.id}> 👋**\n*To proceed, select a campaign you want to modify or create a new one.*`,
+			description: { key: "campaign.create.welcome", data: { id: env.user.id } },
 			color: BRANDING_COLOR
 		},
 
@@ -255,7 +256,7 @@ function buildCampaignButtons(campaign: DBCampaign, categoryId?: CampaignCategor
 					type: MessageComponentTypes.Button,
 					style: ButtonStyles.Primary,
 					emoji: { name: "home", id: 1152658440087425094n },
-					label: "Home",
+					label: "campaign.buttons.home",
 					customId: "campaign:ui:home"
 				},
 
@@ -263,7 +264,7 @@ function buildCampaignButtons(campaign: DBCampaign, categoryId?: CampaignCategor
 					type: MessageComponentTypes.Button,
 					style: ButtonStyles.Secondary,
 					emoji: { name: "👀" },
-					label: "Preview",
+					label: "campaign.buttons.preview",
 					customId: `campaign:ui:preview:${campaign.id}`
 				},
 
@@ -271,7 +272,7 @@ function buildCampaignButtons(campaign: DBCampaign, categoryId?: CampaignCategor
 					type: MessageComponentTypes.Button,
 					style: ButtonStyles.Secondary,
 					emoji: { name: campaign.active ? "❌" : "✅" },
-					label: campaign.active ? "Disable" : "Enable",
+					label: campaign.active ? "campaign.buttons.toggle.disable" : "campaign.buttons.toggle.enable",
 					customId: `campaign:ui:toggle:${campaign.id}`
 				}
 			]
@@ -313,17 +314,17 @@ function buildCampaignButtons(campaign: DBCampaign, categoryId?: CampaignCategor
 
 function buildCampaignOverview(campaign: DBCampaign, categoryId?: CampaignCategoryType): MessageResponse {
 	const fields: { name: string, value: string }[] = [
-		{ name: "Active", value: campaign.active ? "✅" : "❌" },
-		{ name: "Members", value: `${campaign.members.map(id => `<@${id}>`).join(", ")}` },
-		{ name: "Views", value: new Intl.NumberFormat("en-US").format(campaign.stats.views.total) },
-		{ name: "Clicks", value: new Intl.NumberFormat("en-US").format(campaign.stats.clicks.total) }
+		{ name: "active", value: campaign.active ? "✅" : "❌" },
+		{ name: "members", value: `${campaign.members.map(id => `<@${id}>`).join(", ")}` },
+		{ name: "views", value: new Intl.NumberFormat("en-US").format(campaign.stats.views.total) },
+		{ name: "clicks", value: new Intl.NumberFormat("en-US").format(campaign.stats.clicks.total) }
 	];
 
 	if (campaign.budget.type !== "none") fields.push(
-		{ name: "Budget", value: `${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(campaign.budget.used)} / ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(campaign.budget.total)}` },
-		{ name: "Cost", value: `${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(campaign.budget.cost)} per 1K ${campaign.budget.type}s`},
+		{ name: "budget", value: `${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(campaign.budget.used)} / ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(campaign.budget.total)}` },
+		{ name: "cost", value: `${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(campaign.budget.cost)} per 1K ${campaign.budget.type}s`},
 		{
-			name: "Conversion rate",
+			name: "rate",
 			value: campaign.stats.clicks.total !== 0 && campaign.stats.views.total !== 0
 				? new Intl.NumberFormat("en-US", { style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(campaign.stats.clicks.total / campaign.stats.views.total)
 				: "-"
@@ -339,8 +340,8 @@ function buildCampaignOverview(campaign: DBCampaign, categoryId?: CampaignCatego
 	return {
 		embeds: [
 			{
-				title: `Overview for campaign \`${campaign.name}\``,
-				description: `${fields.map(f => `**${f.name}** • ${f.value}`).join("\n")}`,
+				title: { key: "campaign.create.overview", data: { name: campaign.name } },
+				description: `${fields.map(f => `**${t({ key: `campaign.stats.${f.name}` })}** • ${f.value}`).join("\n")}`,
 				color: BRANDING_COLOR
 			},
 
@@ -354,9 +355,9 @@ function buildCampaignOverview(campaign: DBCampaign, categoryId?: CampaignCatego
 
 function buildEditModal(
 	campaign: DBCampaign, category: CampaignParameterCategory, param: CampaignParameter
-): Required<Pick<InteractionCallbackData, "title" | "customId" | "components">> {
+): ToLocaleStrings<Required<Pick<InteractionCallbackData, "title" | "customId" | "components">>> {
 	return {
-		title: "Change the value 📝",
+		title: "campaign.create.edit_value",
 		customId: `campaign:ui:edit:${campaign.id}:${category.id}:${param.name}`,
 
 		components: [ {
@@ -372,9 +373,9 @@ function buildEditModal(
 						` (${
 							param.length.min && param.length.max ? `${param.length.min}-${param.length.max}`
 								: param.length.min && !param.length.max
-									? `min. ${param.length.min}`
+									? { key: "number.min", data: { num: param.length.min } }
 									: param.length.max && !param.length.min
-										? `max. ${param.length.max}`
+										? { key: "number.max", data: { num: param.length.max } }
 										: ""
 						})`
 						: ""
@@ -382,7 +383,7 @@ function buildEditModal(
 
 				placeholder: param.placeholder ?
 					typeof param.placeholder === "function" ? param.placeholder(campaign) : param.placeholder
-					: "Enter a new value...",
+					: "...",
 
 				value: param.previous(campaign) ?? undefined,
 
@@ -398,7 +399,7 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 	let action = args.shift()!;
 
 	/* /campaign command */
-	if (action == "ui") {
+	if (action === "ui") {
 		action = args.shift()!;
 
 		if (action === "select") {
@@ -447,7 +448,7 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 			/* The edit button was pressed */
 			} else {
 				await interaction.showModal(
-					buildEditModal(campaign, category, param)
+					translateObject(buildEditModal(campaign, category, param)) as any
 				);
 			}
 		} else if (action === "toggle") {
@@ -477,7 +478,7 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 			/* The creation button was pressed */
 			} else {
 				await interaction.showModal({
-					title: "Create a new campaign 📝",
+					title: "campaign.create.title",
 					customId: "campaign:ui:create",
 
 					components: [ {
@@ -485,7 +486,7 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 
 						components: [ {
 							type: MessageComponentTypes.InputText,
-							label: "Name",
+							label: "campaign.create.name",
 							customId: "name",
 							placeholder: "...",
 							style: TextStyles.Short,
@@ -512,7 +513,7 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 		}
 
 	/* Button in advertisements */
-	} else if (action == "click") {
+	} else if (action === "click") {
 		const campaign = getCampaign(args[0]);
 		if (!campaign || !campaign.button) return;
 

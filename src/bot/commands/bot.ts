@@ -8,7 +8,6 @@ import { createCommand } from "../helpers/command.js";
 
 export default createCommand({
 	name: "bot",
-	description: "View information & statistics about the bot",
 
 	handler: async ({ bot, interaction }) => {
 		const info: ManagerHTTPWorkerInfoResponse = await (
@@ -40,34 +39,33 @@ export default createCommand({
 
 		return {
 			embeds: {
-				title: "Bot Statistics",
+				title: "info.title",
 				color: BRANDING_COLOR,
 
 				fields: [
 					{
-						name: "Servers 🖥️", inline: true,
+						name: "info.fields.servers 🖥️", inline: true,
 						value: `${new Intl.NumberFormat("en-US").format(guildCount)}`
 					},
 
 
 					{
-						name: "Users 🫂", inline: true,
+						name: "info.fields.users 🫂", inline: true,
 						value: `${new Intl.NumberFormat("en-US").format(userCount)}`
 					},
 
 					{
-						name: "Cluster & Shard 💎", inline: true,
+						name: "info.fields.cluster 💎", inline: true,
 						value: `\`${workerId + 1}\`/\`${info.workers.length}\`— \`${shardId + 1}\`/\`${info.shards.length}\``
 					},
 
 					{
-						name: "Latency 🏓", inline: true,
+						name: "info.fields.latency 🏓", inline: true,
 						value: `**\`${shard.rtt}\`** ms`
 					},
 
-
 					{
-						name: "RAM 🖨️", inline: true,
+						name: "info.fields.memory 🖨️", inline: true,
 						value: `**\`${(mem.heapUsed / 1024 / 1024).toFixed(2)}\`** MB`
 					}
 				]
@@ -81,14 +79,14 @@ export default createCommand({
 						{
 							type: MessageComponentTypes.Button,
 							style: ButtonStyles.Link,
-							label: "Add me to your server",
+							label: "info.buttons.invite",
 							url: `https://discord.com/oauth2/authorize?client_id=${bot.id}&permissions=281357371712&scope=bot%20applications.commands`
 						},
 
 						{
 							type: MessageComponentTypes.Button,
 							style: ButtonStyles.Link,
-							label: "Support server",
+							label: "info.buttons.support",
 							url: `https://${SUPPORT_INVITE}`
 						},
 

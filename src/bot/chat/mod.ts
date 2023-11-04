@@ -169,9 +169,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 
 	} catch (error) {
 		await message.reply(
-			await handleError(bot, {
-				error, guild: message.guildId
-			})
+			await handleError(bot, { env, error })
 		).catch(() => {});
 		
 	} finally {
@@ -258,6 +256,7 @@ async function format(
 	const response: MessageResponse = {
 		/* Disable @everyone and @here pings. */
 		mentions: { parse: [], repliedUser: true },
+		env
 	};
 
 	let content = result.message.content.trim();

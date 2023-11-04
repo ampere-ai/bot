@@ -7,24 +7,23 @@ import { EmbedColor } from "../utils/response.js";
 
 export default createCommand({
 	name: "reset",
-	description: "Reset your conversation with the bot",
 
 	handler: async ({ bot, env, interaction }) => {
 		const conversation = await bot.db.fetch<Conversation>("conversations", interaction.user.id);
 
 		if (conversation.history.length === 0) throw new ResponseError({
-			message: "You do not have an active conversation", emoji: "😔"
+			message: "reset.errors.inactive", emoji: "😔"
 		});
 
 		if (runningGenerations.has(BigInt(conversation.id))) throw new ResponseError({
-			message: "Wait for the current request in your conversation to finish", emoji: "😔"
+			message: "reset.errors.pending", emoji: "😔"
 		});
 
 		await resetConversation(bot, env, conversation);
 
 		return {
 			embeds: {
-				description: "Your conversation has been reset 😊",
+				description: "reset.desc",
 				color: EmbedColor.Green
 			},
 

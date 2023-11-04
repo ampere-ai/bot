@@ -2,7 +2,7 @@ import { RestrictionName } from "../../utils/restriction.js";
 import { createChatModel } from "../../helpers/chat.js";
 
 export default createChatModel({
-	name: "Bard", description: "Next-generation large language model by Google", id: "bard",
+	name: "Bard", id: "bard",
 	emoji: { name: "bard", id: 1151595393033977936n },
 
 	restrictions: [ RestrictionName.Developer ],

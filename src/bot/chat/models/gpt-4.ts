@@ -2,7 +2,7 @@ import { RestrictionName } from "../../utils/restriction.js";
 import { createChatModel } from "../../helpers/chat.js";
 
 export default createChatModel({
-	name: "GPT-4", description: "OpenAI's newest GPT-4 model", id: "gpt-4",
+	name: "GPT-4", id: "gpt-4",
 	emoji: { name: "✨" },
 
 	restrictions: [ RestrictionName.Premium ],

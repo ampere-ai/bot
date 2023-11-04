@@ -45,14 +45,11 @@ export interface SettingsOptionChoice<T> {
 export type SettingsOption<T extends string  = any> = BooleanSettingsOption | StringSettingsOption | ChoiceSettingsOption<T> | MultipleChoiceSettingsOption<T>
 
 interface BaseSettingsOption<T> {
-    /** Name of the settings option */
-    name: string;
+    /** Identifier of the settings option */
+    id: string;
 
     /** Emoji for the settings option */
     emoji: string;
-
-    /** Description of the settings option */
-    description: string;
 
     /** Type of the setting */
     type: SettingsOptionType;
@@ -104,8 +101,8 @@ type MultipleChoiceSettingsOption<T> = BaseSettingsOption<T> & {
 }
 
 export interface SettingsCategory {
-    /** Name of the category */
-    name: string;
+    /** Identifier of the category */
+    id: string;
 
     /** Emoji for the category */
     emoji: ComponentEmoji | string;

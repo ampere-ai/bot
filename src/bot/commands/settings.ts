@@ -20,13 +20,13 @@ export default createCommand({
 		const location = sub === "me" ? SettingsLocation.User : SettingsLocation.Guild;
 
 		if (location === SettingsLocation.Guild && !env.guild) throw new ResponseError({
-			message: "You can only view & change these settings on **servers**", emoji: "😔"
+			message: "settings.errors.guild_only", emoji: "😔"
 		});
 
 		const permissions = interaction.member?.permissions;
 
 		if (location === SettingsLocation.Guild && permissions && !permissions.has("MANAGE_GUILD")) throw new ResponseError({
-			message: "You must have the `Manage Server` permission to view & change these settings", emoji: "😔"
+			message: "settings.errors.missing_permissions", emoji: "😔"
 		});
 
 		return buildSettingsPage(

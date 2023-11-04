@@ -11,6 +11,7 @@ import { DBRole, type DBUser } from "../db/types/user.js";
 import { ResponseError } from "./errors/response.js";
 import { titleCase } from "./utils/helpers.js";
 import { displayBar } from "./utils/bar.js";
+import { t } from "./i18n.js";
 
 /** Default fee for the pay-as-you-go plan, in % */
 const PAYG_FEE = 0.2;
@@ -27,7 +28,7 @@ async function handlePayment(bot: Bot, data: PaymentData) {
 
 		await channel.send({
 			embeds: {
-				title: `Thank you for purchasing ${data.type === "subscription" ? "Premium" : "Premium credits"} 🎉`,
+				title: t({ key: "premium.purchase.title", options: { type: data.type === "subscription" ? "Premium" : "Premium credits" } }),
 				description: `You ${data.extended ? "extended" : "purchased"} ${data.type === "subscription" ? "a Premium subscription" : `**${data.credits}$** worth of credits`} ${data.location === "user" ? "for yourself" : `for the server **${guild?.name}**`}.`,
 				color: EmbedColor.Orange
 			}
@@ -69,7 +70,7 @@ export function buildPremiumOverview(bot: Bot, interaction: Interaction, { user,
 	const buttons: ButtonComponent[] = [
 		{
 			type: MessageComponentTypes.Button,
-			label: "Purchase", emoji: { name: "💸" },
+			label: "premium.buttons.purchase", emoji: { name: "💸" },
 			customId: "premium:purchase",
 			style: ButtonStyles.Success
 		}
@@ -83,7 +84,7 @@ export function buildPremiumOverview(bot: Bot, interaction: Interaction, { user,
 		if (type.type === "plan") {
 			if (type.location === "guild") {
 				if (permissions && !permissions.has("MANAGE_GUILD")) throw new ResponseError({
-					message: "You must have the `Manage Server` permission to view & manage the server's plan", emoji: "😔"
+					message: "premium.errors.missing_permissions", emoji: "😔"
 				});
 			}
 
@@ -94,7 +95,7 @@ export function buildPremiumOverview(bot: Bot, interaction: Interaction, { user,
 			const expenses = plan.expenses.filter(e => e.type !== "api").slice(-10);
 
 			if (expenses.length > 0) response.embeds.push({
-				title: "Previous expenses",
+				title: "premium.overview.expenses",
 
 				fields: expenses.map(expense => {
 					return {
@@ -108,44 +109,44 @@ export function buildPremiumOverview(bot: Bot, interaction: Interaction, { user,
 			const history = plan.history.slice(-10);
 
 			if (history.length > 0) response.embeds.push({
-				title: "Previous charge-ups",
+				title: "premium.overview.charges",
 
 				fields: history.map(credit => ({
-					name: `${titleCase(credit.type)}${credit.gateway ? `— *using **\`${credit.gateway}\`***` : ""}`,
+					name: `${titleCase(credit.type)}${credit.gateway ? `— *${t({ key: "premium.overview.using_gateway", options: { gateway: credit.gateway } })}*` : ""}`,
 					value: `**$${credit.amount.toFixed(2)}** — *<t:${Math.floor(credit.time / 1000)}:F>*`
 				}))
 			});
 
 			const percentage = plan.used / plan.total;
-			const size: number = 25;
+			const size = 25;
 			
 			/* Whether the user has exceeded the limit */
-			const exceededLimit: boolean = plan.used >= plan.total;
+			const exceededLimit = plan.used >= plan.total;
 
 			/* Final, formatted diplay message */
-			const displayMessage: string = !exceededLimit
+			const displayMessage = !exceededLimit
 				? `**$${plan.used.toFixed(2)}** \`${displayBar({ percentage, total: size })}\` **$${plan.total.toFixed(2)}**`
-				: "_You ran out of credits for the **Pay-as-you-go** plan; re-charge credits using the button below_.";
+				: "premium.overview.out_of_credits";
 
-			embed.title = `${type.location === "guild" ? "The server's" : "Your"} pay-as-you-go plan 📊`;
+			embed.title = `premium.overview.title.payg.${type.location}`;
 			embed.description = displayMessage;
 
 		} else if (type.type === "subscription") {
 			const subscription = subscriptions[type.location];
-			embed.title = `${type.location === "guild" ? "The server's" : "Your"} Premium subscription ✨`;
+			embed.title = `premium.overview.title.sub.${type.location}`;
 
 			if (subscription === null && user.roles.includes(DBRole.Moderator)) {
-				embed.description = "*Due to being a moderator of the bot, you have access to **free Premium***.";	
+				embed.description = "premium.overview.moderator";	
 			}
 
 			if (subscription) embed.fields = [
 				{
-					name: "Premium subscriber since", inline: true,
+					name: "premium.sub.since", inline: true,
 					value: `<t:${Math.floor(subscription.since / 1000)}:F>`,
 				},
 
 				{
-					name: "Subscription active until", inline: true,
+					name: "premium.sub.until", inline: true,
 					value: `<t:${Math.floor(subscription.expires / 1000)}:F>, <t:${Math.floor(subscription.expires / 1000)}:R>`,
 				}
 			];
@@ -153,13 +154,13 @@ export function buildPremiumOverview(bot: Bot, interaction: Interaction, { user,
 
 		buttons.push({
 			type: MessageComponentTypes.Button,
-			label: "Settings", emoji: { name: "⚙️" },
+			label: "settings.button", emoji: { name: "⚙️" },
 			customId: `settings:view:${type.location}:premium`,
 			style: ButtonStyles.Secondary
 		});
 
 	} else {
-		embed.description = "You can buy a **Premium** subscription or **Premium** credits for the plan below.";
+		embed.description = "premium.purchase.message";
 	}
 
 	response.components = [

@@ -1,4 +1,4 @@
-import { DiscordInteraction, Interaction, InteractionCallbackData, InteractionResponseTypes, MessageFlags } from "@discordeno/bot";
+import { DiscordInteraction, Interaction, InteractionCallbackData, InteractionResponseTypes } from "@discordeno/bot";
 
 import { type MessageResponse, transformResponse } from "../utils/response.js";
 import { createTransformer } from "../helpers/transformer.js";
@@ -12,7 +12,7 @@ export default createTransformer<"interaction", Interaction, DiscordInteraction>
 			value: function(response: Pick<MessageResponse, "components">) {
 				return bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
 					type: InteractionResponseTypes.Modal,
-					data: response
+					data: response as any
 				});
 			}
 		});
@@ -52,7 +52,7 @@ export default createTransformer<"interaction", Interaction, DiscordInteraction>
 				return bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
 					type: InteractionResponseTypes.DeferredChannelMessageWithSource,
 					data: ephemeral ? {
-						flags: MessageFlags.Ephemeral
+						flags: 64
 					} : undefined
 				});
 			}

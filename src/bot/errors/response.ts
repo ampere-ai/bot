@@ -1,6 +1,9 @@
-import { EmbedColor, MessageResponse } from "../utils/response.js";
+import type { DBEnvironment } from "../../db/types/mod.js";
+import { t, type ToLocaleStrings } from "../i18n.js";
 
-interface ResponseErrorOptions {
+import { type MessageResponse, EmbedColor } from "../utils/response.js";
+
+type ResponseErrorOptions = ToLocaleStrings<{
 	/** Which message to display */
 	message: string;
 
@@ -9,13 +12,13 @@ interface ResponseErrorOptions {
 
 	/** Which embed color to use */
 	color?: EmbedColor;
-}
+}>
 
 export class ResponseError extends Error {
 	public readonly options: Required<ResponseErrorOptions>;
 
 	constructor(options: ResponseErrorOptions) {
-		super(options.message);
+		super("");
 
 		this.options = {
 			color: EmbedColor.Red, emoji: "❌",
@@ -23,14 +26,14 @@ export class ResponseError extends Error {
 		};
 	}
 
-	public display(): MessageResponse {
+	public display(env?: DBEnvironment): MessageResponse {
 		return {
 			embeds: {
-				description: `${this.options.message} ${this.options.emoji}`,
+				description: `${t({ key: this.options.message })} ${this.options.emoji}`,
 				color: this.options.color
 			},
 
-			ephemeral: true
+			ephemeral: true, env
 		};
 	}
 }

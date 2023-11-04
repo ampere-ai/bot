@@ -20,9 +20,6 @@ export interface ChatModel {
 	/** Identifier of the chat model */
 	id: string;
 
-	/** Description of the chat model */
-	description: string;
-
 	/** Emoji of the chat model */
 	emoji: ComponentEmoji | string;
 

@@ -11,6 +11,7 @@ import { setupPaymentHandler } from "./premium.js";
 import { fetchCampaigns } from "./campaign.js";
 import { setupEvents } from "./events/mod.js";
 import { setupVoteHandler } from "./vote.js";
+import { setupI18N } from "./i18n.js";
 import { createAPI } from "./api.js";
 import { createDB } from "./db.js";
 
@@ -44,6 +45,7 @@ async function handleGatewayMessage({ payload, shard }: GatewayMessage) {
 	}
 }
 
+await setupI18N();
 await registerCommands(bot);
 await fetchCampaigns();
 

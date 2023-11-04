@@ -3,7 +3,6 @@ import type { ImageModel } from "../types/image.js";
 export const IMAGE_MODELS: ImageModel[] = [
 	{
 		name: "Kandinsky",
-		description: "Multi-lingual latent diffusion model",
 		id: "kandinsky",
 		path: "kandinsky",
 
@@ -14,7 +13,6 @@ export const IMAGE_MODELS: ImageModel[] = [
 
 	{
 		name: "SDXL",
-		description: "Latest Stable Diffusion model, more realism",
 		id: "sdxl",
 		path: "deepinfra",
 
@@ -29,7 +27,6 @@ export const IMAGE_MODELS: ImageModel[] = [
 
 	{
 		name: "Stable Diffusion v2.1",
-		description: "Latent text-to-image Stable Diffusion model",
 		id: "sd21",
 		path: "deepinfra",
 
@@ -44,7 +41,6 @@ export const IMAGE_MODELS: ImageModel[] = [
 
 	{
 		name: "Project Unreal Engine 5",
-		description: "Trained to look like Unreal Engine 5 renders",
 		id: "ue5",
 		path: "sh",
 
@@ -55,7 +51,6 @@ export const IMAGE_MODELS: ImageModel[] = [
 
 	{
 		name: "Dreamshaper",
-		description: "A mix of several Stable Diffusion models",
 		id: "dreamshaper",
 		path: "sh",
 
@@ -66,7 +61,6 @@ export const IMAGE_MODELS: ImageModel[] = [
     
 	{
 		name: "I Can't Believe It's Not Photography",
-		description: "Highly photo-realistic Stable Diffusion model",
 		id: "icbinp",
 		path: "sh",
         
@@ -77,7 +71,6 @@ export const IMAGE_MODELS: ImageModel[] = [
 
 	{
 		name: "Anything Diffusion",
-		description: "Stable Diffusion-based model for generating anime",
 		id: "anything",
 		path: "sh",
 

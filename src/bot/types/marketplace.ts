@@ -1,6 +1,8 @@
 import { type Bot, type ComponentEmoji, TextStyles } from "@discordeno/bot";
 
 import type { DBMarketplaceEntry, DBMarketplaceType } from "../../db/types/marketplace.js";
+import type { LocaleString } from "../i18n.js";
+
 import { emojiToString, stringToEmoji } from "../utils/helpers.js";
 
 export interface MarketplaceFilterOptions {
@@ -17,16 +19,10 @@ export interface MarketplacePage {
 }
 
 interface MarketplaceCreatorError {
-	message: string;
+	message: string | LocaleString;
 }
 
 interface MarketplaceCreatorField {
-	/** Name of the field, displayed to the user */
-	name: string;
-
-	/** Placeholder of this field */
-	placeholder?: string;
-
 	/** Type of this field */
 	style?: TextStyles;
 
@@ -49,28 +45,26 @@ interface MarketplaceCreatorField {
 
 export const MARKETPLACE_BASE_FIELDS: Record<"name" | "emoji" | "description", MarketplaceCreatorField> = {
 	name: {
-		name: "Name", builtIn: true,
+		builtIn: true,
 		minLength: 1, maxLength: 32,
 		style: TextStyles.Short,
 		parse: entry => entry.name
 	},
 
 	emoji: {
-		name: "Fitting emoji", builtIn: true,
+		builtIn: true,
 		minLength: 1, maxLength: 64,
 		style: TextStyles.Short,
-		placeholder: ":flushed:, flushed, 😳",
 		parse: entry => emojiToString(entry.emoji),
 
 		validate: input => {
 			if (!stringToEmoji(input)) return {
-				message: "Invalid emoji"
+				message: "marketplace.errors.invalid_emoji"
 			};
 		}
 	},
 
 	description: {
-		name: "Description",
 		builtIn: true, optional: true,
 		minLength: 1, maxLength: 256,
 		style: TextStyles.Paragraph,
@@ -78,7 +72,7 @@ export const MARKETPLACE_BASE_FIELDS: Record<"name" | "emoji" | "description", M
 
 		validate: input => {
 			if (input.split("\n").length > 4) return {
-				message: "Cannot be longer than 4 lines"
+				message: { key: "marketplace.errors.too_long", data: { length: 4 } }
 			};
 		}
 	}
@@ -103,7 +97,6 @@ export interface MarketplaceCategory<
 > {
 	type: DBMarketplaceType;
 	emoji: ComponentEmoji;
-	name?: string;
 	key: string;
 	default: string;
 	creator?: MarketplaceCreator<Fields>;
@@ -123,15 +116,11 @@ export const MARKETPLACE_CATEGORIES = [
 		creator: {
 			fields: {
 				prompt: {
-					name: "Initial prompt, given to the AI model",
-					placeholder: "From now on, you must act as a ...",
 					style: TextStyles.Paragraph, maxLength: 2048,
 					parse: entry => entry.data.prompt
 				},
 
 				disableHistory: {
-					name: "Whether chat history should be disabled",
-					placeholder: "true / false",
 					style: TextStyles.Short, maxLength: 5,
 					parse: entry => Boolean(entry.data.disableHistory).toString(),
 					validate: input => {
@@ -156,8 +145,6 @@ export const MARKETPLACE_CATEGORIES = [
 		creator: {
 			fields: {
 				tags: {
-					name: "List of tags, separated by newline",
-					placeholder: "cinematic\nvignette\n4k rtx",
 					style: TextStyles.Paragraph,
 					parse: entry => entry.data.tags ? entry.data.tags.join("\n") : null
 				}
@@ -170,7 +157,7 @@ export const MARKETPLACE_CATEGORIES = [
 	}),
 
 	createCategory({
-		type: "indicator", emoji: { name: "🔄" }, name: "loading indicator",
+		type: "indicator", emoji: { name: "🔄" },
 		key: "general:indicator", default: "indicator-orb",
 
 		creator: {

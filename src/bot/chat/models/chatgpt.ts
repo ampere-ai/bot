@@ -1,7 +1,7 @@
 import { createChatModel } from "../../helpers/chat.js";
 
 export default createChatModel({
-	name: "ChatGPT", description: "The usual ChatGPT", id: "chatgpt",
+	name: "ChatGPT", id: "chatgpt",
 	emoji: { name: "chatgpt", id: 1087127347792191519n },
 
 	maxTokens: 8191,

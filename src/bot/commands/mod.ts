@@ -1,4 +1,4 @@
-import { type Bot, type ApplicationCommandOption, ApplicationCommandOptionTypes } from "@discordeno/bot";
+import { type Bot, type ApplicationCommandOption, ApplicationCommandOptionTypes, CreateApplicationCommand, Localization, Locales } from "@discordeno/bot";
 import type { Command } from "../types/command.js";
 
 import { MOD_GUILD_ID } from "../../config.js";
@@ -8,7 +8,7 @@ import campaign from "./mod/campaigns.js";
 import translate from "./translate.js";
 import settings from "./settings.js";
 import pardon from "./mod/pardon.js";
-import imagine from "./imagine.js";
+import imagine, { generateModelChoices } from "./imagine.js";
 import premium from "./premium.js";
 import roles from "./dev/roles.js";
 import info from "./mod/info.js";
@@ -21,12 +21,14 @@ import bot from "./bot.js";
 
 /* The order is important; don't try to fix it */
 import { RestrictionName } from "../utils/restriction.js";
+import { USER_LOCALES } from "../types/locale.js";
+import { hasTranslation, t } from "../i18n.js";
 
 export const COMMANDS: Command<any, any>[] = [
 	settings, reset, imagine, premium, info, bot, ban, pardon, warn, dev, roles, translate, vote, marketplace, campaign
 ];
 
-function transformCommand(command: Command) {
+function transformCommand(bot: Bot, command: Command): CreateApplicationCommand {
 	const options: ApplicationCommandOption[] = [];
 	const sub: ApplicationCommandOption[] = [];
 
@@ -57,9 +59,21 @@ function transformCommand(command: Command) {
 		});
 	}
 
+	const description = t({ key: `commands.${command.name}.desc` });
+	const descriptionLocalizations: Localization = {};
+
+	for (const locale of USER_LOCALES) {
+		const key = `commands.${command.name}.desc`;
+
+		if (locale.supported && hasTranslation({ key, lang: locale.id })) {
+			descriptionLocalizations[locale.id as Locales] = 
+				t({ key, lang: locale.id });
+		}
+	}
+
 	return {
 		name: command.name,
-		description: command.description ?? "...",
+		description, descriptionLocalizations,
 		type: command.type,
 
 		options: command.sub
@@ -76,17 +90,18 @@ export function isPrivateCommand(command: Command) {
 }
 
 export async function registerCommands(bot: Bot) {
+	imagine.options!.model.choices = generateModelChoices() as any;
 	const commands = Object.values(COMMANDS);
 
 	Promise.all([
 		/* Global commands */
-		bot.helpers.upsertGlobalApplicationCommands(
-			commands.filter(c => !isPrivateCommand(c)).map(transformCommand)
+		bot.rest.upsertGlobalApplicationCommands(
+			commands.filter(c => !isPrivateCommand(c)).map(c => transformCommand(bot, c))
 		),
 
 		/* Moderation & developer commands */
-		bot.helpers.upsertGuildApplicationCommands(
-			MOD_GUILD_ID, commands.filter(c => isPrivateCommand(c)).map(transformCommand)
+		bot.rest.upsertGuildApplicationCommands(
+			MOD_GUILD_ID, commands.filter(c => isPrivateCommand(c)).map(c => transformCommand(bot, c))
 		)
 	]);
 }

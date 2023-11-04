@@ -76,9 +76,6 @@ export interface Command<
     /** Name of the command */
     name: string;
 
-    /** Description of the command */
-    description?: string;
-
 	/** Restrictions of the command */
 	restrictions?: RestrictionName[];
 

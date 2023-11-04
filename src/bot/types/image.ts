@@ -18,9 +18,6 @@ export interface ImageModel {
 	/** Display name of the model */
 	name: string;
 
-	/** Description of the model */
-	description: string;
-
 	/** ID of the model */
 	id: string;
 

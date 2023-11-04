@@ -65,25 +65,27 @@ export async function executeCommand(bot: Bot, interaction: Interaction) {
 			bot, interaction, options, sub, env
 		});
 
-		if (response) await interaction.reply(response);
+		if (response) await interaction.reply({
+			...response, env
+		});
 
 	} catch (error) {
 		if (error instanceof ResponseError) {
 			try {
-				return void await interaction.reply(error.display());
+				return void await interaction.reply(error.display(env));
 			} catch {
-				return void await interaction.editReply(error.display())
+				return void await interaction.editReply(error.display(env))
 					.catch(() => {});
 			}
 		}
 
 		try {
 			await interaction.reply(
-				await handleError(bot, { error, guild: interaction.guildId })
+				await handleError(bot, { env, error })
 			);
 		} catch {
 			await interaction.editReply(
-				await handleError(bot, { error, guild: interaction.guildId })
+				await handleError(bot, { env, error })
 			).catch(() => {});
 		}
 	}

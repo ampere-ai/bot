@@ -1,7 +1,7 @@
 import { createChatModel } from "../../helpers/chat.js";
 
 export default createChatModel({
-	name: "LLaMA", description: "A foundational large language model, by Meta", id: "llama",
+	name: "LLaMA", id: "llama",
 	emoji: { name: "meta", id: 1151164065209651280n },
 
 	maxTokens: 2048,

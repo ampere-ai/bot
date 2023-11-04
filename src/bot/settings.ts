@@ -11,32 +11,30 @@ import type { DBUser } from "../db/types/user.js";
 
 import { type MessageResponse, EmbedColor } from "./utils/response.js";
 import { canUse, restrictionTypes } from "./utils/restriction.js";
-import { USER_LANGUAGES } from "../db/types/language.js";
 import { CHAT_MODELS } from "./chat/models/mod.js";
 import { resetConversation } from "./chat/mod.js";
 import { IMAGE_MODELS } from "./image/models.js";
+import { USER_LOCALES } from "./types/locale.js";
 
 export const SettingsCategories: SettingsCategory[] = [
 	{
-		name: "General",
+		id: "general",
 		emoji: "🧭",
 
 		options: [
 			{
-				name: "Language",
-				description: "Primary language to use for the bot",
+				id: "language",
 				emoji: "🌐", type: SettingsOptionType.Choices,
 				location: SettingsLocation.User,
 				default: "en-US",
 				
-				choices: USER_LANGUAGES.map(l => ({
+				choices: USER_LOCALES.map(l => ({
 					name: l.name, emoji: l.emoji, value: l.id
 				}))
 			},
 
 			{
-				name: "Indicator",
-				description: "Which emoji to use throughout the bot to indicating loading",
+				id: "indicator",
 				emoji: "🔄", type: SettingsOptionType.String,
 				hidden: true, default: "indicator-orb",
 				location: SettingsLocation.User,
@@ -45,19 +43,18 @@ export const SettingsCategories: SettingsCategory[] = [
 	},
 
 	{
-		name: "Chat",
+		id: "chat",
 		emoji: "🗨️",
 
 		options: [
 			{
-				name: "Model",
-				description: "Which AI language model to use for chatting",
+				id: "model",
 				emoji: "🤖", type: SettingsOptionType.Choices,
 				location: SettingsLocation.User,
 				default: "chatgpt",
 				
 				choices: CHAT_MODELS.map(m => ({
-					name: m.name, description: m.description, emoji: m.emoji, restrictions: m.restrictions, value: m.id
+					name: m.name, description: `chat.models.${m.id}.desc`, emoji: m.emoji, restrictions: m.restrictions, value: m.id
 				})),
 
 				handler: async (bot, env) => {
@@ -66,8 +63,7 @@ export const SettingsCategories: SettingsCategory[] = [
 			},
 
 			{
-				name: "Personality", emoji: "😊",
-				description: "How the AI language model should act",
+				id: "personality", emoji: "😊",
 				type: SettingsOptionType.String,
 				location: SettingsLocation.User,
 				hidden: true, default: "personality-neutral",
@@ -79,8 +75,7 @@ export const SettingsCategories: SettingsCategory[] = [
 			},
 
 			{
-				name: "Partial messages",
-				description: "Whether chat messages by the bot should be shown while they're being generated",
+				id: "partial_messages",
 				emoji: "⏳", default: true,
 				type: SettingsOptionType.Boolean,
 				location: SettingsLocation.User
@@ -89,24 +84,22 @@ export const SettingsCategories: SettingsCategory[] = [
 	},
 
 	{
-		name: "Image",
+		id: "image",
 		emoji: "🖼️",
 		
 		options: [
 			{
-				name: "Model", emoji: "🖼️",
-				description: "Which image generation model to use",
+				id: "model", emoji: "🖼️",
 				location: SettingsLocation.User, default: IMAGE_MODELS[0].id,
 				type: SettingsOptionType.Choices,
 
 				choices: IMAGE_MODELS.map(m => ({
-					name: m.name, description: m.description, value: m.id
+					name: m.name, description: `image.models.${m.id}.desc`, value: m.id
 				}))
 			},
 
 			{
-				name: "Style", emoji: "🖌️",
-				description: "Which image style to use",
+				id: "style", emoji: "🖌️",
 				location: SettingsLocation.User,
 				type: SettingsOptionType.String,
 				default: "style-none", hidden: true
@@ -115,44 +108,42 @@ export const SettingsCategories: SettingsCategory[] = [
 	},
 
 	{
-		name: "Premium",
+		id: "premium",
 		emoji: "✨",
 		
 		options: [
 			{
-				name: "Type priority", emoji: "✨",
-				description: "Which premium type to prioritize",
+				id: "type_priority", emoji: "✨",
 				location: SettingsLocation.Both, default: "plan",
 				type: SettingsOptionType.Choices,
 
 				choices: [
 					{
-						name: "Pay-as-you-go", emoji: "📊", value: "plan",
-						description: "Use the credit-based pay-as-you-go plan first"
+						name: "premium.settings.payg_priority.name", emoji: "📊", value: "plan",
+						description: "premium.settings.payg_priority.desc"
 					},
 		
 					{
-						name: "Subscription", emoji: "💸", value: "subscription",
-						description: "Use the fixed subscription first"
+						name: "premium.settings.subscription_priority.name", emoji: "💸", value: "subscription",
+						description: "premium.settings.subscription_priority.name"
 					}
 				]
 			},
 
 			{
-				name: "Location priority", emoji: "✨",
-				description: "Whether to prioritize your own or the server's Premium",
+				id: "location_priority", emoji: "✨",
 				location: SettingsLocation.User, default: "guild",
 				type: SettingsOptionType.Choices,
 
 				choices: [
 					{
-						name: "The server's Premium", emoji: "☎️", value: "guild",
-						description: "Use the server's Premium before using your own"
+						name: "premium.settings.guild_priority.name", emoji: "☎️", value: "guild",
+						description: "premium.settings.guild_priority.desc"
 					},
 		
 					{
-						name: "My own Premium", emoji: "👤", value: "user",
-						description: "Always use your own Premium, not regarding whether the server has Premium or not"
+						name: "premium.settings.user_priority.name", emoji: "👤", value: "user",
+						description: "premium.settings.user_priority.desc"
 					}
 				]
 			}
@@ -160,16 +151,8 @@ export const SettingsCategories: SettingsCategory[] = [
 	}
 ];
 
-function categoryKey(category: SettingsCategory) {
-	return category.name.toLowerCase().replaceAll(" ", "_");
-}
-
-function optionKey(option: SettingsOption) {
-	return option.name.toLowerCase().replaceAll(" ", "_");
-}
-
 function categoryOptionKey(category: SettingsCategory, option: SettingsOption): `${string}:${string}` {
-	return `${categoryKey(category)}:${optionKey(option)}`;
+	return `${category.id}:${option.id}`;
 }
 
 export function whichEntry(location: SettingsLocation, env: DBEnvironment): DBUser | DBGuild {
@@ -178,10 +161,10 @@ export function whichEntry(location: SettingsLocation, env: DBEnvironment): DBUs
 }
 
 function getOption(key: string): SettingsOption {
-	const [ categoryName, optionName ] = key.split(":");
+	const [ categoryID, optionID ] = key.split(":");
 
-	const category = SettingsCategories.find(c => categoryKey(c) === categoryName)!;
-	const option = category.options.find(o => optionKey(o) === optionName)!;
+	const category = SettingsCategories.find(c => c.id === categoryID)!;
+	const option = category.options.find(o => o.id === optionID)!;
 
 	return option;
 }
@@ -226,12 +209,12 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 	const location: SettingsLocation = args.shift()! as SettingsLocation;
 
 	const categoryName = args.shift()!;
-	const category = SettingsCategories.find(c => categoryKey(c) === categoryName)!;
+	const category = SettingsCategories.find(c => c.id === categoryName)!;
 
 	/* Change the page */
 	if (action === "page") {
 		/* Current category index */
-		const currentIndex = SettingsCategories.findIndex(c => c.name === category.name);
+		const currentIndex = SettingsCategories.findIndex(c => c.id === category.id);
 
 		/* How to switch the pages, either -1 or (+)1 */
 		const delta = parseInt(args[0]);
@@ -249,7 +232,7 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 	/** Update a setting value */
 	} else if (action === "change") {
 		/* Which option to update */
-		const option = category.options.find(o => optionKey(o) === args[0]);
+		const option = category.options.find(o => o.id === args[0]);
 		if (!option) return;
 
 		const key = categoryOptionKey(category, option);
@@ -335,7 +318,7 @@ export function buildSettingsPage(
 	}
 
 	rows.push(buildPageSwitcher(location, category));
-	return { components: rows, ephemeral: true };
+	return { components: rows, ephemeral: true, env };
 }
 
 function buildOption(
@@ -347,7 +330,7 @@ function buildOption(
 		components.push(
 			{
 				type: MessageComponentTypes.Button,
-				label: option.name, emoji: { name: option.emoji },
+				label: `settings.categories.${category.id}.options.${option.id}.name`, emoji: { name: option.emoji },
 				style: ButtonStyles.Secondary, disabled: true,
 				customId: randomUUID()
 			},
@@ -375,7 +358,7 @@ function buildOption(
 		});
 
 		if (option.type === SettingsOptionType.Choices && option.optional) choices.unshift({
-			label: "None", emoji: { name: "❌" },
+			label: "settings.none", emoji: { name: "❌" },
 			default: current === null, value: "none"
 		});
 
@@ -386,7 +369,7 @@ function buildOption(
 			maxValues: option.type === SettingsOptionType.MultipleChoices ? option.max : undefined,
 			minValues: option.type === SettingsOptionType.MultipleChoices ? option.min : undefined,
 
-			placeholder: `${option.name} ${option.emoji}`,
+			placeholder: `settings.categories.${category.id}.options.${option.id}.name ${option.emoji}`,
 			options: choices
 		});
 	}
@@ -397,28 +380,28 @@ function buildOption(
 }
 
 function buildPageSwitcher(location: SettingsLocation, category: SettingsCategory): ActionRow {
-	const currentIndex = SettingsCategories.findIndex(c => c.name === category.name);
+	const currentIndex = SettingsCategories.findIndex(c => c.id === category.id);
 
 	const components: [ ButtonComponent, ButtonComponent, ButtonComponent ] = [
 		{
 			type: MessageComponentTypes.Button,
 			style: ButtonStyles.Secondary, emoji: { name: "◀️" },
-			customId: `settings:page:${location}:${categoryKey(category)}:-1`,
+			customId: `settings:page:${location}:${category.id}:-1`,
 			disabled: currentIndex - 1 < 0
 		},
 
 		{
 			type: MessageComponentTypes.Button,
-			label: category.name,
+			label: `settings.categories.${category.id}.name`,
 			style: ButtonStyles.Success,
 			emoji: typeof category.emoji === "string" ? { name: category.emoji } : category.emoji,
-			customId: `settings:current:${location}:${categoryKey(category)}`
+			customId: `settings:current:${location}:${category.id}`
 		},
 
 		{
 			type: MessageComponentTypes.Button,
 			style: ButtonStyles.Secondary, emoji: { name: "▶️" },
-			customId: `settings:page:${location}:${categoryKey(category)}:1`,
+			customId: `settings:page:${location}:${category.id}:1`,
 			disabled: currentIndex + 1 > SettingsCategories.length - 1
 		}
 	];

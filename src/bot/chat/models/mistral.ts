@@ -1,7 +1,7 @@
 import { createChatModel } from "../../helpers/chat.js";
 
 export default createChatModel({
-	name: "Mistral", description: "Frontier AI in your hands", id: "mistral",
+	name: "Mistral", id: "mistral",
 	emoji: { name: "mistral", id: 1157006746603245628n },
 
 	maxTokens: 2048,

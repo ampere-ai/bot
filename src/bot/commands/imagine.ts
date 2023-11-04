@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionTypes, DiscordEmbedField, MessageComponentTypes, MessageComponents } from "@discordeno/bot";
+import { ApplicationCommandOptionChoice, ApplicationCommandOptionTypes, DiscordEmbedField, Locales, Localization, MessageComponentTypes, MessageComponents } from "@discordeno/bot";
 import { ActionRow, Bot, ButtonStyles, Interaction } from "@discordeno/bot";
 
 import type { ImageGenerationAction, ImageModel, ImagePrompt, ImageSampler, ImageGenerationOptions, ImageGenerationSize } from "../types/image.js";
@@ -20,8 +20,10 @@ import { handleError } from "../moderation/error.js";
 import { pickAdvertisement } from "../campaign.js";
 import { getSettingsValue } from "../settings.js";
 import { IMAGE_MODELS } from "../image/models.js";
+import { USER_LOCALES } from "../types/locale.js";
 import { BRANDING_COLOR } from "../../config.js";
 import { mergeImages } from "../utils/image.js";
+import { hasTranslation, t } from "../i18n.js";
 import { Emitter } from "../utils/event.js";
 import { charge } from "../premium.js";
 
@@ -58,9 +60,9 @@ const DEFAULT_GEN_OPTIONS = {
 	guidance: 7, steps: 30, count: 2, sampler: "k_euler_a"
 };
 
+
 export default createCommand({
 	name: "imagine",
-	description: "Generate beautiful images using AI",
 
 	cooldown: {
 		user: 1.75 * 60 * 1000,
@@ -79,9 +81,7 @@ export default createCommand({
 			type: ApplicationCommandOptionTypes.String,
 			description: "Which model to use",
 
-			choices: IMAGE_MODELS.map(m => ({
-				name: `${m.name} • ${m.description}`, value: m.id
-			}))
+			choices: []
 		},
 
 		negative: {
@@ -141,7 +141,9 @@ export default createCommand({
 		const style: MarketplaceStyle = await getMarketplaceSetting(bot, env, "style");
 
 		if (model.settings?.forcedSize && ratio !== "1:1") throw new ResponseError({
-			message: `**${model.name}** has a fixed resolution of \`${model.settings.forcedSize.width}×${model.settings.forcedSize.height}\`; *you cannot modify the aspect ratio*`
+			message: { key: "image.errors.fixed_res", data: {
+				model: model.name, ...model.settings.forcedSize
+			} }
 		});
 
 		const moderation = await moderate({
@@ -164,13 +166,13 @@ export default createCommand({
 		} catch (error) {
 			if (error instanceof ResponseError) {
 				return void await interaction.editReply(
-					error.display()
+					error.display(env)
 				);
 			}
 
 			await interaction.editReply(
 				await handleError(bot, {
-					error, guild: interaction.guildId
+					env, error
 				})
 			).catch(() => {});
 		}
@@ -253,7 +255,7 @@ async function start(options: ImageStartOptions) {
 	const ratio = validRatio(rawRatio);
 
 	if (ratio === null) throw new ResponseError({
-		message: "You specified an **invalid** aspect ratio"
+		message: "image.errors.invalid_ratio"
 	});
 
 	/* Find the best size for the specified aspect ratio. */
@@ -309,7 +311,7 @@ async function start(options: ImageStartOptions) {
 	const usable: boolean = result.results.filter(i => i.status === "success").length > 0;
 
 	if (!usable) throw new ResponseError({
-		message: "All of the generated images were deemed as **not safe for work**", emoji: "🔞"
+		message: "images.errors.all_nsfw", emoji: "🔞"
 	});
 
 	await charge(bot, env, {
@@ -361,7 +363,7 @@ async function formatResult(options: ImageFormatOptions & ImageStartOptions): Pr
 
 		return { embeds: {
 			title: displayPrompt({ action, interaction, prompt }),
-			description: `**${result.progress && (result.progress < 1 && result.progress > 0) ? `${Math.floor(result.progress * 100)}%` : "Generating"}** ... ${emoji}`,
+			description: `**${result.progress && (result.progress < 1 && result.progress > 0) ? `${Math.floor(result.progress * 100)}%` : t({ key: "image.indicator", env: options.env })}** ... ${emoji}`,
 			color: EmbedColor.Orange
 		} };
 	}
@@ -437,31 +439,35 @@ function buildActionButtons({ action, result: { id, results } }: ImageToolbarOpt
 }
 
 async function displayFields(options: ImageStartOptions) {
-	const fields: Omit<DiscordEmbedField, "inline">[] = [];
-	fields.push({ name: "Model", value: options.model.name });
+	const fields: Omit<DiscordEmbedField, "inline">[] = [
+		{
+			name: "image.fields.model",
+			value: options.model.name
+		}
+	];
 
 	if (options.ratio !== "1:1") {
 		const ratio = validRatio(options.ratio)!;
 		const { width, height } = findBestSize(ratio, options.model);
 
-		fields.push({ name: "Ratio", value: `\`${ratio.a}:${ratio.b}\` (**${width}**×**${height}**)` });
+		fields.push({ name: "image.fields.ratio", value: `\`${ratio.a}:${ratio.b}\` (**${width}**×**${height}**)` });
 	}
 
 	if (options.prompt.negative) fields.push({
-		name: "Negative", value: `\`${options.prompt.negative}\``
+		name: "image.fields.negative_prompt", value: `\`${options.prompt.negative}\``
 	});
 
 	if (options.steps !== DEFAULT_GEN_OPTIONS.steps) fields.push({
-		name: "Steps", value: `${options.steps}`
+		name: "image.fields.steps", value: `${options.steps}`
 	});
 
 	if (options.guidance !== DEFAULT_GEN_OPTIONS.guidance) fields.push({
-		name: "Guidance", value: `${options.guidance}`
+		name: "image.fields.guidance", value: `${options.guidance}`
 	});
 
 	if (options.prompt.style) {
 		const style = await fetchMarketplaceEntry<MarketplaceStyle>(options.bot, options.prompt.style);
-		fields.push({ name: "Style", value: `${style.name} ${emojiToString(style.emoji)}` });
+		fields.push({ name: "image.fields.style", value: `${style.name} ${emojiToString(style.emoji)}` });
 	}
 
 	return fields.map(field => ({ ...field, inline: true }));
@@ -472,4 +478,29 @@ function displayPrompt(
 	{ action, interaction, prompt }: Pick<ImageFormatOptions, "action" | "interaction" | "prompt">
 ) {
 	return `**${truncate(prompt.prompt, 200)}** — @${interaction.user.username}${action !== null ? ` ${action === "upscale" ? "🔎" : ""}` : ""}`;
+}
+
+/** A really awful way to do this */
+export function generateModelChoices() {
+	const choices: ApplicationCommandOptionChoice[] = [];
+
+	for (const model of IMAGE_MODELS) {
+		const key = `image.models.${model.id}`;
+		const nameLocalizations: Localization = {};
+
+		for (const locale of USER_LOCALES) {
+			if (locale.supported && hasTranslation({ key, lang: locale.id })) {
+				nameLocalizations[locale.id as Locales] =
+					`${model.name} • ${t({ key: `${key}.desc`, lang: locale.id })}`;
+			}
+		}
+
+		choices.push({
+			name: `${model.name} • ${t({ key: `${key}.desc` })}`,
+			nameLocalizations, value: model.id
+		});
+	}
+
+	return choices;
+
 }

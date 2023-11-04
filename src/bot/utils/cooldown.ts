@@ -5,6 +5,7 @@ import type { DBEnvironment } from "../../db/types/mod.js";
 
 import { EmbedColor, type MessageResponse } from "./response.js";
 import { DBRole } from "../../db/types/user.js";
+import { ToLocaleStrings } from "../i18n.js";
 
 type CooldownTarget = Conversation | Interaction;
 
@@ -19,17 +20,17 @@ export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTar
 		ephemeral: true
 	};
 
-	const embeds: Embed[] = [
+	const embeds: ToLocaleStrings<Embed>[] = [
 		{
-			title: "Whoa-whoa... slow down ⌛",
-			description: `This action is currently on cool-down; you can use it again <t:${Math.floor((cooldown!.when - 1000) / 1000)}:R>.`,
+			title: "cooldown.title",
+			description: { key: "cooldown.desc", data: { time: Math.floor((cooldown!.when - 1000) / 1000) } },
 			color: EmbedColor.Yellow
 		}
 	];
 
 	if (!premium) {
 		embeds.push({
-			description: "By upgrading to **Premium** ✨, you will have practically **no cool-down** for **all features** throughout the bot. **Premium** ✨ also *removes* all annoying advertisements.",
+			description: "premium.cooldown",
 			color: EmbedColor.Orange
 		});
 
@@ -39,7 +40,7 @@ export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTar
 			components: [
 				{
 					type: MessageComponentTypes.Button,
-					label: "Upgrade to Premium", emoji: { name: "💸" },
+					label: "premium.buttons.upgrade", emoji: { name: "💸" },
 					customId: "premium:purchase",
 					style: ButtonStyles.Success
 				}
