@@ -195,16 +195,11 @@ export function getSettingsValue<T = string | number | boolean>(
 	if (option.type === SettingsOptionType.Choices) {
 		/* If no option is selected & it's optional, return null. */
 		if (value === "none") return null as T;
-
-		console.log(value, option.choices);
 		
 		/* If the option is a select menu & the user doesn't have the permission to use the current choice, reset it. */
 		const choice = option.choices.find(c => c.value === value) ?? null;
 		if (choice?.restrictions && !canUse(bot, env, choice.restrictions)) return option.default;
-		else if (choice === null) {
-			console.log("DEFAULT");
-			return option.default;
-		}
+		else if (choice === null) return option.default;
 	}
 	
 	return value ?? option.default;
