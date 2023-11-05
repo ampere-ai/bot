@@ -35,14 +35,14 @@ export default createCommand({
 				: await bot.helpers.getUser(id).catch(() => null);
 
 			if (target === null) throw new ResponseError({
-				message: `You must specify a valid ${sub}`
+				message: { key: "mod.errors.invalid_target", data: { type: sub } }
 			});
 	
 			return buildModerationOverview(bot, sub, target);
 
 		} catch (error) {
 			if (error instanceof SyntaxError) throw new ResponseError({
-				message: "You must specify a valid identifier"
+				message: "mod.errors.invalid_id"
 			});
 			
 			throw error;

@@ -29,7 +29,9 @@ export const SettingsCategories: SettingsCategory[] = [
 				default: "en-US",
 				
 				choices: USER_LOCALES.map(l => ({
-					name: l.name, emoji: l.emoji, value: l.id
+					name: l.localName ?? l.name,
+					description: l.localName ? l.name : undefined,
+					emoji: l.emoji, value: l.id
 				}))
 			},
 

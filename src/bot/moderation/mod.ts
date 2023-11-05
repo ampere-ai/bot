@@ -11,6 +11,7 @@ import { EmbedColor, transformResponse, type MessageResponse } from "../utils/re
 import { buildInfractionInfo, buildModerationLogs } from "./tools.js";
 import { MOD_CHANNELS, SUPPORT_INVITE } from "../../config.js";
 import { applyFilters, executeFilters } from "./filters.js";
+import { t } from "../i18n.js";
 
 /** Moderate the given prompt. */
 export async function moderate(options: ModerationOptions) {
@@ -52,19 +53,18 @@ export async function moderate(options: ModerationOptions) {
 	return data;
 }
 
-export function moderationNotice({ result, small }: ModerationNoticeOptions): MessageResponse {
+export function moderationNotice({ result, env, small }: ModerationNoticeOptions): MessageResponse {
 	const embed: Embed = {
-		title: small ? undefined : "What's this? 🤨",
-		footer: small ? undefined : { text: `${SUPPORT_INVITE} • Support server` },
+		title: small ? undefined : "mod.flags.block 🤨",
+		footer: small ? undefined : { text: SUPPORT_INVITE },
 		color: result.blocked ? EmbedColor.Red : EmbedColor.Orange 
 	};
 
-	if (result.auto && result.auto.type !== "block") {
-		if (result.auto.type === "warn") embed.description = "Your prompt violates our **usage policies** & you have received a **warning**. *If you continue to violate the usage policies, we may have to take additional moderative actions*.";
-		else if (result.auto.type === "ban") embed.description = "Your prompt violates our **usage policies** & you have been **banned** from using the bot. _If you want to appeal or have questions about your ban, join the **support server**_.";
-		else if (result.auto.type === "flag") embed.description = "Your prompt may violate our **usage policies**. *If you violate the usage policies, we may have to take moderative actions; otherwise you can ignore this notice*.";
-	} else if (result.blocked) embed.description = "Your prompt violates our **usage policies**. *If you actually violate the usage policies, we may have to take moderative actions; otherwise you can ignore this notice*.";
-	else if (result.flagged) embed.description = "Your prompt may violate our **usage policies**. *If you violate the usage policies, we may have to take moderative actions; otherwise you can ignore this notice*.";
+	if (result.auto && result.auto.type !== "block" && result.auto.type !== "flag") {
+		if (result.auto.type === "warn") embed.description = `mod.prompt.warn *${t({ key: "mod.violation.continue", env })}*`;
+		else if (result.auto.type === "ban") embed.description = `mod.prompt.ban _${t({ key: "mod.violation.appeal", env })}_.`;
+	} else if (result.blocked) embed.description = `mod.prompt.block *${t({ key: "mod.violation.continue", env })}*.`;
+	else if (result.flagged) embed.description = `mod.prompt.flag *${t({ key: "mod.violation.maybe", env })}*.`;
 
 	return {
 		embeds: embed, ephemeral: true
@@ -183,7 +183,7 @@ export function infractionNotice(entry: DBGuild | DBUser, infraction: DBInfracti
 	} else if (infraction.type === "warn") {
 		return {
 			embeds: {
-				title: "Before you continue...",
+				title: "mod.flags.warn",
 				description: `${location === "guild" ? "This server" : "You"} received a warning, as a consequence of ${location === "guild" ? "the" : "your"} interactions with our bot. *This is only a warning, you can continue to use the bot. If ${location === "guild" ? "your server" : "you"} however ${location === "guild" ? "keeps" : "keep"} violating our **usage policies**, we may have to take further moderative actions*.`,
 				fields: buildInfractionInfo(infraction).fields,
 				footer: { text: SUPPORT_INVITE },

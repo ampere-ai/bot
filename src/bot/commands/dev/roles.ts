@@ -47,7 +47,7 @@ export default createCommand({
 		const db: DBUser = await bot.db.fetch("users", id);
 
 		if (db === null || discordEntry === null) throw new ResponseError({
-			message: `You must specify a valid ${sub}`
+			message: { key: "mod.errors.invalid_target", data: { type: sub } }
 		});
 
 		const target = toModerationTarget(discordEntry);
@@ -68,7 +68,7 @@ export default createCommand({
 
 		return {
 			embeds: {
-				description: `Role **${titleCase(role)}** ${sub === "add" ? "added" : "removed"}`,
+				description: { key: `mod.messages.role.${sub}`, data: { name: titleCase(role) } },
 				author: { name: target.name, iconUrl: target.icon },
 				color: EmbedColor.Yellow
 			},

@@ -23,6 +23,9 @@ interface MarketplaceCreatorError {
 }
 
 interface MarketplaceCreatorField {
+	/** Placeholder of this field */
+	placeholder?: string;
+
 	/** Type of this field */
 	style?: TextStyles;
 
@@ -53,6 +56,7 @@ export const MARKETPLACE_BASE_FIELDS: Record<"name" | "emoji" | "description", M
 
 	emoji: {
 		builtIn: true,
+		placeholder: ":flushed:, flushed, 😳",
 		minLength: 1, maxLength: 64,
 		style: TextStyles.Short,
 		parse: entry => emojiToString(entry.emoji),
@@ -116,16 +120,18 @@ export const MARKETPLACE_CATEGORIES = [
 		creator: {
 			fields: {
 				prompt: {
+					placeholder: "From now on, you must act as a ...",
 					style: TextStyles.Paragraph, maxLength: 2048,
 					parse: entry => entry.data.prompt
 				},
 
 				disableHistory: {
 					style: TextStyles.Short, maxLength: 5,
+					placeholder: "true / false",
 					parse: entry => Boolean(entry.data.disableHistory).toString(),
 					validate: input => {
 						if (![ "true", "false" ].includes(input)) return {
-							message: "Not a valid boolean"
+							message: "marketplace.errors.invalid_bool"
 						};
 					}
 				}
@@ -146,6 +152,7 @@ export const MARKETPLACE_CATEGORIES = [
 			fields: {
 				tags: {
 					style: TextStyles.Paragraph,
+					placeholder: "cinematic\nvignette\n4k rtx",
 					parse: entry => entry.data.tags ? entry.data.tags.join("\n") : null
 				}
 			},

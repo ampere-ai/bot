@@ -47,7 +47,7 @@ export default createCommand({
 				: await bot.helpers.getUser(id).catch(() => null);
 
 			if (db === null || discordEntry === null) throw new ResponseError({
-				message: `You must specify a valid ${sub}`
+				message: { key: "mod.errors.invalid_target", data: { type: sub } }
 			});
 
 			const target = toModerationTarget(discordEntry);
@@ -61,7 +61,7 @@ export default createCommand({
 
 			return {
 				embeds: {
-					title: "Warning given ⚠️",
+					title: "mod.messages.warn ⚠️",
 					author: { name: target.name, iconUrl: target.icon },
 					fields: buildInfractionInfo(infraction).fields,
 					color: EmbedColor.Yellow
@@ -70,7 +70,7 @@ export default createCommand({
 
 		} catch (error) {
 			if (error instanceof SyntaxError) throw new ResponseError({
-				message: "You must specify a valid identifier"
+				message: "mod.errors.invalid_id"
 			});
 			
 			throw error;

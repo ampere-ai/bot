@@ -10,6 +10,7 @@ import type { DBImage } from "../../db/types/image.js";
 import { findBestSize, generate, interrogate, validRatio } from "../image/mod.js";
 import { fetchMarketplaceEntry, getMarketplaceSetting } from "../marketplace.js";
 import { type ImageGenerationResult, IMAGE_SAMPLERS } from "../types/image.js";
+import { DISCORD_LOCALE_MAP, USER_LOCALES } from "../types/locale.js";
 import { EmbedColor, MessageResponse } from "../utils/response.js";
 import { moderate, moderationNotice } from "../moderation/mod.js";
 import { ModerationSource } from "../moderation/types/mod.js";
@@ -20,7 +21,6 @@ import { handleError } from "../moderation/error.js";
 import { pickAdvertisement } from "../campaign.js";
 import { getSettingsValue } from "../settings.js";
 import { IMAGE_MODELS } from "../image/models.js";
-import { USER_LOCALES } from "../types/locale.js";
 import { BRANDING_COLOR } from "../../config.js";
 import { mergeImages } from "../utils/image.js";
 import { hasTranslation, t } from "../i18n.js";
@@ -150,7 +150,7 @@ export default createCommand({
 			bot, env, user: interaction.user, content: prompt, source: ModerationSource.ImagePrompt
 		});
 
-		if (moderation.blocked) return moderationNotice({ result: moderation });
+		if (moderation.blocked) return moderationNotice({ result: moderation, env });
 
 		try {
 			await start({
@@ -490,7 +490,7 @@ export function generateModelChoices() {
 
 		for (const locale of USER_LOCALES) {
 			if (locale.supported && hasTranslation({ key, lang: locale.id })) {
-				nameLocalizations[locale.id as Locales] =
+				nameLocalizations[DISCORD_LOCALE_MAP[locale.id] ?? locale.id as Locales] =
 					`${model.name} • ${t({ key: `${key}.desc`, lang: locale.id })}`;
 			}
 		}

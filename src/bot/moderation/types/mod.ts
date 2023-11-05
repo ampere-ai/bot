@@ -47,6 +47,7 @@ export interface ModerationResult {
 }
 
 export interface ModerationNoticeOptions {
+	env: DBEnvironment;
 	result: ModerationResult;
 	small?: boolean;
 }

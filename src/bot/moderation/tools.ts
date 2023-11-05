@@ -178,7 +178,7 @@ export async function buildModerationOverview(bot: Bot, location: "user" | "guil
 	const db = await bot.db.fetch<DBGuild | DBUser>(`${target.type}s`, target.id);
 
 	const fields: DiscordEmbedField[] = [ {
-		name: "First interaction 🙌",
+		name: "mod.info.first_interaction 🙌",
 		value: `<t:${Math.floor(Date.parse(db.created) / 1000)}:f>` 
 	} ];
 
@@ -186,22 +186,22 @@ export async function buildModerationOverview(bot: Bot, location: "user" | "guil
 		const user = db as DBUser;
 
 		fields.push(
-			{ name: "Roles ⚒️", value: [ ...user.roles, "*User*" ].map(role => `**${titleCase(role)}**`).join(", ") },
-			{ name: "Voted 📩", value: user.voted ? `<t:${Math.round(Date.parse(user.voted) / 1000)}:R>` : "❌" },
+			{ name: "mod.info.roles ⚒️", value: [ ...user.roles, "*User*" ].map(role => `**${titleCase(role)}**`).join(", ") },
+			{ name: "mod.info.voted 📩", value: user.voted ? `<t:${Math.round(Date.parse(user.voted) / 1000)}:R>` : "❌" },
 		);
 	} else {
 		const guild = entry as Guild;
 
 		if (guild.description) fields.push({
-			name: "Description 🗒️", value: guild.description
+			name: "mod.info.desc 🗒️", value: guild.description
 		});
 
 		if (guild.approximateMemberCount) fields.push({
-			name: "Members 🫂", value: guild.approximateMemberCount.toString()
+			name: "mod.info.members 🫂", value: guild.approximateMemberCount.toString()
 		});
 
 		if (guild.vanityUrlCode) fields.push({
-			name: "Invite 📨", value: `[.gg/${guild.vanityUrlCode}](https://discord.gg/${guild.vanityUrlCode})`
+			name: "mod.info.invite 📨", value: `[.gg/${guild.vanityUrlCode}](https://discord.gg/${guild.vanityUrlCode})`
 		});
 	}
 
@@ -220,7 +220,7 @@ export async function buildModerationOverview(bot: Bot, location: "user" | "guil
 		.slice(-25);
 
 	if (flags.length > 0) embeds.push({
-		title: "Flags 👀", color: EmbedColor.Orange,
+		title: "mod.info.flags 👀", color: EmbedColor.Orange,
 
 		fields: flags.sort((a, b) => b.when - a.when).map(flag => {
 			const action = flag.moderation!.auto
@@ -239,7 +239,7 @@ export async function buildModerationOverview(bot: Bot, location: "user" | "guil
 		.filter(i => i.type === "warn" && i.reason).slice(-25);
 
 	if (warnings.length > 0) embeds.push({
-		title: "Warnings ⚠️", color: EmbedColor.Yellow,
+		title: "mod.info.warns ⚠️", color: EmbedColor.Yellow,
 
 		fields: warnings.sort((a, b) => b.when - a.when).map(w => ({
 			name: `· ${w.reason!}${!w.by ? " 🤖" : ""}`, inline: true,
@@ -250,7 +250,7 @@ export async function buildModerationOverview(bot: Bot, location: "user" | "guil
 	const banned = isBanned(db);
 
 	if (banned) embeds.push({
-		title: "Ban Overview 🔨", color: EmbedColor.Red,
+		title: "mod.info.ban 🔨", color: EmbedColor.Red,
 		fields: buildInfractionInfo(banned, [ "by" ]).fields
 	});
 
@@ -264,18 +264,18 @@ export function buildInfractionInfo(infraction: DBInfraction, display: "by"[] = 
 	const fields: DiscordEmbedField[] = [];
 
 	if (infraction.reason) fields.push({
-		name: "Reason", value: infraction.reason, inline: true
+		name: "mod.infraction.reason", value: infraction.reason, inline: true
 	});
 
 	if (infraction.by && display.includes("by")) fields.push({
-		name: "By", value: `<@${infraction.by}>`, inline: true
+		name: "mod.infraction.by", value: `<@${infraction.by}>`, inline: true
 	});
 
 	if (infraction.until) {
 		const until = Math.floor(infraction.until / 1000);
 
 		fields.push({
-			name: "Until", value: `<t:${until}:f>, <t:${until}:R>`, inline: true
+			name: "mod.infraction.until", value: `<t:${until}:f>, <t:${until}:R>`, inline: true
 		});
 	}
 

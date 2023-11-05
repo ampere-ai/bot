@@ -129,7 +129,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 	});
 
 	if (moderation.blocked) return void await message.reply(
-		moderationNotice({ result: moderation })
+		moderationNotice({ result: moderation, env })
 	);
 
 	/* Start the generation process. */
@@ -292,7 +292,7 @@ async function format(
 	}
 
 	if (result.done && moderation.flagged) embeds.push(
-		moderationNotice({ result: moderation, small: true }).embeds as Embed
+		moderationNotice({ result: moderation, env, small: true }).embeds as Embed
 	);
 
 	if (result.finishReason === "length") {

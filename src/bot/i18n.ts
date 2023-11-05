@@ -89,11 +89,11 @@ export function translateObject<T = any>(obj: T, env?: DBEnvironment): T {
 export async function setupI18N() {
 	i18next.init({
 		resources: {},
-		lng: "en-US",
-		ns: "en-US",
+		lng: "en",
+		ns: "en",
 
-		fallbackLng: "en-US",
-		fallbackNS: "en-US",
+		fallbackLng: "en",
+		fallbackNS: "en",
 	
 		interpolation: {
 			escapeValue: false

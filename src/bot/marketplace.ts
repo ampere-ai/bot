@@ -95,20 +95,20 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		});
 		
 		entry = await incrementStatistics(bot, entry, "uses");
-		await interaction.update(await buildEntryOverview(bot, env, entry));
+		await interaction.update(translateObject(await buildEntryOverview(bot, env, entry), env));
 
 	} else if (action === "view") {
 		let entry = await fetchMarketplaceEntry(bot, interaction.data!.values![0]);
 
 		entry = await incrementStatistics(bot, entry, "views");
-		await interaction.update(await buildEntryOverview(bot, env, entry));
+		await interaction.update(translateObject(await buildEntryOverview(bot, env, entry), env));
 		
 	} else if (action === "edit") {
 		const entry = await fetchMarketplaceEntry(bot, args.shift()!);
 		const category = getMarketplaceCategory(entry.type);
 
 		await interaction.showModal(
-			buildCreationModal(env, category, "edit", entry)
+			translateObject(buildCreationModal(env, category, "edit", entry), env)
 		);
 
 	} else if (action === "remove") {
@@ -214,7 +214,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 
 						options: MARKETPLACE_CATEGORIES.filter(category => category.creator)
 							.map(category => ({
-								label: `marketplace.categories.${category.type}.name`,
+								label: `marketplace.categories.${category.type}`,
 								emoji: category.emoji,
 								value: category.type
 							}))
@@ -254,12 +254,12 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 
 			components: [ {
 				type: MessageComponentTypes.SelectMenu, customId: `market:view:${category.type}`,
-				placeholder: `marketplace.categories.${category.type}.name ${emojiToString(category.emoji)}`,
+				placeholder: `marketplace.categories.${category.type} ${emojiToString(category.emoji)}`,
 
 				options:
 					sortEntries(page.entries
 						.filter(entry => !options.creator ? entry.status.visibility === "public" : true)
-					).map(entry => buildEntryPreview(entry))
+					).map(entry => buildEntryPreview(entry, env))
 			} ]
 		});
 	}
@@ -312,12 +312,14 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 }
 
 /** Build a small preview of an entry, as a select option. */
-function buildEntryPreview(entry: DBMarketplaceEntry): SelectOption {
-	return {
-		label: entry.status.builtIn ? `${entry.name} ⭐` : entry.name,
+function buildEntryPreview(entry: DBMarketplaceEntry, env: DBEnvironment): SelectOption {
+	const { name, desc } = localizeMarketplaceEntry(entry, env);
 
-		description: entry.description
-			? entry.description.split("\n").length > 1 ? `${entry.description.split("\n")[0]} ...` : entry.description
+	return {
+		label: entry.status.builtIn ? `${name} ⭐` : name,
+
+		description: desc
+			? desc.split("\n").length > 1 ? `${desc.split("\n")[0]} ...` : desc
 			: undefined,
 			
 		emoji: entry.emoji,
@@ -327,7 +329,6 @@ function buildEntryPreview(entry: DBMarketplaceEntry): SelectOption {
 
 /** Build a full overview of an entry. */
 async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketplaceEntry): Promise<MessageResponse> {
-
 	/* Current setting for this marketplace type */
 	const category = getMarketplaceCategory(entry.type);
 	const currentID: string | null = getSettingsValue(bot, env, "user", category.key);
@@ -372,6 +373,8 @@ async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketp
 		emoji: { name: "home", id: 1152658440087425094n }
 	});
 
+	const { name, desc } = localizeMarketplaceEntry(entry, env);
+
 	return {
 		embeds: [
 			{
@@ -380,8 +383,8 @@ async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketp
 					: undefined,
 
 				footer: { text: `${t({ key: "marketplace.counts.views", options: { count: entry.stats.views }, env })} • ${t({ key: "marketplace.counts.uses", options: { count: entry.stats.uses }, env })}` },
-				title: `${entry.name} ${emojiToString(entry.emoji)}`,
-				description: entry.description ? `*${entry.description}*` : undefined
+				title: `${name} ${emojiToString(entry.emoji)}`,
+				description: desc ? `*${desc}*` : undefined
 			},
 		],
 
@@ -398,7 +401,7 @@ function buildCreationModal(
 	env: DBEnvironment, category: MarketplaceCategory, type: "new" | "edit", entry?: DBMarketplaceEntry
 ): Required<Pick<InteractionCallbackData, "title" | "customId" | "components">> {
 	return {
-		title: `${type === "new" ? "marketplace.manage.create" : "marketplace.manage.edit"} ${t({ key: `marketplace.categories.${category.type}.name`, env }).toLowerCase()} ${emojiToString(category.emoji)}`,
+		title: `${type === "new" ? "marketplace.manage.create" : "marketplace.manage.edit"} ${t({ key: `marketplace.categories.${category.type}`, env }).toLowerCase()} ${emojiToString(category.emoji)}`,
 		customId: `market:create:${type}:${category.type}:${entry?.id}`,
 
 		components: Object.entries({ ...MARKETPLACE_BASE_FIELDS, ...category.creator!.fields })
@@ -408,11 +411,8 @@ function buildCreationModal(
 				components: [ {
 					type: MessageComponentTypes.InputText,
 					customId: id, style: field.style ?? TextStyles.Short,
-					label: `marketplace.fields.${id}.name`,
-					
-					placeholder: hasTranslation({ key: `marketplace.fields.${id}.placeholder`, env })
-						? `marketplace.fields.${id}.placeholder`
-						: undefined,
+					label: `marketplace.fields.${id}`,
+					placeholder: field.placeholder,
 
 					value: type === "edit" && entry
 						? field.parse(entry) ?? undefined
@@ -423,6 +423,23 @@ function buildCreationModal(
 				} ]
 			}))
 	};
+}
+
+/** Translate a marketplace entry, if needed. */
+function localizeMarketplaceEntry(entry: DBMarketplaceEntry, env: DBEnvironment): { name: string; desc: string | null; } {
+	const key = `marketplace.entries.${entry.type}.${entry.id.split("-").reverse()[0]}`;
+
+	if (hasTranslation({ key, env })) {
+		return {
+			name: t({ key: `${key}.name`, env }),
+			desc: t({ key: `${key}.desc`, env })
+		};
+	} else {
+		return {
+			name: entry.name,
+			desc: entry.description
+		};
+	}
 }
 
 /** Check whether a user can create & manage entries in the marketplace. */

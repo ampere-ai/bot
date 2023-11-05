@@ -47,13 +47,13 @@ export default createCommand({
 				: await bot.helpers.getUser(id).catch(() => null);
 
 			if (db === null || discordEntry === null) throw new ResponseError({
-				message: `You must specify a valid ${sub}`
+				message: { key: "mod.errors.invalid_target", data: { type: sub } }
 			});
 
 			const target = toModerationTarget(discordEntry);
 
 			if (!isBanned(db)) throw new ResponseError({
-				message: `The specified ${sub} is not banned`
+				message: { key: "mod.errors.not_banned", data: { type: sub } }
 			});
 
 			db = await banEntry(bot, db, {
@@ -65,7 +65,7 @@ export default createCommand({
 
 			return {
 				embeds: {
-					title: "Ban revoked 🙌",
+					title: "mod.messages.pardon 🙌",
 					author: { name: target.name, iconUrl: target.icon },
 					fields: buildInfractionInfo(infraction).fields,
 					color: EmbedColor.Yellow
@@ -74,7 +74,7 @@ export default createCommand({
 
 		} catch (error) {
 			if (error instanceof SyntaxError) throw new ResponseError({
-				message: "You must specify a valid identifier"
+				message: "mod.errors.invalid_id"
 			});
 			
 			throw error;

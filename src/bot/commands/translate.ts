@@ -6,6 +6,7 @@ import { createCommand } from "../helpers/command.js";
 import { ResponseError } from "../errors/response.js";
 import { USER_LOCALES } from "../types/locale.js";
 import { BRANDING_COLOR } from "../../config.js";
+import { translateObject } from "../i18n.js";
 import { APIError } from "../errors/api.js";
 
 export default createCommand({
@@ -42,7 +43,7 @@ export default createCommand({
 			bot, env, user: interaction.user, content, source: ModerationSource.TranslationPrompt
 		});
 	
-		if (moderation.blocked) return moderationNotice({ result: moderation });
+		if (moderation.blocked) return moderationNotice({ result: moderation, env });
 		await interaction.deferReply();
 
 		try {
@@ -50,7 +51,7 @@ export default createCommand({
 				content, language: language.modelName ?? language.name
 			});
 
-			await interaction.editReply({
+			await interaction.editReply(translateObject({
 				embeds: {
 					title: "translate.title",
 					description: `\`\`\`\n${result.content}\n\`\`\``,
@@ -70,7 +71,7 @@ export default createCommand({
 						}
 					]
 				}
-			});
+			}, env));
 		} catch (error) {
 			if (error instanceof APIError) {
 				throw new ResponseError({

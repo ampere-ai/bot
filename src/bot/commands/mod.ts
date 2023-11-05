@@ -21,7 +21,7 @@ import bot from "./bot.js";
 
 /* The order is important; don't try to fix it */
 import { RestrictionName } from "../utils/restriction.js";
-import { USER_LOCALES } from "../types/locale.js";
+import { DISCORD_LOCALE_MAP, USER_LOCALES } from "../types/locale.js";
 import { hasTranslation, t } from "../i18n.js";
 
 export const COMMANDS: Command<any, any>[] = [
@@ -66,7 +66,7 @@ function transformCommand(bot: Bot, command: Command): CreateApplicationCommand 
 		const key = `commands.${command.name}.desc`;
 
 		if (locale.supported && hasTranslation({ key, lang: locale.id })) {
-			descriptionLocalizations[locale.id as Locales] = 
+			descriptionLocalizations[DISCORD_LOCALE_MAP[locale.id] ?? locale.id as Locales] = 
 				t({ key, lang: locale.id });
 		}
 	}

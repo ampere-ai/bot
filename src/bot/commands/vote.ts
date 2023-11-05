@@ -16,7 +16,7 @@ export default createCommand({
 
 		return {
 			embeds: {
-				title: "vote.title",
+				title: "vote.title <:topgg:1151514119749521468>",
 				color: 0xff3366,
 				fields
 			},

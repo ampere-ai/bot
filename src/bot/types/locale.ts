@@ -1,6 +1,11 @@
+import { Locales } from "@discordeno/types";
+
 export interface UserLocale {
 	/** Name of the language */
 	name: string;
+
+	/** Localized name of the language */
+	localName?: string;
 
 	/** Name to pass to the AI model, when translating */
 	modelName?: string;
@@ -15,23 +20,26 @@ export interface UserLocale {
 	id: string;
 }
 
+export const DISCORD_LOCALE_MAP: Record<string, Locales> = {
+	"en": Locales.EnglishUs,
+	"es": Locales.Spanish
+};
+
 export const USER_LOCALES: UserLocale[] = [
 	/* Actual languages */
-	{ name: "English", id: "en-US", emoji: "🇬🇧", supported: true },
-	{ name: "Spanish", id: "es-ES", emoji: "🇪🇸", supported: true },
-	{ name: "French", id: "fr", emoji: "🇫🇷", supported: true },
-	{ name: "German", id: "de", emoji: "🇩🇪", supported: true },
-	{ name: "Brazilian Portuguese", id: "pt-BR", emoji: "🇧🇷", supported: true },
-	{ name: "Italian", id: "it", emoji: "🇮🇹", supported: true },
-	{ name: "Polish", id: "pl", emoji: "🇵🇱", supported: true },
-	{ name: "Russian", id: "ru", emoji: "🇷🇺", supported: true },
-	{ name: "Bulgarian", id: "bg", emoji: "🇧🇬", supported: true },
-	{ name: "Czech", id: "cs", emoji: "🇨🇿", supported: true },
-	{ name: "Japanese", id: "ja", emoji: "🇯🇵", supported: true },
-	{ name: "Chinese", id: "zh-CN", emoji: "🇨🇳", supported: true },
-	{ name: "Vietnamese", id: "vi", emoji: "🇻🇳", supported: true },
-	{ name: "Persian", id: "ir", emoji: "🇮🇷", },
-
-	/* Fun languages */
-	{ name: "Pirate", modelName: "Heavy English pirate speak", id: "pirate", emoji: "🏴‍☠️" }
+	{ id: "en", name: "English", emoji: "🇬🇧", supported: true },
+	{ id: "es", name: "Spanish", localName: "Español", emoji: "🇪🇸", supported: true },
+	{ id: "fr", name: "French", localName: "Français", emoji: "🇫🇷", supported: true },
+	{ id: "de", name: "German", localName: "Deutsch", emoji: "🇩🇪", supported: true },
+	{ id: "pt-BR", name: "Brazilian Portuguese", localName: "Português (Brasil)", emoji: "🇧🇷", supported: true },
+	{ id: "it", name: "Italian", localName: "Italiano", emoji: "🇮🇹", supported: true },
+	{ id: "pl", name: "Polish", localName: "Polski", emoji: "🇵🇱", supported: true },
+	{ id: "ru", name: "Russian", localName: "Русский", emoji: "🇷🇺", supported: true },
+	{ id: "bg", name: "Bulgarian", localName: "Български", emoji: "🇧🇬", supported: true },
+	{ id: "cs", name: "Czech", localName: "Čeština", emoji: "🇨🇿", supported: true },
+	{ id: "ja", name: "Japanese", localName: "日本語", emoji: "🇯🇵", supported: true },
+	{ id: "zh-CN", name: "Chinese", localName: "中文", emoji: "🇨🇳", supported: true },
+	{ id: "vi", name: "Vietnamese", localName: "Tiếng Việt", emoji: "🇻🇳", supported: true },
+	{ id: "ir", name: "Persian", localName: "فارسی", emoji: "🇮🇷" },
+	{ id: "en@pirate", name: "Pirate", modelName: "Heavy English pirate speak", emoji: "🏴‍☠️" }
 ];
