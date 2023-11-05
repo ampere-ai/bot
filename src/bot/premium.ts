@@ -128,12 +128,12 @@ export function buildPremiumOverview(bot: Bot, interaction: Interaction, { user,
 				? `**$${plan.used.toFixed(2)}** \`${displayBar({ percentage, total: size })}\` **$${plan.total.toFixed(2)}**`
 				: "premium.overview.out_of_credits";
 
-			embed.title = `premium.overview.title.payg.${type.location}`;
+			embed.title = `premium.overview.title.payg.${type.location} 📊`;
 			embed.description = displayMessage;
 
 		} else if (type.type === "subscription") {
 			const subscription = subscriptions[type.location];
-			embed.title = `premium.overview.title.sub.${type.location}`;
+			embed.title = `premium.overview.title.sub.${type.location} ✨`;
 
 			if (subscription === null && user.roles.includes(DBRole.Moderator)) {
 				embed.description = "premium.overview.moderator";	

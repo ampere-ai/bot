@@ -482,12 +482,12 @@ export function generateModelChoices() {
 		for (const locale of USER_LOCALES) {
 			if (locale.supported && hasTranslation({ key, lang: locale.id })) {
 				nameLocalizations[DISCORD_LOCALE_MAP[locale.id] ?? locale.id as Locales] =
-					`${model.name} • ${t({ key: `${key}.desc`, lang: locale.id })}`;
+					`${model.name} • ${t({ key, lang: locale.id })}`;
 			}
 		}
 
 		choices.push({
-			name: `${model.name} • ${t({ key: `${key}.desc` })}`,
+			name: `${model.name} • ${t({ key })}`,
 			nameLocalizations, value: model.id
 		});
 	}

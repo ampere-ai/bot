@@ -477,7 +477,7 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 
 			/* The creation button was pressed */
 			} else {
-				await interaction.showModal({
+				await interaction.showModal(translateObject({
 					title: "campaign.create.title",
 					customId: "campaign:ui:create",
 
@@ -495,7 +495,7 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 							maxLength: 128
 						} ]
 					} ]
-				});
+				}, env));
 			}
 
 		} else if (action === "preview") {

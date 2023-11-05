@@ -96,7 +96,7 @@ export const SettingsCategories: SettingsCategory[] = [
 				type: SettingsOptionType.Choices,
 
 				choices: IMAGE_MODELS.map(m => ({
-					name: m.name, description: `image.models.${m.id}.desc`, value: m.id
+					name: m.name, description: `image.models.${m.id}`, value: m.id
 				}))
 			},
 
