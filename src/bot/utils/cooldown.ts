@@ -3,9 +3,9 @@ import { type Interaction, type Embed, type Bot, Collection, MessageComponentTyp
 import type { Conversation } from "../types/conversation.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
-import { EmbedColor, type MessageResponse } from "./response.js";
+import { type ToLocaleStrings, translateObject } from "../i18n.js";
+import { type MessageResponse, EmbedColor } from "./response.js";
 import { DBRole } from "../../db/types/user.js";
-import { ToLocaleStrings } from "../i18n.js";
 
 type CooldownTarget = Conversation | Interaction;
 
@@ -49,7 +49,7 @@ export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTar
 	}
 
 	response.embeds = embeds;
-	return response;
+	return translateObject(response, env);
 }
 
 export function getCooldown(target: CooldownTarget) {

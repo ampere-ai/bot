@@ -74,7 +74,7 @@ export function translateObject<T = any>(obj: T, env?: DBEnvironment): T {
 			const translated: any = {};
 
 			for (const key of Object.keys(obj)) {
-				translated[key] = key !== "customId" && key !== "url" && key !== "id" && key !== "value"
+				translated[key] = key !== "customId" && key !== "url" && key !== "id"
 					? translateObject((obj as any)[key], env)
 					: (obj as any)[key];
 			}

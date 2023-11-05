@@ -299,7 +299,7 @@ async function format(
 
 	if (result.finishReason === "length") {
 		embeds.push({
-			description: "This message reached the length limit, and was not fully generated.",
+			description: "chat.messages.length",
 			color: EmbedColor.Yellow
 		});
 
