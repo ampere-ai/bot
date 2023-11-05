@@ -74,7 +74,7 @@ export default createCommand({
 		} catch (error) {
 			if (error instanceof APIError) {
 				throw new ResponseError({
-					message: error.message
+					message: error.options.data?.message ?? error.message
 				});
 			} else {
 				throw error;
