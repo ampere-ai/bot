@@ -6,13 +6,10 @@ import type { DBEnvironment } from "../../db/types/mod.js";
 
 import { DBUserType } from "../../db/types/user.js";
 
-export interface SubCommand {
-	description: string;
-}
+export interface SubCommand {}
 
 interface BaseCommandOption<T extends ApplicationCommandOptionTypes> {
 	type: T;
-	description: string;
 	required?: boolean;
 	default?: MapCommandOptionTypeToValue<T>;
 }

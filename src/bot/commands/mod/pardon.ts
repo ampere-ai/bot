@@ -28,7 +28,7 @@ export default createCommand({
 	options: {
 		id: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "...", required: true
+			required: true
 		},
 	
 		reason: {

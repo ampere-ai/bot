@@ -8,13 +8,8 @@ export default createCommand({
 	restrictions: [ RestrictionName.Developer ],
 
 	sub: {
-		refresh_cache: {
-			description: "Clear all cache entries in Redis & refresh loaded campaigns"
-		},
-
-		flush: {
-			description: "Save all queued database changes immediately"
-		}
+		refresh_cache: {},
+		flush: {}
 	},
 
 	handler: async ({ bot, sub }) => {

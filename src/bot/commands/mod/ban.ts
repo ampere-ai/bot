@@ -46,17 +46,16 @@ export default createCommand({
 	options: {
 		id: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "...", required: true
+			required: true
 		},
 	
 		reason: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "Why this ban was done", required: true
+			required: true
 		},
 	
 		duration: {
 			type: ApplicationCommandOptionTypes.Number,
-			description: "For how long the ban should last",
 	
 			choices: DURATION_CHOICES.map(d => ({
 				name: d.humanize(),

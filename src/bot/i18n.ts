@@ -4,8 +4,9 @@ import fs from "fs/promises";
 
 import { DBEnvironment } from "../db/types/mod.js";
 import { getSettingsValue } from "./settings.js";
-import { USER_LOCALES } from "./types/locale.js";
+import { DISCORD_LOCALE_MAP, USER_LOCALES } from "./types/locale.js";
 import { bot } from "./mod.js";
+import { Locales, Localization } from "@discordeno/types";
 
 export type LocaleString = {
 	key: string;
@@ -37,7 +38,7 @@ export function t({ env, key, lang, options }: {
 		const lng = getSettingsValue<string>(bot, env, "user", "general:language");
 		return i18next.t(key, { lng, ns: lng, ...options ?? {} });
 	} else {
-		return i18next.t(key, { lng: lang, ns: lang, ...options ?? {} });
+		return i18next.t(key, { lng: lang ?? "en", ns: lang ?? "en", ...options ?? {} });
 	}
 }
 
@@ -86,14 +87,26 @@ export function translateObject<T = any>(obj: T, env?: DBEnvironment): T {
 	}
 }
 
-export async function setupI18N() {
-	i18next.init({
-		resources: {},
-		lng: "en",
-		ns: "en",
+export function createLocalizationMap(key: string, replacement?: string) {
+	const locales: Localization = {};
 
-		fallbackLng: "en",
-		fallbackNS: "en",
+	const fallback = hasTranslation({ key })
+		? t({ key }) : replacement ?? key;
+
+	for (const locale of USER_LOCALES) {
+		if (locale.supported && hasTranslation({ key, lang: locale.id })) {
+			locales[DISCORD_LOCALE_MAP[locale.id] ?? locale.id as Locales] = 
+				t({ key, lang: locale.id });
+		}
+	}
+
+	return { locales, fallback };
+}
+
+export async function setupI18N() {
+	await i18next.init({
+		resources: {},
+		lng: "en", ns: "en",
 	
 		interpolation: {
 			escapeValue: false
@@ -110,5 +123,4 @@ export async function setupI18N() {
 				(i18next as any).addResourceBundle(l.id, l.id, data);
 			}).catch(() => {});
 	}));
-
 }

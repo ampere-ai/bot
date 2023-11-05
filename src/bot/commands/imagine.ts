@@ -73,52 +73,43 @@ export default createCommand({
 	options: {
 		prompt: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "The possibilities are endless... 💫",
 			required: true
 		},
 
 		model: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "Which model to use",
-
 			choices: []
 		},
 
 		negative: {
-			type: ApplicationCommandOptionTypes.String,
-			description: "Things to *not include in the generated images",
+			type: ApplicationCommandOptionTypes.String
 		},
 
 		count: {
 			type: ApplicationCommandOptionTypes.Integer,
-			description: "How many images to generate",
 			default: DEFAULT_GEN_OPTIONS.count,
 			min: 1, max: 4
 		},
 
 		ratio: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "Which aspect ratio the images should have, e.g. 16:9 or 1.5:1",
 			default: "1:1"
 		},
 
 		steps: {
 			type: ApplicationCommandOptionTypes.Integer,
-			description: "How many steps to generate the image for",
 			default: DEFAULT_GEN_OPTIONS.steps,
 			min: 15, max: 50
 		},
 
 		guidance: {
 			type: ApplicationCommandOptionTypes.Integer,
-			description: "Higher values will make the AI prioritize your prompt; lower values make the AI more creative",
 			default: DEFAULT_GEN_OPTIONS.guidance,
 			min: 1, max: 24
 		},
 
 		sampler: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "The sampler responsible for carrying out the denoising steps",
 			default: DEFAULT_GEN_OPTIONS.sampler,
 
 			choices: IMAGE_SAMPLERS.map(s => ({

@@ -21,13 +21,11 @@ export default createCommand({
 	options: {
 		content: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "Which text to translate",
 			required: true
 		},
 
 		to: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "Which language to translate the given text into",
 
 			choices: USER_LOCALES.map(l => ({
 				name: `${l.emoji} ${l.name}`, value: l.id

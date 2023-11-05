@@ -1,14 +1,15 @@
-import { type Bot, type ApplicationCommandOption, ApplicationCommandOptionTypes, CreateApplicationCommand, Localization, Locales } from "@discordeno/bot";
+import { type Bot, type ApplicationCommandOption, ApplicationCommandOptionTypes, CreateApplicationCommand } from "@discordeno/bot";
 import type { Command } from "../types/command.js";
 
+import { createLocalizationMap } from "../i18n.js";
 import { MOD_GUILD_ID } from "../../config.js";
 
+import imagine, { generateModelChoices } from "./imagine.js";
 import marketplace from "./marketplace.js";
 import campaign from "./mod/campaigns.js";
 import translate from "./translate.js";
 import settings from "./settings.js";
 import pardon from "./mod/pardon.js";
-import imagine, { generateModelChoices } from "./imagine.js";
 import premium from "./premium.js";
 import roles from "./dev/roles.js";
 import info from "./mod/info.js";
@@ -21,59 +22,57 @@ import bot from "./bot.js";
 
 /* The order is important; don't try to fix it */
 import { RestrictionName } from "../utils/restriction.js";
-import { DISCORD_LOCALE_MAP, USER_LOCALES } from "../types/locale.js";
-import { hasTranslation, t } from "../i18n.js";
 
 export const COMMANDS: Command<any, any>[] = [
 	settings, reset, imagine, premium, info, bot, ban, pardon, warn, dev, roles, translate, vote, marketplace, campaign
 ];
 
-function transformCommand(bot: Bot, command: Command): CreateApplicationCommand {
+function transformCommand(command: Command): CreateApplicationCommand {
 	const options: ApplicationCommandOption[] = [];
 	const sub: ApplicationCommandOption[] = [];
 
 	for (const [ name, data ] of Object.entries(command.options ?? {})) {
-		const { type, description, choices, required } = data;
+		const { type, choices, required } = data;
+		const { fallback, locales } = createLocalizationMap(`commands.${command.name}.options.${name}`, "...");
 
 		if (data.type === ApplicationCommandOptionTypes.Number || data.type === ApplicationCommandOptionTypes.Integer) {
 			options.push({
-				name, type, description, choices, required,
+				name, type, choices, required,
+				description: fallback, descriptionLocalizations: locales,
 				maxValue: data.max, minValue: data.min
 			});
 		} else if (data.type === ApplicationCommandOptionTypes.String) {
 			options.push({
-				name, type, description, choices, required,
+				name, type, choices, required,
+				description: fallback, descriptionLocalizations: locales,
 				maxLength: data.maxLength, minLength: data.minLength
 			});
 		} else {
 			options.push({
-				name, type, description, choices, required
+				description: fallback, descriptionLocalizations: locales,
+				name, type, choices, required
 			});
 		}
 	}
 
-	for (const [ name, settings ] of Object.entries(command.sub ?? {})) {
+	for (const [ name ] of Object.entries(command.sub ?? {})) {
+		const { fallback, locales } = createLocalizationMap(`commands.${command.name}.sub.${name}`);
+
 		sub.push({
 			type: ApplicationCommandOptionTypes.SubCommand,
-			name, options, description: settings.description
+			description: fallback,
+			descriptionLocalizations: locales,
+			name, options
 		});
 	}
+	
 
-	const description = t({ key: `commands.${command.name}.desc` });
-	const descriptionLocalizations: Localization = {};
-
-	for (const locale of USER_LOCALES) {
-		const key = `commands.${command.name}.desc`;
-
-		if (locale.supported && hasTranslation({ key, lang: locale.id })) {
-			descriptionLocalizations[DISCORD_LOCALE_MAP[locale.id] ?? locale.id as Locales] = 
-				t({ key, lang: locale.id });
-		}
-	}
+	const { fallback, locales } = createLocalizationMap(`commands.${command.name}.desc`);
 
 	return {
 		name: command.name,
-		description, descriptionLocalizations,
+		description: fallback,
+		descriptionLocalizations: locales,
 		type: command.type,
 
 		options: command.sub
@@ -96,12 +95,12 @@ export async function registerCommands(bot: Bot) {
 	Promise.all([
 		/* Global commands */
 		bot.rest.upsertGlobalApplicationCommands(
-			commands.filter(c => !isPrivateCommand(c)).map(c => transformCommand(bot, c))
+			commands.filter(c => !isPrivateCommand(c)).map(transformCommand)
 		),
 
 		/* Moderation & developer commands */
 		bot.rest.upsertGuildApplicationCommands(
-			MOD_GUILD_ID, commands.filter(c => isPrivateCommand(c)).map(c => transformCommand(bot, c))
+			MOD_GUILD_ID, commands.filter(c => isPrivateCommand(c)).map(transformCommand)
 		)
 	]);
 }

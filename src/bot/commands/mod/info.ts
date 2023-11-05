@@ -10,19 +10,14 @@ export default createCommand({
 	restrictions: [ RestrictionName.Moderator ],
 
 	sub: {
-		user: {
-			description: "View information about a user"
-		},
-
-		guild: {
-			description: "View information about a server"
-		}
+		user: {},
+		guild: {}
 	},
 
 	options: {
 		id: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "...", required: true
+			required: true
 		}
 	},
 

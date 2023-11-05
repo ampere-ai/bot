@@ -15,25 +15,19 @@ export default createCommand({
 	restrictions: [ RestrictionName.Moderator ],
 
 	sub: {
-		user: {
-			description: "Give a warning to a user",
-
-		},
-
-		guild: {
-			description: "Give a warning to a server"
-		}
+		user: {},
+		guild: {}
 	},
 
 	options: {
 		id: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "...", required: true
+			required: true
 		},
 	
 		reason: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "Why this warning was isused", required: true
+			required: true
 		}
 	},
 

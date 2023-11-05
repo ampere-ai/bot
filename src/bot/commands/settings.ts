@@ -7,13 +7,8 @@ export default createCommand({
 	name: "settings",
 
 	sub: {
-		me: {
-			description: "Customize the bot for yourself"
-		},
-
-		server: {
-			description: "Customize the bot for the entire server"
-		}
+		me: {},
+		server: {}
 	},
 
 	handler: async ({ bot, interaction, sub, env }) => {

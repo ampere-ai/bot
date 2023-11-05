@@ -13,24 +13,18 @@ export default createCommand({
 	restrictions: [ RestrictionName.Developer ],
 
 	sub: {
-		add: {
-			description: "Give a role to a user"
-		},
-
-		remove: {
-			description: "Revoke a role from a user"
-		}
+		add: {},
+		remove: {}
 	},
 
 	options: {
 		id: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "...", required: true
+			required: true
 		},
 
 		which: {
 			type: ApplicationCommandOptionTypes.String,
-			description: "Which role to assign or revoke",
 			required: true,
 
 			choices: USER_ROLES.map(r => ({
@@ -53,11 +47,11 @@ export default createCommand({
 		const target = toModerationTarget(discordEntry);
 
 		if (sub === "add" && db.roles.includes(role)) throw new ResponseError({
-			message: `The user already has the **${titleCase(role)}** role`
+			message: { key: "mod.errors.already_has_role", data: { role: titleCase(role) } }
 		});
 
 		if (sub === "remove" && !db.roles.includes(role)) throw new ResponseError({
-			message: `The user doesn't have the **${titleCase(role)}** role`
+			message: { key: "mod.errors.missing_role", data: { role: titleCase(role) } }
 		});
 
 		await bot.db.update<DBUser>("users", db, {
