@@ -28,7 +28,7 @@ async function handlePayment(bot: Bot, data: PaymentData) {
 
 		await channel.send({
 			embeds: {
-				title: t({ key: "premium.dm.title", options: { type: data.type === "subscription" ? "Premium" : "Premium credits" } }),
+				title: `${t({ key: "premium.dm.title", options: { type: data.type === "subscription" ? "Premium" : "Premium credits" } })} 🎉`,
 				description: `You ${data.extended ? "extended" : "purchased"} ${data.type === "subscription" ? "a Premium subscription" : `**${data.credits}$** worth of credits`} ${data.location === "user" ? "for yourself" : `for the server **${guild?.name}**`}.`,
 				color: EmbedColor.Orange
 			}

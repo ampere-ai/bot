@@ -22,7 +22,7 @@ export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTar
 
 	const embeds: ToLocaleStrings<Embed>[] = [
 		{
-			title: "cooldown.title",
+			title: "cooldown.title ⌛",
 			description: { key: "cooldown.desc", data: { time: Math.floor((cooldown!.when - 1000) / 1000) } },
 			color: EmbedColor.Yellow
 		}

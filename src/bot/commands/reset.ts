@@ -23,7 +23,7 @@ export default createCommand({
 
 		return {
 			embeds: {
-				description: "reset.desc",
+				description: "reset.desc 😊",
 				color: EmbedColor.Green
 			},
 

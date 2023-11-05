@@ -357,7 +357,7 @@ function buildEditModal(
 	campaign: DBCampaign, category: CampaignParameterCategory, param: CampaignParameter
 ): ToLocaleStrings<Required<Pick<InteractionCallbackData, "title" | "customId" | "components">>> {
 	return {
-		title: "campaign.create.edit_value",
+		title: "campaign.create.edit_value 📝",
 		customId: `campaign:ui:edit:${campaign.id}:${category.id}:${param.name}`,
 
 		components: [ {
@@ -478,7 +478,7 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 			/* The creation button was pressed */
 			} else {
 				await interaction.showModal(translateObject({
-					title: "campaign.create.title",
+					title: "campaign.create.title 📝",
 					customId: "campaign:ui:create",
 
 					components: [ {

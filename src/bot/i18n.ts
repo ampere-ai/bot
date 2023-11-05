@@ -106,6 +106,8 @@ export function createLocalizationMap(key: string, replacement?: string) {
 export async function setupI18N() {
 	await i18next.init({
 		resources: {},
+
+		fallbackLng: "en", fallbackNS: "en",
 		lng: "en", ns: "en",
 	
 		interpolation: {

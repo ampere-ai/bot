@@ -29,7 +29,7 @@ export async function handleError(bot: Bot, { env, error }: HandleErrorOptions):
 
 	return {
 		embeds: {
-			title: "error.title",
+			title: "error.title 😬",
 			description: { key: "error.desc", data: { invite: SUPPORT_INVITE } },
 			color: EmbedColor.Red
 		},

@@ -201,7 +201,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		} else if (interaction.data?.componentType === MessageComponentTypes.Button) {
 			return {
 				embeds: {
-					description: "marketplace.manage.select_type",
+					description: "marketplace.manage.select_type ✏️",
 					color: EmbedColor.Orange
 				},
 
@@ -301,7 +301,7 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 
 	return {
 		embeds: {
-			title: "marketplace.title",
+			title: "marketplace.title 📚",
 			description: "marketplace.desc",
 			color: EmbedColor.Orange
 		},
