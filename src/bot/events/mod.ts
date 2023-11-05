@@ -18,7 +18,7 @@ const EVENTS = [
 
 export function setupEvents() {
 	for (const event of EVENTS) {
-		bot.events[event.name] = async (...data: any[]) => {
+		bot.events[event.name] = async (...data) => {
 			await (event.handler as any)(bot, ...data);
 		};
 	}

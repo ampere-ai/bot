@@ -15,7 +15,9 @@ interface APIErrorOptions {
 export class APIError extends Error {
 	public readonly options: APIErrorOptions;
 
-	constructor(response: Response | null, path: string, body: any | null) {
+	constructor(response: Response | null, path: string, body: {
+		error?: NonNullable<APIErrorOptions["data"]>
+	} | null) {
 		super();
 
 		this.options = {

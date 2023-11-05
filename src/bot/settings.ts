@@ -206,8 +206,8 @@ export function getSettingsValue<T = string | number | boolean>(
 }
 
 export async function handleSettingsInteraction({ bot, args, env, interaction }: InteractionHandlerOptions) {
-	const action: "page" | "current" | "change" | "view" = args.shift()! as any;
-	const location: SettingsLocation = args.shift()! as SettingsLocation;
+	const action = args.shift()!;
+	const location = args.shift()! as SettingsLocation;
 
 	const categoryName = args.shift()!;
 	const category = SettingsCategories.find(c => c.id === categoryName)!;

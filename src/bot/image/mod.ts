@@ -7,7 +7,7 @@ import { Emitter } from "../utils/event.js";
 export async function generate({ bot, model, emitter, body }: ImageGenerationOptions) {
 	return bot.api.image[model.path]({
 		...body, ...model.body ?? {}, stream: true
-	} as any, emitter);
+	}, emitter);
 }
 
 export async function interrogate({ bot, emitter: target, url }: ImageInterrogateOptions): Promise<ImageGenerationResult> {

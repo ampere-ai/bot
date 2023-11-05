@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionChoice, ApplicationCommandOptionTypes, DiscordEmbedField, Locales, Localization, MessageComponentTypes, MessageComponents } from "@discordeno/bot";
+import { ApplicationCommandOptionChoice, ApplicationCommandOptionTypes, ButtonComponent, DiscordEmbedField, Locales, Localization, MessageComponentTypes, MessageComponents } from "@discordeno/bot";
 import { ActionRow, Bot, ButtonStyles, Interaction } from "@discordeno/bot";
 
 import type { ImageGenerationAction, ImageModel, ImagePrompt, ImageSampler, ImageGenerationOptions, ImageGenerationSize } from "../types/image.js";
@@ -78,7 +78,7 @@ export default createCommand({
 
 		model: {
 			type: ApplicationCommandOptionTypes.String,
-			choices: []
+			choices: [] as ApplicationCommandOptionChoice[]
 		},
 
 		negative: {
@@ -409,22 +409,20 @@ function buildActionButtons({ action, result: { id, results } }: ImageToolbarOpt
 	for (let i = 0; i < rowCount; i++) {
 		rows.push({
 			type: MessageComponentTypes.ActionRow,
-			components: [] as any,
+
+			components: results
+				/* Filter out all results that are in this row. */
+				.filter((_, j) => (Math.ceil((j + 1) / perRow) - 1) == i)
+
+				.map((image, index) => ({
+					type: MessageComponentTypes.Button,
+					style: image.status === "success" ? ButtonStyles.Secondary : ButtonStyles.Danger,
+					label: `${action.charAt(0).toUpperCase()}${index + 1}`,
+					customId: `i:${action}:${id}:${index}`,
+					disabled: image.status !== "success"
+				})) as [ ButtonComponent ]
 		});
 	}
-
-	results.forEach((image, index) => {
-		const which: number = Math.ceil((index + 1) / perRow) - 1;
-		const row = rows[which];
-
-		row.components.push({
-			type: MessageComponentTypes.Button,
-			style: image.status === "success" ? ButtonStyles.Secondary : ButtonStyles.Danger,
-			label: `${action.charAt(0).toUpperCase()}${index + 1}`,
-			customId: `i:${action}:${id}:${index}`,
-			disabled: image.status !== "success"
-		});
-	});
 
 	return rows;
 }

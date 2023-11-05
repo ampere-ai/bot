@@ -1,9 +1,9 @@
 import type { ComponentEmoji } from "@discordeno/bot";
 import type { EmbedColor } from "../../bot/utils/response.js";
 
-type DBCampaignButton = DBCampaignLinkButton | DBCampaignIDButton;
+export type DBCampaignButton = DBCampaignLinkButton | DBCampaignIDButton;
 
-interface DBCampaignLinkButton {
+export interface DBCampaignLinkButton {
 	type: "Link";
 
 	/** Link of the button */

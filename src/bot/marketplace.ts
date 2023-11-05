@@ -1,4 +1,4 @@
-import { ActionRow, Bot, ButtonComponent, ButtonStyles, ComponentEmoji, InteractionCallbackData, InteractionTypes, MessageComponentTypes, SelectOption, TextStyles, avatarUrl } from "@discordeno/bot";
+import { ActionRow, Bot, ButtonComponent, ButtonStyles, Component, ComponentEmoji, InteractionCallbackData, InteractionTypes, MessageComponentTypes, SelectOption, TextStyles, avatarUrl } from "@discordeno/bot";
 import { randomUUID } from "crypto";
 
 import type { InteractionHandlerOptions } from "./types/interaction.js";
@@ -27,7 +27,7 @@ async function createEntry(bot: Bot, data: Omit<DBMarketplaceEntry, "id" | "crea
 
 async function getEntries(bot: Bot, { page, creator }: MarketplaceFilterOptions): Promise<Record<DBMarketplaceType, MarketplacePage>> {
 	const all = (await bot.db.all<DBMarketplaceEntry>("marketplace"));
-	const map: Record<DBMarketplaceType, MarketplacePage> = {} as any;
+	const map = {} as Record<DBMarketplaceType, MarketplacePage>;
 
 	for (const category of MARKETPLACE_CATEGORIES) {
 		const entries = all.filter(e => e.type === category.type);
@@ -121,8 +121,9 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 	} else if (action === "create") {
 		/* The creation modal was submitted */
 		if (interaction.type === InteractionTypes.ModalSubmit && interaction.data?.components) {
-			const action: "new" | "edit" = args.shift()! as any;
-			const type: DBMarketplaceType = args.shift()! as any;
+			const action: "new" | "edit" = args.shift()! as "new" | "edit";
+			const type: DBMarketplaceType = args.shift()! as DBMarketplaceType;
+			
 			const id = args.shift();
 
 			const category = getMarketplaceCategory(type);
@@ -131,7 +132,9 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 			const components: {
 				customId: string;
 				value?: string;
-			}[] = interaction.data.components.map(c => c.components![0] as any);
+			}[] = interaction.data.components.map(
+				c => c.components![0] as Required<Component>
+			);
 
 			/* Specified fields */
 			const fields: Record<string, string | null> = {};

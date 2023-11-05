@@ -43,7 +43,7 @@ const CollectionTemplates: Partial<Record<CollectionName, (id: string) => DBObje
 };
 
 /** Update queue */
-const queue: Record<CollectionName, Record<string, DBObject>> = {} as any;
+const queue = {} as Record<CollectionName, Record<string, DBObject>>;
 
 for (const type of CollectionNames) {
 	queue[type] = {};

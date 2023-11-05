@@ -96,7 +96,7 @@ export function transformResponse<T extends (CreateMessageOptions | EditMessage 
 				guildId: response.reference.guildId?.toString(),
 				messageId: response.reference.id.toString()
 			} : undefined,
-		}, response.env),
+		}, response.env!),
 
 		files: response.file ? [ {
 			name: response.file.name,

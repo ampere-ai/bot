@@ -1,4 +1,4 @@
-import i18next, { TOptions } from "i18next";
+import i18next, { TOptions, i18n } from "i18next";
 import { constants } from "fs";
 import fs from "fs/promises";
 
@@ -57,31 +57,29 @@ export function hasTranslation({ env, key, lang }: {
 }
 
 /** Translate all strings of an object. */
-export function translateObject<T = any>(obj: T, env?: DBEnvironment): T {
+export function translateObject<T extends {[key: string]: any } | LocaleString | string | Array<unknown>>(obj: T, env?: DBEnvironment): T {
 	if (!obj) return obj;
 
 	if (typeof obj == "string") {
 		const [ key, ...other ] = obj.split(" ");
-		return `${t({ key, env })}${other.length > 0 ? ` ${other.join(" ")}` : ""}` as any;
+		return (`${t({ key, env })}${other.length > 0 ? ` ${other.join(" ")}` : ""}`) as T;
 
 	} else if (Array.isArray(obj)) {
-		return obj.map(o => translateObject(o, env)) as any;
+		return (obj.map(o => translateObject(o, env))) as T;
+
+	} else if (typeof obj == "object" && "key" in obj && "data" in obj) {
+		return t({ key: obj.key, env }) as T;
 
 	} else if (typeof obj == "object") {
-		if ((obj as any as LocaleString).key && (obj as any as LocaleString).data) {
-			return t({ key: obj as any as LocaleString, env }) as any;
+		const translated: any = {};
 
-		} else {
-			const translated: any = {};
-
-			for (const key of Object.keys(obj)) {
-				translated[key] = key !== "customId" && key !== "url" && key !== "id"
-					? translateObject((obj as any)[key], env)
-					: (obj as any)[key];
-			}
-			
-			return translated;
+		for (const key of Object.keys(obj)) {
+			translated[key] = key !== "customId" && key !== "url" && key !== "id"
+				? translateObject(obj[key], env)
+				: obj[key];
 		}
+		
+		return translated as T;
 	} else {
 		return obj;
 	}
@@ -122,7 +120,7 @@ export async function setupI18N() {
 		return fs.access(path, constants.F_OK)
 			.then(async () => {
 				const data = JSON.parse((await fs.readFile(path)).toString());
-				(i18next as any).addResourceBundle(l.id, l.id, data);
+				(i18next as unknown as i18n).addResourceBundle(l.id, l.id, data);
 			}).catch(() => {});
 	}));
 }

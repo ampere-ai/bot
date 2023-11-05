@@ -1,4 +1,5 @@
 import { type ActionRow, type Embed, MessageComponentTypes, ButtonStyles, ButtonComponent, InteractionCallbackData, InteractionTypes, TextStyles } from "@discordeno/bot";
+import { randomUUID } from "crypto";
 
 import type { DBCampaign, DBCampaignIDButton, DBCampaignStatistics } from "../db/types/campaign.js";
 import type { DBEnvironment } from "../db/types/mod.js";
@@ -8,11 +9,10 @@ import { type DBUser, DBUserType, DBRole } from "../db/types/user.js";
 import { InteractionHandlerOptions } from "./types/interaction.js";
 import { EmbedColor, MessageResponse } from "./utils/response.js";
 import { handleInteraction } from "./interactions/mod.js";
+import { t, translateObject } from "./i18n.js";
 import { BRANDING_COLOR } from "../config.js";
 import { chunk } from "./utils/helpers.js";
 import { bot } from "./mod.js";
-import { randomUUID } from "crypto";
-import { ToLocaleStrings, t, translateObject } from "./i18n.js";
 
 /** Ad display counters */
 const counters = new Map<string, number>();
@@ -355,7 +355,7 @@ function buildCampaignOverview(campaign: DBCampaign, categoryId?: CampaignCatego
 
 function buildEditModal(
 	campaign: DBCampaign, category: CampaignParameterCategory, param: CampaignParameter
-): ToLocaleStrings<Required<Pick<InteractionCallbackData, "title" | "customId" | "components">>> {
+): Required<Pick<InteractionCallbackData, "title" | "customId" | "components">> {
 	return {
 		title: "campaign.create.edit_value 📝",
 		customId: `campaign:ui:edit:${campaign.id}:${category.id}:${param.name}`,
@@ -448,7 +448,7 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 			/* The edit button was pressed */
 			} else {
 				await interaction.showModal(
-					translateObject(buildEditModal(campaign, category, param)) as any
+					translateObject(buildEditModal(campaign, category, param), env)
 				);
 			}
 		} else if (action === "toggle") {

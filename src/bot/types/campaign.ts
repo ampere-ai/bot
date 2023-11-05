@@ -216,11 +216,11 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 					if (value.length === 0) return { button: null };
 					else {
 						if (campaign.button !== null) {
-							return { button: { ...campaign.button as any, type: value } };
+							return { button: { ...campaign.button, type: value as any } };
 						} else {
 							return {
 								button: {
-									type: value,
+									type: value as any,
 									label: "Placeholder",
 									emoji: "❓",
 									id: "placeholder",
@@ -240,7 +240,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 				display: campaign => campaign.button?.type === "Link",
 				previous: c => c.button?.type === "Link" ? c.button?.url : null,
 				validate: createURLValidator(false),
-				update: ({ value, campaign }) => ({ button: { ...campaign.button as any, url: value } })
+				update: ({ value, campaign }) => ({ button: { ...campaign.button!, url: value } })
 			},
 
 			{
@@ -249,7 +249,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 
 				display: campaign => campaign.button !== null,
 				previous: c => c.button !== null && c.button.type !== "Link" ? c.button.label : null,
-				update: ({ value, campaign }) => ({ button: { ...campaign.button as any, label: value } })
+				update: ({ value, campaign }) => ({ button: { ...campaign.button!, label: value } })
 			},
 
 			{
@@ -269,8 +269,8 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 				previous: c => c.button !== null && c.button.type !== "Link" && c.button.emoji ? emojiToString(c.button.emoji) : null,
 				update: ({ value, campaign }) => ({
 					button: { 
-						...campaign.button as any,
-						emoji: value.length > 0 ? stringToEmoji(value) : null
+						...campaign.button!,
+						emoji: value.length > 0 ? stringToEmoji(value) ?? undefined : undefined
 					}
 				})
 			},
@@ -281,7 +281,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 
 				display: campaign => campaign.button !== null && campaign.button.type !== "Link",
 				previous: c => c.button !== null && c.button.type !== "Link" ? c.button.id : null,
-				update: ({ value, campaign }) => ({ button: { ...campaign.button as any, id: value } })
+				update: ({ value, campaign }) => ({ button: { ...campaign.button!, id: value } })
 			}
 		]
 	},

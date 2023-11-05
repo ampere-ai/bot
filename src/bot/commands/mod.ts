@@ -89,7 +89,7 @@ export function isPrivateCommand(command: Command) {
 }
 
 export async function registerCommands(bot: Bot) {
-	imagine.options!.model.choices = generateModelChoices() as any;
+	imagine.options!.model.choices = generateModelChoices();
 	const commands = Object.values(COMMANDS);
 
 	Promise.all([

@@ -55,8 +55,8 @@ export async function buildModerationLogs(options: ModerationOptions, result: Mo
 }
 
 export async function handleModerationInteraction({ bot, interaction, args }: InteractionHandlerOptions): Promise<MessageResponse | void> {
-	const action: "view" | "warn" | "ban" | "unban" = args.shift()! as any;
-	const location: "user" | "guild" = args.shift()! as any;
+	const action = args.shift()! as "view" | "warn" | "ban" | "unban";
+	const location = args.shift()! as "user" | "guild";
 
 	const id = BigInt(args.shift()!);
 	let db = await bot.db.fetch<DBUser | DBGuild>(`${location}s`, id);

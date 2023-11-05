@@ -43,12 +43,12 @@ export function setupTransformers() {
 
 		/* Add custom properties & functions */
 		if (transformer.handler) {
-			const oldTransformer = bot.transformers[transformer.name];
+			const oldTransformer = bot.transformers[transformer.name] as (...args: unknown[]) => any;
 
-			bot.transformers[transformer.name] = ((bot: Bot, payload: unknown) => {
-				const transformed = (oldTransformer as any)(bot, payload);
-				return transformer.handler!(bot, transformed, payload as any);
-			}) as any;
+			bot.transformers[transformer.name] = ((bot: Bot, payload: any) => {
+				const transformed = oldTransformer(bot, payload);
+				return transformer.handler!(bot, transformed, payload);
+			}) as typeof oldTransformer;
 		}
 	}
 }
