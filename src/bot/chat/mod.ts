@@ -13,7 +13,7 @@ import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../utils/
 import { transformResponse, type MessageResponse, EmbedColor } from "../utils/response.js";
 import { type ModerationResult, ModerationSource } from "../moderation/types/mod.js";
 import { CHAT_MODELS, type ChatModel, type ChatModelResult } from "./models/mod.js";
-import { getMarketplaceSetting } from "../marketplace.js";
+import { getMarketplaceSetting, localizeMarketplaceEntry } from "../marketplace.js";
 import { SettingsLocation } from "../types/settings.js";
 import { ResponseError } from "../errors/response.js";
 import { handleError } from "../moderation/error.js";
@@ -275,9 +275,11 @@ async function format(
 			style: ButtonStyles.Secondary
 		});
 
+		const { name } = localizeMarketplaceEntry(personality, env);
+
 		buttons.push({
 			type: MessageComponentTypes.Button,
-			label: personality.name,
+			label: name,
 			emoji: typeof personality.emoji === "string" ? { name: personality.emoji } : personality.emoji,
 			customId: "market:category:personality",
 			style: ButtonStyles.Secondary

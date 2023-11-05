@@ -9,6 +9,8 @@ import type { DBEnvironment } from "../../db/types/mod.js";
 import type { ChatModel } from "./models/mod.js";
 
 import { ChatError, ChatErrorType } from "../errors/chat.js";
+import { getSettingsValue } from "../settings.js";
+import { USER_LOCALES } from "../types/locale.js";
 
 interface BuildHistoryOptions {
 	bot: Bot;
@@ -81,6 +83,14 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 				role: "system", content: personality.data.prompt
 			});
 		}
+
+		/* The user's configured language */
+		const localeID = getSettingsValue<string>(bot, env, "user", "general:language");
+		const locale = USER_LOCALES.find(l => l.id === localeID)!;
+
+		if (locale.id !== "en") messages.push({
+			role: "system", content: `The user's configured language is ${locale.localName ? `${locale.localName}/${locale.name}` : locale.name}. If not told otherwise, you must prefer to speak that language.`
+		});
 
 		/* Map all of the system messages into a single one, to save tokens. */
 		if (messages.length > 0) messages = [ {

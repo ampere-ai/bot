@@ -148,7 +148,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 					const result = settings.validate(fields[component.customId]!);
 					
 					if (result) return { embeds: {
-						description: { key: "marketplace.errors.invalid_value", data: { name: t({ key: `marketplace.categories.${category.type}.fields.${component.customId}.name`, env }), message: t({ key: result.message, env }) } },
+						description: { key: "marketplace.errors.invalid_value", data: { name: t({ key: `marketplace.fields.${component.customId}`, env }), message: t({ key: result.message, env }) } },
 						color: EmbedColor.Red
 					}, ephemeral: true };
 				}
@@ -426,7 +426,7 @@ function buildCreationModal(
 }
 
 /** Translate a marketplace entry, if needed. */
-function localizeMarketplaceEntry(entry: DBMarketplaceEntry, env: DBEnvironment): { name: string; desc: string | null; } {
+export function localizeMarketplaceEntry(entry: DBMarketplaceEntry, env: DBEnvironment) {
 	const key = `marketplace.entries.${entry.type}.${entry.id.split("-").reverse()[0]}`;
 
 	if (hasTranslation({ key, env })) {
