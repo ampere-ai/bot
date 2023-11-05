@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import { calculateBits, camelToSnakeCase, createLogger } from "@discordeno/utils";
 import { RequestMethods, createRestManager } from "@discordeno/bot";
-import { createLogger } from "@discordeno/utils";
 
 import formData from "express-form-data";
 import express from "express";
@@ -16,6 +16,48 @@ const logger = createLogger({ name: "[REST]" });
 const rest = createRestManager({
 	token: BOT_TOKEN
 });
+
+/* Fix broken localization keys, due to requests going through this function two times */
+rest.changeToDiscordFormat = (obj: any) => {
+	if (obj === null) return null;
+
+	if (typeof obj === "object") {
+		if (Array.isArray(obj)) return obj.map((item) => rest.changeToDiscordFormat(item));
+		const newObj: any = {};
+
+		for (const key of Object.keys(obj)){
+			const value = obj[key];
+
+			if (value !== undefined) {
+				switch(key){
+					case "permissions":
+					case "allow":
+					case "deny":
+						newObj[key] = typeof value === "string" ? value : calculateBits(value);
+						continue;
+					case "defaultMemberPermissions":
+						newObj.default_member_permissions = typeof value === "string" ? value : calculateBits(value);
+						continue;
+					case "nameLocalizations":
+					case "name_localizations":
+						newObj.name_localizations = value;
+						continue;
+					case "descriptionLocalizations":
+					case "description_localizations":
+						newObj.description_localizations = value;
+						continue;
+				}
+			}
+			
+			newObj[camelToSnakeCase(key)] = rest.changeToDiscordFormat(value);
+		}
+
+		return newObj;
+	}
+
+	if (typeof obj === "bigint") return obj.toString();
+	return obj;
+};
 
 interface RESTError {
 	ok: boolean;
