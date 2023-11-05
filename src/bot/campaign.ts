@@ -18,11 +18,11 @@ import { bot } from "./mod.js";
 const counters = new Map<string, number>();
 
 /** After how many interactions to display an advertisement, for each user type */
-const COUNTER_LIMITS: Record<DBUserType, number | null> = {
-	plan: null,
-	subscription: null,
-	voter: 10,
-	user: 5
+const COUNTER_LIMITS = {
+	[DBUserType.PremiumPlan]: null,
+	[DBUserType.PremiumSubscription]: null,
+	[DBUserType.Voter]: 10,
+	[DBUserType.User]: 5
 };
 
 /** List of all database campaigns */

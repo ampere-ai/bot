@@ -129,12 +129,12 @@ export async function createDB(bot: Bot) {
 
 		if (p) {
 			if (p.type === "subscription") types.push(DBUserType.PremiumSubscription);
-			else if (p.type === "plan") types.push(DBUserType.PremiumPlan);
+			else types.push(DBUserType.PremiumPlan);
 		}
 
 		if (voted(env.user)) types.push(DBUserType.Voter);
-
 		types.push(DBUserType.User);
+		
 		return types;
 	};
 

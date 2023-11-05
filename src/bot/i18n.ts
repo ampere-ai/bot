@@ -68,13 +68,13 @@ export function translateObject<T extends {[key: string]: any } | LocaleString |
 		return (obj.map(o => translateObject(o, env))) as T;
 
 	} else if (typeof obj == "object" && "key" in obj && "data" in obj) {
-		return t({ key: obj.key, env }) as T;
+		return t({ key: obj.key, options: obj.data, env }) as T;
 
 	} else if (typeof obj == "object") {
 		const translated: any = {};
 
 		for (const key of Object.keys(obj)) {
-			translated[key] = key !== "customId" && key !== "url" && key !== "id"
+			translated[key] = key !== "customId" && key !== "url" && key !== "id" && obj[key] !== "premium"
 				? translateObject(obj[key], env)
 				: obj[key];
 		}

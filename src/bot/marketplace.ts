@@ -114,9 +114,9 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 	} else if (action === "remove") {
 		await bot.db.remove("marketplace", args.shift()!);
 
-		await interaction.update(await buildMarketplaceOverview(bot, env, {
+		await interaction.update(translateObject(await buildMarketplaceOverview(bot, env, {
 			page: 0
-		}));
+		}), env));
 
 	} else if (action === "create") {
 		/* The creation modal was submitted */
@@ -193,7 +193,9 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 				});
 			}
 
-			await interaction.update(await buildEntryOverview(bot, env, entry));
+			await interaction.update(
+				translateObject(await buildEntryOverview(bot, env, entry), env)
+			);
 
 		/* Which type to create was selected */
 		} else if (interaction.data?.componentType === MessageComponentTypes.SelectMenu) {
@@ -229,9 +231,9 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		} 
 
 	} else if (action === "page") {
-		await interaction.update(await buildMarketplaceOverview(bot, env, {
+		await interaction.update(translateObject(await buildMarketplaceOverview(bot, env, {
 			page: parseInt(args.shift()!)
-		}));
+		}), env));
 
 	} else if (action === "category") {
 		return buildMarketplaceOverview(bot, env, {
