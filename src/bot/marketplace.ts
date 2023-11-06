@@ -1,4 +1,4 @@
-import { ActionRow, Bot, ButtonComponent, ButtonStyles, Component, ComponentEmoji, InteractionCallbackData, InteractionTypes, MessageComponentTypes, SelectOption, TextStyles, avatarUrl } from "@discordeno/bot";
+import { ActionRow, Bot, ButtonComponent, ButtonStyles, Component, ComponentEmoji, InteractionTypes, MessageComponentTypes, ModalResponse, SelectOption, TextStyles, avatarUrl } from "@discordeno/bot";
 import { randomUUID } from "crypto";
 
 import type { InteractionHandlerOptions } from "./types/interaction.js";
@@ -9,7 +9,7 @@ import { type DBMarketplaceEntry, type DBMarketplaceType, DBMarketplaceStatistic
 import { type MessageResponse, EmbedColor } from "./utils/response.js";
 import { emojiToString, stringToEmoji } from "./utils/helpers.js";
 import { getSettingsValue, updateSettings } from "./settings.js";
-import { hasTranslation, t, translateObject } from "./i18n.js";
+import { hasTranslation, t } from "./i18n.js";
 import { DBRole } from "../db/types/user.js";
 
 /** How many marketplace entries can be on a single page, max. 25 */
@@ -95,28 +95,28 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		});
 		
 		entry = await incrementStatistics(bot, entry, "uses");
-		await interaction.update(translateObject(await buildEntryOverview(bot, env, entry), env));
+		await interaction.update(await buildEntryOverview(bot, env, entry));
 
 	} else if (action === "view") {
 		let entry = await fetchMarketplaceEntry(bot, interaction.data!.values![0]);
 
 		entry = await incrementStatistics(bot, entry, "views");
-		await interaction.update(translateObject(await buildEntryOverview(bot, env, entry), env));
+		await interaction.update(await buildEntryOverview(bot, env, entry));
 		
 	} else if (action === "edit") {
 		const entry = await fetchMarketplaceEntry(bot, args.shift()!);
 		const category = getMarketplaceCategory(entry.type);
 
 		await interaction.showModal(
-			translateObject(buildCreationModal(env, category, "edit", entry), env)
+			buildCreationModal(env, category, "edit", entry)
 		);
 
 	} else if (action === "remove") {
 		await bot.db.remove("marketplace", args.shift()!);
 
-		await interaction.update(translateObject(await buildMarketplaceOverview(bot, env, {
+		await interaction.update(await buildMarketplaceOverview(bot, env, {
 			page: 0
-		}), env));
+		}));
 
 	} else if (action === "create") {
 		/* The creation modal was submitted */
@@ -151,7 +151,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 					const result = settings.validate(fields[component.customId]!);
 					
 					if (result) return { embeds: {
-						description: { key: "marketplace.errors.invalid_value", data: { name: t({ key: `marketplace.fields.${component.customId}`, env }), message: t({ key: result.message, env }) } },
+						description: { key: "modal.errors.invalid_value", data: { name: t({ key: `marketplace.fields.${component.customId}`, env }), message: t({ key: result.message, env }) } },
 						color: EmbedColor.Red
 					}, ephemeral: true };
 				}
@@ -194,13 +194,13 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 			}
 
 			await interaction.update(
-				translateObject(await buildEntryOverview(bot, env, entry), env)
+				await buildEntryOverview(bot, env, entry)
 			);
 
 		/* Which type to create was selected */
 		} else if (interaction.data?.componentType === MessageComponentTypes.SelectMenu) {
 			const category = getMarketplaceCategory(interaction.data!.values![0]);
-			await interaction.showModal(translateObject(buildCreationModal(env, category, "new"), env));
+			await interaction.showModal(buildCreationModal(env, category, "new"));
 
 		/* The creation button was pressed in the dashboard */
 		} else if (interaction.data?.componentType === MessageComponentTypes.Button) {
@@ -231,9 +231,9 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		} 
 
 	} else if (action === "page") {
-		await interaction.update(translateObject(await buildMarketplaceOverview(bot, env, {
+		await interaction.update(await buildMarketplaceOverview(bot, env, {
 			page: parseInt(args.shift()!)
-		}), env));
+		}));
 
 	} else if (action === "category") {
 		return buildMarketplaceOverview(bot, env, {
@@ -312,7 +312,8 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 		},
 
 		components: rows,
-		ephemeral: true
+		ephemeral: true,
+		env
 	};
 }
 
@@ -381,33 +382,31 @@ async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketp
 	const { name, desc } = localizeMarketplaceEntry(entry, env);
 
 	return {
-		embeds: [
-			{
-				author: creator
-					? { name: creator.username, iconUrl: avatarUrl(creator.id, creator.discriminator, { format: "png", avatar: creator.avatar }) }
-					: undefined,
+		embeds: [ {
+			author: creator
+				? { name: creator.username, iconUrl: avatarUrl(creator.id, creator.discriminator, { format: "png", avatar: creator.avatar }) }
+				: undefined,
 
-				footer: { text: `${t({ key: "marketplace.counts.views", options: { count: entry.stats.views }, env })} • ${t({ key: "marketplace.counts.uses", options: { count: entry.stats.uses }, env })}` },
-				title: `${name} ${emojiToString(entry.emoji)}`,
-				description: desc ? `*${desc}*` : undefined
-			},
-		],
+			footer: { text: `${t({ key: "marketplace.counts.views", options: { count: entry.stats.views }, env })} • ${t({ key: "marketplace.counts.uses", options: { count: entry.stats.uses }, env })}` },
+			title: `${name} ${emojiToString(entry.emoji)}`,
+			description: desc ? `*${desc}*` : undefined
+		} ],
 
 		components: [ {
 			type: MessageComponentTypes.ActionRow,
 			components: buttons as [ ButtonComponent ]
 		} ],
 
-		ephemeral: true
+		ephemeral: true, env
 	};
 }
 
 function buildCreationModal(
 	env: DBEnvironment, category: MarketplaceCategory, type: "new" | "edit", entry?: DBMarketplaceEntry
-): Required<Pick<InteractionCallbackData, "title" | "customId" | "components">> {
+): ModalResponse {
 	return {
-		title: `${type === "new" ? "marketplace.manage.create" : "marketplace.manage.edit"} ${t({ key: `marketplace.categories.${category.type}`, env }).toLowerCase()} ${emojiToString(category.emoji)}`,
-		customId: `market:create:${type}:${category.type}:${entry?.id}`,
+		title: `${type === "new" ? "marketplace.manage.create" : "marketplace.manage.edit"} ${emojiToString(category.emoji)}`,
+		customId: `market:create:${type}:${category.type}:${entry?.id}`, env,
 
 		components: Object.entries({ ...MARKETPLACE_BASE_FIELDS, ...category.creator!.fields })
 			.map(([ id, field ]) => ({

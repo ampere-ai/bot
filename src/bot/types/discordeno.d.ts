@@ -20,6 +20,8 @@ declare module "@discordeno/bot" {
 		rabbitmq: RabbitMQ.Connection;
     }
 
+	type ModalResponse = Required<Pick<InteractionCallbackData, "title" | "customId"> & Pick<MessageResponse, "components" | "env">>;
+
 	interface Interaction {
 		/** Defer the interaction, to be edited at a future point. */
 		deferReply: (ephemeral?: boolean) => Promise<void>;
@@ -28,7 +30,7 @@ declare module "@discordeno/bot" {
 		deferUpdate: () => Promise<void>;
 		
 		/** Show a modal to the user. */
-		showModal: (response: Required<Pick<InteractionCallbackData, "title" | "customId" | "components">>) => Promise<void>;
+		showModal: (response: Required<Pick<InteractionCallbackData, "title" | "customId"> & Pick<MessageResponse, "components" | "env">>) => Promise<void>;
 	
 		/** Send a reply to an interaction. */
 		reply: (response: MessageResponse) => Promise<void>;

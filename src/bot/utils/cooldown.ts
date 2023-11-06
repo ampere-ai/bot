@@ -2,8 +2,8 @@ import { type Interaction, type Embed, type Bot, Collection, MessageComponentTyp
 
 import type { Conversation } from "../types/conversation.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
+import type { ToLocaleStrings } from "../i18n.js";
 
-import { type ToLocaleStrings, translateObject } from "../i18n.js";
 import { type MessageResponse, EmbedColor } from "./response.js";
 import { DBRole } from "../../db/types/user.js";
 
@@ -17,7 +17,7 @@ export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTar
 	const premium = bot.db.premium(env);
 
 	const response: MessageResponse = {
-		ephemeral: true
+		ephemeral: true, env
 	};
 
 	const embeds: ToLocaleStrings<Embed>[] = [
@@ -49,7 +49,7 @@ export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTar
 	}
 
 	response.embeds = embeds;
-	return translateObject(response, env);
+	return response;
 }
 
 export function getCooldown(target: CooldownTarget) {

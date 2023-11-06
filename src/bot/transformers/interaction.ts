@@ -2,6 +2,7 @@ import { type DiscordInteraction, type Interaction, type InteractionCallbackData
 
 import { type MessageResponse, transformResponse } from "../utils/response.js";
 import { createTransformer } from "../helpers/transformer.js";
+import { translateObject } from "../i18n.js";
 
 export default createTransformer<"interaction", Interaction, DiscordInteraction>({
 	name: "interaction",
@@ -9,10 +10,10 @@ export default createTransformer<"interaction", Interaction, DiscordInteraction>
 
 	handler: (bot, interaction) => {
 		Object.defineProperty(interaction, "showModal", {
-			value: function(response: Pick<MessageResponse, "components">) {
+			value: function(response: Pick<MessageResponse, "components" | "env">) {
 				return bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
 					type: InteractionResponseTypes.Modal,
-					data: response as InteractionCallbackData
+					data: translateObject(response as InteractionCallbackData, response.env)
 				});
 			}
 		});

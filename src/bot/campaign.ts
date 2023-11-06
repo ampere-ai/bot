@@ -1,4 +1,4 @@
-import { type ActionRow, type Embed, MessageComponentTypes, ButtonStyles, ButtonComponent, InteractionCallbackData, InteractionTypes, TextStyles } from "@discordeno/bot";
+import { type ActionRow, type Embed, MessageComponentTypes, ButtonStyles, ButtonComponent, InteractionTypes, TextStyles, ModalResponse } from "@discordeno/bot";
 import { randomUUID } from "crypto";
 
 import type { DBCampaign, DBCampaignIDButton, DBCampaignStatistics } from "../db/types/campaign.js";
@@ -9,10 +9,10 @@ import { type DBUser, DBUserType, DBRole } from "../db/types/user.js";
 import { InteractionHandlerOptions } from "./types/interaction.js";
 import { EmbedColor, MessageResponse } from "./utils/response.js";
 import { handleInteraction } from "./interactions/mod.js";
-import { t, translateObject } from "./i18n.js";
 import { BRANDING_COLOR } from "../config.js";
 import { chunk } from "./utils/helpers.js";
 import { bot } from "./mod.js";
+import { LocaleString, t } from "./i18n.js";
 
 /** Ad display counters */
 const counters = new Map<string, number>();
@@ -242,7 +242,7 @@ function buildCampaignButtons(campaign: DBCampaign, categoryId?: CampaignCategor
 			components: arr.map(c => ({
 				type: MessageComponentTypes.Button,
 				style: ButtonStyles.Secondary,
-				label: c.name,
+				label: `campaign.create.categories.${c.id}`,
 				emoji: c.emoji,
 				customId: `campaign:ui:category:${campaign.id}:${c.id}`
 			})) as [ ButtonComponent ]
@@ -294,16 +294,16 @@ function buildCampaignButtons(campaign: DBCampaign, categoryId?: CampaignCategor
 			components: arr.map(p => ({
 				type: MessageComponentTypes.Button,
 				style: ButtonStyles.Secondary,
-				label: p.name,
+				label: `campaign.create.fields.${p.id}`,
 				emoji: { name: "✏️" },
-				customId: `campaign:ui:edit:${campaign.id}:${category.id}:${p.name}`
+				customId: `campaign:ui:edit:${campaign.id}:${category.id}:${p.id}`
 			})) as [ ButtonComponent ]
 		}));
 
 		rows[0].components.unshift({
 			type: MessageComponentTypes.Button,
 			emoji: { name: "back", id: 1166827863190806688n },
-			label: category.name,
+			label: `campaign.create.categories.${category.id}`,
 			style: ButtonStyles.Primary,
 			customId: `campaign:ui:select:${campaign.id}`
 		});
@@ -312,24 +312,28 @@ function buildCampaignButtons(campaign: DBCampaign, categoryId?: CampaignCategor
 	}
 }
 
-function buildCampaignOverview(campaign: DBCampaign, categoryId?: CampaignCategoryType): MessageResponse {
-	const fields: { name: string, value: string }[] = [
+function buildCampaignOverview(env: DBEnvironment, campaign: DBCampaign, categoryId?: CampaignCategoryType): MessageResponse {
+	const fields: { name: string, value: string | LocaleString }[] = [
 		{ name: "active", value: campaign.active ? "✅" : "❌" },
 		{ name: "members", value: `${campaign.members.map(id => `<@${id}>`).join(", ")}` },
 		{ name: "views", value: new Intl.NumberFormat("en-US").format(campaign.stats.views.total) },
 		{ name: "clicks", value: new Intl.NumberFormat("en-US").format(campaign.stats.clicks.total) }
 	];
 
-	if (campaign.budget.type !== "none") fields.push(
-		{ name: "budget", value: `${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(campaign.budget.used)} / ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(campaign.budget.total)}` },
-		{ name: "cost", value: `${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(campaign.budget.cost)} per 1K ${campaign.budget.type}s`},
-		{
-			name: "rate",
-			value: campaign.stats.clicks.total !== 0 && campaign.stats.views.total !== 0
-				? new Intl.NumberFormat("en-US", { style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(campaign.stats.clicks.total / campaign.stats.views.total)
-				: "-"
-		}
-	);
+	if (campaign.budget.type !== "none") {
+		const num = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+		fields.push(
+			{ name: "budget", value: { key: "campaign.values.budget", data: { used: num.format(campaign.budget.used), total: num.format(campaign.budget.total) } } },
+			{ name: "cost", value: { key: "campaign.values.cpm", data: { cost: num.format(campaign.budget.cost), type: t({ key: `campaign.cost_types.${campaign.budget.type}`, env }) } } },
+			{
+				name: "rate",
+				value: campaign.stats.clicks.total !== 0 && campaign.stats.views.total !== 0
+					? new Intl.NumberFormat("en-US", { style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(campaign.stats.clicks.total / campaign.stats.views.total)
+					: "-"
+			}
+		);
+	}
 
 	/* Add the category-specific fields to the embed. */
 	if (categoryId) {
@@ -341,7 +345,7 @@ function buildCampaignOverview(campaign: DBCampaign, categoryId?: CampaignCatego
 		embeds: [
 			{
 				title: { key: "campaign.create.overview", data: { name: campaign.name } },
-				description: `${fields.map(f => `**${t({ key: `campaign.stats.${f.name}` })}** • ${f.value}`).join("\n")}`,
+				description: `${fields.map(f => `**${t({ key: `campaign.stats.${f.name}` })}** • ${typeof f.value === "object" ? t({ key: f.value }) : f.value}`).join("\n")}`,
 				color: BRANDING_COLOR
 			},
 
@@ -349,16 +353,16 @@ function buildCampaignOverview(campaign: DBCampaign, categoryId?: CampaignCatego
 		],
 
 		components: buildCampaignButtons(campaign, categoryId),
-		ephemeral: true
+		ephemeral: true, env
 	};
 }
 
 function buildEditModal(
-	campaign: DBCampaign, category: CampaignParameterCategory, param: CampaignParameter
-): Required<Pick<InteractionCallbackData, "title" | "customId" | "components">> {
+	env: DBEnvironment, campaign: DBCampaign, category: CampaignParameterCategory, param: CampaignParameter
+): ModalResponse {
 	return {
 		title: "campaign.create.edit_value 📝",
-		customId: `campaign:ui:edit:${campaign.id}:${category.id}:${param.name}`,
+		customId: `campaign:ui:edit:${campaign.id}:${category.id}:${param.id}`, env,
 
 		components: [ {
 			type: MessageComponentTypes.ActionRow,
@@ -368,14 +372,14 @@ function buildEditModal(
 				customId: "value",
 				style: param.type,
 
-				label: `${param.tooltip ?? param.name}${
+				label: `campaign.create.fields.${param.id}${
 					param.length ?
 						` (${
 							param.length.min && param.length.max ? `${param.length.min}-${param.length.max}`
 								: param.length.min && !param.length.max
-									? { key: "number.min", data: { num: param.length.min } }
+									? t({ key: "number.min", options: { num: param.length.min }, env })
 									: param.length.max && !param.length.min
-										? { key: "number.max", data: { num: param.length.max } }
+										? t({ key: "number.max", options: { num: param.length.max }, env })
 										: ""
 						})`
 						: ""
@@ -406,20 +410,20 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 			const id = interaction.data?.values ? interaction.data.values[0]! : args[0];
 			const campaign = getCampaign(id)!;
 	
-			await interaction.update(buildCampaignOverview(campaign));
+			await interaction.update(buildCampaignOverview(env, campaign));
 
 		} else if (action === "category") {
 			const [ id, category ] = args; 
 			const campaign = getCampaign(id)!;
 
-			await interaction.update(buildCampaignOverview(campaign, category as CampaignCategoryType));
+			await interaction.update(buildCampaignOverview(env, campaign, category as CampaignCategoryType));
 
 		} else if (action === "edit") {
 			const [ id, categoryId, parameterId ] = args;
 			let campaign = getCampaign(id)!;
 
 			const category = CAMPAIGN_PARAMETER_CATEGORIES.find(c => c.id === categoryId)!;
-			const param = category.parameters.find(p => p.name === parameterId)!;
+			const param = category.parameters.find(p => p.id === parameterId)!;
 
 			/* The edit modal was submitted */
 			if (interaction.type === InteractionTypes.ModalSubmit && interaction.data?.components) {
@@ -427,28 +431,28 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 				const newValue = interaction.data.components[0].components![0].value!;
 
 				/* Whether the new value validates the checks */
-				const validated = param.validate
+				const valid = param.validate
 					? param.validate({ value: newValue, env, bot })
 					: true;
 
-				if (validated === false || typeof validated === "object") return void await interaction.reply({
+				if (typeof valid == "object") return {
 					embeds: {
-						description: `The value for **${param.name}** was given an invalid value${typeof validated === "object" ? ` » **${validated.message}**` : ""}`,
+						description: { key: "modal.errors.invalid_value", data: { name: t({ key: `campaign.create.fields.${param.id}`, env }), message: t(valid) } },
 						color: EmbedColor.Red
 					}, ephemeral: true
-				});
+				};
 
 				const changes = param.update({ value: newValue, campaign, bot });	
 				if (changes) campaign = await updateCampaign(campaign, changes);
 
 				await interaction.update(
-					buildCampaignOverview(campaign, categoryId as CampaignCategoryType)
+					buildCampaignOverview(env, campaign, categoryId as CampaignCategoryType)
 				);
 
 			/* The edit button was pressed */
 			} else {
 				await interaction.showModal(
-					translateObject(buildEditModal(campaign, category, param), env)
+					buildEditModal(env, campaign, category, param)
 				);
 			}
 		} else if (action === "toggle") {
@@ -459,7 +463,7 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 			});
 
 			await interaction.update(
-				buildCampaignOverview(campaign)
+				buildCampaignOverview(env, campaign)
 			);
 
 		} else if (action === "create") {
@@ -472,14 +476,14 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 				const campaign = await createCampaign(env.user, name);
 
 				await interaction.update(
-					buildCampaignOverview(campaign)
+					buildCampaignOverview(env, campaign)
 				);
 
 			/* The creation button was pressed */
 			} else {
-				await interaction.showModal(translateObject({
+				await interaction.showModal({
 					title: "campaign.create.title 📝",
-					customId: "campaign:ui:create",
+					customId: "campaign:ui:create", env,
 
 					components: [ {
 						type: MessageComponentTypes.ActionRow,
@@ -495,7 +499,7 @@ export async function handleCampaignInteraction({ interaction, env, args }: Inte
 							maxLength: 128
 						} ]
 					} ]
-				}, env));
+				});
 			}
 
 		} else if (action === "preview") {

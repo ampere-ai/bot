@@ -10,7 +10,7 @@ import { Locales, Localization } from "@discordeno/types";
 
 export type LocaleString = {
 	key: string;
-	data: Record<string, any>;
+	data?: Record<string, any>;
 }
 
 export type ToLocaleStrings<T> = T extends string
@@ -67,7 +67,7 @@ export function translateObject<T extends {[key: string]: any } | LocaleString |
 	} else if (Array.isArray(obj)) {
 		return (obj.map(o => translateObject(o, env))) as T;
 
-	} else if (typeof obj == "object" && "key" in obj && "data" in obj) {
+	} else if (typeof obj == "object" && "key" in obj) {
 		return t({ key: obj.key, options: obj.data, env }) as T;
 
 	} else if (typeof obj == "object") {

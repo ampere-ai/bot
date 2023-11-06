@@ -40,7 +40,7 @@ interface MarketplaceCreatorField {
 	maxLength?: number;
 
 	/** Validator of this field */
-	validate?: (input: string) => MarketplaceCreatorError | null | void;
+	validate?: (input: string) => MarketplaceCreatorError | void;
 
 	/** Marketplace entry -> field converter */
 	parse: (entry: DBMarketplaceEntry) => string | null;

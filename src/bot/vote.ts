@@ -3,7 +3,6 @@ import { bold } from "colorette";
 import dayjs from "dayjs";
 
 import { BRANDING_COLOR } from "../config.js";
-import { translateObject } from "./i18n.js";
 
 interface VoteData {
 	id: string;
@@ -23,13 +22,13 @@ export function setupVoteHandler(bot: Bot) {
 			const channel = await bot.helpers.getDmChannel(data.id);
 			const env = await bot.db.env(BigInt(data.id));
 
-			await channel.send(translateObject({
+			await channel.send({
 				embeds: {
 					title: "vote.thanks.title 📩",
 					description: { key: "vote.thanks.desc", data: { time: VOTE_DURATION.asHours() } },
 					color: BRANDING_COLOR
-				}
-			}, env));
+				}, env
+			});
 	
 		} catch (error) {
 			bot.logger.warn(`Couldn't DM user ${bold(data.id)} about vote ->`, error);

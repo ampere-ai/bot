@@ -7,6 +7,7 @@ import { emojiToString, stringToEmoji } from "../utils/helpers.js";
 import { DBEnvironment } from "../../db/types/mod.js";
 import { EmbedColor } from "../utils/response.js";
 import { campaigns } from "../campaign.js";
+import { LocaleString } from "../i18n.js";
 
 export interface CampaignRender {
 	row: ActionRow;
@@ -18,21 +19,14 @@ export interface CampaignDisplay {
 	campaign: DBCampaign;
 }
 
-interface CampaignParameterValidation {
-	message: string;
-}
-
 export enum CampaignCategoryType {
-	General = "g",
-	Embed = "e",
-	Button = "b",
-	Budget = "bt"
+	General = "general",
+	Embed = "embed",
+	Button = "button",
+	Budget = "budget"
 }
 
 export interface CampaignParameterCategory {
-	/** Name of this category */
-	name: string;
-	
 	/** Identifier of this category */
 	id: CampaignCategoryType;
 
@@ -48,10 +42,7 @@ export interface CampaignParameterCategory {
 
 export interface CampaignParameter {
 	/** Name of the parameter */
-	name: string;
-
-	/** Tooltip for the modal */
-	tooltip?: string;
+	id: string;
 
 	/** Whether this parameter is optional */
 	optional?: boolean;
@@ -72,7 +63,7 @@ export interface CampaignParameter {
 	placeholder?: string | ((campaign: DBCampaign) => string);
 
 	/** Function to call, to validate the user's input */
-	validate?: (options: { value: string; env: DBEnvironment; bot: Bot; }) => CampaignParameterValidation | boolean;
+	validate?: (options: { value: string; env: DBEnvironment; bot: Bot; }) => LocaleString | true | void;
 
 	/** Function to call, to update the campaign in the database */
 	update: (options: { value: string; campaign: DBCampaign; bot: Bot; }) => Partial<DBCampaign> | void;
@@ -88,15 +79,14 @@ const createURLValidator: (optional: boolean) => CampaignParameter["validate"] =
 
 		try {
 			new URL(value);
-			return true;
 		} catch (error) {
-			return { message: "invalid URL" };
+			return { key: "invalid_url" };
 		}
 	};
 
 /* Generic color validator */
 const validateColor: CampaignParameter["validate"] = ({ value }) => {
-	if (!Object.keys(EmbedColor).includes(value)) return { message: "invalid color" };
+	if (!Object.keys(EmbedColor).includes(value)) return { key: "invalid_color" };
 	else return true;
 };
 
@@ -104,24 +94,22 @@ const validateColor: CampaignParameter["validate"] = ({ value }) => {
 const createNumberValidator: (min: number, max: number) => CampaignParameter["validate"] =
 	(min, max) => ({ value }) => {
 		const num = parseFloat(value);
-		if (isNaN(num)) return { message: "invalid number" };
 
-		if (num > max || num < min) return { message: `number must be inbetween ${min} and ${max}` };
-		return true;
+		if (isNaN(num)) return { key: "invalid_number" };
+		if (num > max || num < min) return { key: "number_range", data: { min, max } };
 	};
 
 export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 	{
-		name: "General",
 		id: CampaignCategoryType.General,
 		emoji: { name: "⚙️" },
 
 		parameters: [
 			{
-				name: "Name",
+				id: "name",
 				type: TextStyles.Short, length: { min: 3, max: 64 },
 				validate: ({ value }) => {
-					if (campaigns.find(c => c.name === value) != undefined) return { message: "a campaign with this name already exists" };
+					if (campaigns.find(c => c.name === value) != undefined) return { key: "already_exists" };
 					return true;
 				},
 				update: ({ value }) => ({ name: value }),
@@ -129,13 +117,12 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 			},
 
 			{
-				name: "Members",
-				tooltip: "Member IDs, one per line",
+				id: "members",
 				type: TextStyles.Paragraph,
 				length: { max: 200 },
 				validate: ({ value, env }) => {
 					const ids = value.split(/[ ,\n]+/);
-					if (!ids.some(id => id === env.user.id)) return { message: "you can't remove yourself" };
+					if (!ids.some(id => id === env.user.id)) return { key: "remove_self" };
 		
 					return true;
 				},
@@ -146,27 +133,26 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 	},
 
 	{
-		name: "Embed",
 		id: CampaignCategoryType.Embed,
 		emoji: { name: "📜" },
 
 		parameters: [
 			{
-				name: "Title",
+				id: "title",
 				type: TextStyles.Short, length: { min: 1, max: 256 },
 				update: ({ value, campaign }) => ({ settings: { ...campaign.settings, title: value } }),
 				previous: c => c.settings.title
 			},
 			
 			{
-				name: "Description",
+				id: "desc",
 				type: TextStyles.Paragraph, length: { min: 1, max: 512 },
 				update: ({ value, campaign }) => ({ settings: { ...campaign.settings, description: value } }),
 				previous: c => c.settings.description
 			},
 			
 			{
-				name: "Color",
+				id: "color",
 				type: TextStyles.Short, length: { min: 1, max: 16 },
 				validate: validateColor,
 				update: ({ value, campaign }) => ({ settings: { ...campaign.settings, color: value as keyof typeof EmbedColor } }),
@@ -174,7 +160,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 			},
 			
 			{
-				name: "Image",
+				id: "image",
 				optional: true, type: TextStyles.Short,
 				length: { min: 1, max: 128 },
 				validate: createURLValidator(true),
@@ -183,7 +169,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 			},
 			
 			{
-				name: "Thumbnail",
+				id: "thumbnail",
 				optional: true, type: TextStyles.Short,
 				length: { min: 1, max: 128 },
 				validate: createURLValidator(true),
@@ -194,20 +180,19 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 	},
 
 	{
-		name: "Button",
 		id: CampaignCategoryType.Button,
 		emoji: { name: "🖱️" },
 
 		parameters: [
 			{
-				name: "Type", type: TextStyles.Short,
+				id: "type", type: TextStyles.Short,
 				length: { min: 1, max: 16 }, optional: true,
 				placeholder: "Link / Primary / Secondary / Success / Danger",
 
 				previous: c => c.button?.type ?? null,
 				validate: ({ value }) => {
 					if (![ "Link", "Primary", "Secondary", "Success", "Danger" ].includes(value)) {
-						return { message: "invalid type" };
+						return { key: "invalid_type" };
 					}
 
 					return true;
@@ -233,7 +218,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 			},
 
 			{
-				name: "Link", type: TextStyles.Short,
+				id: "link", type: TextStyles.Short,
 				length: { min: 1, max: 256 }, optional: true,
 				placeholder: "https://example.com",
 
@@ -244,7 +229,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 			},
 
 			{
-				name: "Label", type: TextStyles.Short,
+				id: "label", type: TextStyles.Short,
 				length: { min: 1, max: 32 }, optional: true,
 
 				display: campaign => campaign.button !== null,
@@ -253,7 +238,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 			},
 
 			{
-				name: "Emoji", type: TextStyles.Short,
+				id: "emoji", type: TextStyles.Short,
 				length: { min: 1, max: 32 }, optional: true,
 
 				display: campaign => campaign.button !== null && campaign.button.type !== "Link",
@@ -261,7 +246,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 					if (value.length === 0) return true;
 
 					if (stringToEmoji(value) === null) return {
-						message: "invalid emoji"
+						key: "invalid_emoji"
 					};
 
 					return true;
@@ -276,7 +261,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 			},
 
 			{
-				name: "ID", type: TextStyles.Short,
+				id: "id", type: TextStyles.Short,
 				length: { min: 1, max: 32 },
 
 				display: campaign => campaign.button !== null && campaign.button.type !== "Link",
@@ -287,20 +272,19 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 	},
 
 	{
-		name: "Budget",
-		emoji: { name: "💸" },
 		id: CampaignCategoryType.Budget,
+		emoji: { name: "💸" },
 
 		parameters: [
 			{
-				name: "Type", type: TextStyles.Short,
+				id: "type", type: TextStyles.Short,
 				length: { min: 1, max: 16 }, optional: true,
 				placeholder: "Per-click / per-view / <empty to disable>",
 
 				previous: c => c.budget.type !== "none" ? c.budget.type : null,
 				validate: ({ value }) => {
 					if (![ "click", "view" ].includes(value) && value.length !== 0) {
-						return { message: "invalid type" };
+						return { key: "invalid_type" };
 					}
 
 					return true;
@@ -311,7 +295,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 			},
 
 			{
-				name: "Total", type: TextStyles.Short,
+				id: "total", type: TextStyles.Short,
 				length: { min: 1, max: 16 }, optional: true,
 
 				display: campaign => campaign.budget.type !== "none",
@@ -323,7 +307,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 			},
 
 			{
-				name: "Used", type: TextStyles.Short,
+				id: "used", type: TextStyles.Short,
 				length: { min: 1, max: 16 }, optional: true,
 
 				display: campaign => campaign.budget.type !== "none",
@@ -335,7 +319,7 @@ export const CAMPAIGN_PARAMETER_CATEGORIES: CampaignParameterCategory[] = [
 			},
 
 			{
-				name: "CPM", type: TextStyles.Short,
+				id: "cpm", type: TextStyles.Short,
 				length: { min: 1, max: 16 }, optional: true,
 
 				display: campaign => campaign.budget.type !== "none",

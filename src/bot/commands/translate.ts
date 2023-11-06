@@ -6,7 +6,6 @@ import { createCommand } from "../helpers/command.js";
 import { ResponseError } from "../errors/response.js";
 import { USER_LOCALES } from "../types/locale.js";
 import { BRANDING_COLOR } from "../../config.js";
-import { translateObject } from "../i18n.js";
 import { APIError } from "../errors/api.js";
 
 export default createCommand({
@@ -49,7 +48,7 @@ export default createCommand({
 				content, language: language.modelName ?? language.name
 			});
 
-			await interaction.editReply(translateObject({
+			await interaction.editReply({
 				embeds: {
 					title: "translate.title",
 					description: `\`\`\`\n${result.content}\n\`\`\``,
@@ -68,8 +67,8 @@ export default createCommand({
 							inline: true
 						}
 					]
-				}
-			}, env));
+				}, env
+			});
 		} catch (error) {
 			if (error instanceof APIError) {
 				throw new ResponseError({

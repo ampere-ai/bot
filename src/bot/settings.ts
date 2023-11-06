@@ -331,7 +331,7 @@ function buildOption(
 		components.push(
 			{
 				type: MessageComponentTypes.Button,
-				label: `settings.categories.${category.id}.options.${option.id}.name`, emoji: { name: option.emoji },
+				label: `settings.categories.${category.id}.options.${option.id}`, emoji: { name: option.emoji },
 				style: ButtonStyles.Secondary, disabled: true,
 				customId: randomUUID()
 			},
@@ -370,7 +370,7 @@ function buildOption(
 			maxValues: option.type === SettingsOptionType.MultipleChoices ? option.max : undefined,
 			minValues: option.type === SettingsOptionType.MultipleChoices ? option.min : undefined,
 
-			placeholder: `settings.categories.${category.id}.options.${option.id}.name ${option.emoji}`,
+			placeholder: `settings.categories.${category.id}.options.${option.id} ${option.emoji}`,
 			options: choices
 		});
 	}
