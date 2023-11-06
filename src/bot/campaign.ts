@@ -12,7 +12,7 @@ import { handleInteraction } from "./interactions/mod.js";
 import { BRANDING_COLOR } from "../config.js";
 import { chunk } from "./utils/helpers.js";
 import { bot } from "./mod.js";
-import { LocaleString, t } from "./i18n.js";
+import { LocaleString, ToLocaleStrings, t } from "./i18n.js";
 
 /** Ad display counters */
 const counters = new Map<string, number>();
@@ -172,7 +172,9 @@ function buildCampaignButton(campaign: DBCampaign): ButtonComponent | null {
 }
 
 
-function buildCampaignSelector(campaigns: DBCampaign[]): ActionRow {
+function buildCampaignSelector(campaigns: DBCampaign[]): ToLocaleStrings<ActionRow> {
+	const num = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 	return {
 		type: MessageComponentTypes.ActionRow,
 
@@ -184,7 +186,7 @@ function buildCampaignSelector(campaigns: DBCampaign[]): ActionRow {
 			options: campaigns.map(c => ({
 				label: c.name,
 				emoji: { name: c.active ? "✅" : "❌" },
-				description: `${c.budget !== null ? `${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(c.budget.used)} / ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(c.budget.total)} • ` : ""}${c.members.length} member${c.members.length > 1 ? "s" : ""}`,
+				description: { key: "campaign.info", data: { used: num.format(c.budget.used), total: num.format(c.budget.total) } },
 				value: c.id
 			}))
 		} ]

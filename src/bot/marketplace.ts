@@ -200,7 +200,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		/* Which type to create was selected */
 		} else if (interaction.data?.componentType === MessageComponentTypes.SelectMenu) {
 			const category = getMarketplaceCategory(interaction.data!.values![0]);
-			await interaction.showModal(buildCreationModal(env, category, "new"));
+			await interaction.showModal(buildCreationModal(env, category, "create"));
 
 		/* The creation button was pressed in the dashboard */
 		} else if (interaction.data?.componentType === MessageComponentTypes.Button) {
@@ -402,10 +402,10 @@ async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketp
 }
 
 function buildCreationModal(
-	env: DBEnvironment, category: MarketplaceCategory, type: "new" | "edit", entry?: DBMarketplaceEntry
+	env: DBEnvironment, category: MarketplaceCategory, type: "create" | "edit", entry?: DBMarketplaceEntry
 ): ModalResponse {
 	return {
-		title: `${type === "new" ? "marketplace.manage.create" : "marketplace.manage.edit"} ${emojiToString(category.emoji)}`,
+		title: `marketplace.manage.${type} ${emojiToString(category.emoji)}`,
 		customId: `market:create:${type}:${category.type}:${entry?.id}`, env,
 
 		components: Object.entries({ ...MARKETPLACE_BASE_FIELDS, ...category.creator!.fields })

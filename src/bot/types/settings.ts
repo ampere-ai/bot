@@ -42,7 +42,8 @@ export interface SettingsOptionChoice<T> {
 	value: T;
 }
 
-export type SettingsOption<T extends string  = any> = BooleanSettingsOption | StringSettingsOption | ChoiceSettingsOption<T> | MultipleChoiceSettingsOption<T>
+export type SettingsOption<T extends string = any>
+	= BooleanSettingsOption | StringSettingsOption | ChoiceSettingsOption<T> | MultipleChoiceSettingsOption<T>;
 
 interface BaseSettingsOption<T> {
     /** Identifier of the settings option */
