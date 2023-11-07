@@ -25,7 +25,7 @@ async function createEntry(bot: Bot, data: Omit<DBMarketplaceEntry, "id" | "crea
 	});
 }
 
-async function getEntries(bot: Bot, { page, creator }: MarketplaceFilterOptions): Promise<Record<DBMarketplaceType, MarketplacePage>> {
+async function getEntries(bot: Bot, { page }: MarketplaceFilterOptions): Promise<Record<DBMarketplaceType, MarketplacePage>> {
 	const all = (await bot.db.all<DBMarketplaceEntry>("marketplace"));
 	const map = {} as Record<DBMarketplaceType, MarketplacePage>;
 
@@ -33,10 +33,7 @@ async function getEntries(bot: Bot, { page, creator }: MarketplaceFilterOptions)
 		const entries = all.filter(e => e.type === category.type);
 
 		map[category.type] = {
-			entries: entries
-				.slice(page * MARKETPLACE_PAGE_SIZE, (page * MARKETPLACE_PAGE_SIZE) + MARKETPLACE_PAGE_SIZE)
-				.filter(entry => creator ? entry.creator === creator : true),
-
+			entries: entries.slice(page * MARKETPLACE_PAGE_SIZE, (page * MARKETPLACE_PAGE_SIZE) + MARKETPLACE_PAGE_SIZE),
 			count: Math.ceil(entries.length / MARKETPLACE_PAGE_SIZE)
 		};
 	}
@@ -121,9 +118,8 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 	} else if (action === "create") {
 		/* The creation modal was submitted */
 		if (interaction.type === InteractionTypes.ModalSubmit && interaction.data?.components) {
-			const action: "new" | "edit" = args.shift()! as "new" | "edit";
-			const type: DBMarketplaceType = args.shift()! as DBMarketplaceType;
-			
+			const action = args.shift()! as "new" | "edit";
+			const type = args.shift()! as DBMarketplaceType;
 			const id = args.shift();
 
 			const category = getMarketplaceCategory(type);
@@ -173,7 +169,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 			const data = category.creator.create(fields as any, bot);
 
 			/* Edit an existing entry */
-			if (action === "edit" && id) {
+			if (action === "edit" && entry) {
 				entry = await bot.db.update<DBMarketplaceEntry>("marketplace", entry, {
 					name: fields["name"] ?? undefined, emoji,
 					description: fields["description"] ?? null,
@@ -263,7 +259,7 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 
 				options:
 					sortEntries(page.entries
-						.filter(entry => !options.creator ? entry.status.visibility === "public" : true)
+						.filter(entry => entry.status.visibility === "public")
 					).map(entry => buildEntryPreview(entry, env))
 			} ]
 		});

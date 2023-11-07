@@ -22,7 +22,7 @@ export default createChatModel({
 			messages: history.messages,
 			maxTokens: history.maxTokens,
 			temperature: history.temperature,
-			model: "gpt-4"
+			model: "gpt-4-vision-preview"
 		}, emitter);
 	}
 });

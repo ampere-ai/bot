@@ -22,7 +22,7 @@ export interface ImageModel {
 	id: string;
 
 	/** Which path is used */
-	path: "deepinfra" | "sh" | "kandinsky";
+	path: "deepinfra" | "sh" | "kandinsky" | "openai";
 
     /** Various settings for the model */
     settings?: ImageConfigModelSettings;

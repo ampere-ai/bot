@@ -6,7 +6,6 @@ import type { LocaleString } from "../i18n.js";
 import { emojiToString, stringToEmoji } from "../utils/helpers.js";
 
 export interface MarketplaceFilterOptions {
-	creator?: string;
 	page: number;
 }
 

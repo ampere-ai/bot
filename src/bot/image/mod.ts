@@ -6,7 +6,7 @@ import { Emitter } from "../utils/event.js";
 
 export async function generate({ bot, model, emitter, body }: ImageGenerationOptions) {
 	return bot.api.image[model.path]({
-		...body, ...model.body ?? {}, stream: true
+		...body, ...model.body ?? {}
 	}, emitter);
 }
 

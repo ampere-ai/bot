@@ -454,7 +454,7 @@ async function displayFields(options: ImageStartOptions) {
 		name: "image.fields.guidance", value: `${options.guidance}`
 	});
 
-	if (options.prompt.style) {
+	if (options.prompt.style && options.prompt.style !== "style-none") {
 		const style = await fetchMarketplaceEntry<MarketplaceStyle>(options.bot, options.prompt.style);
 		fields.push({ name: "image.fields.style", value: `${style.name} ${emojiToString(style.emoji)}` });
 	}

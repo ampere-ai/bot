@@ -224,15 +224,14 @@ async function execute(options: ExecuteOptions): Promise<ConversationResult> {
 	});
 
 	/** Apply all updates to the conversation's history. */
-	await updateConversation(bot, options.conversation, options.conversation);
-	await bot.db.update("conversations", options.conversation.id, options.conversation);
+	await Promise.all([
+		bot.db.update("conversations", options.conversation.id, options.conversation),
 
-	/* Charge the user accordingly, if they're using the pay-as-you-go plan. */
-	await charge(bot, env, {
-		type: "chat", used: result.cost ?? 0, data: {
+		/* Charge the user accordingly, if they're using the pay-as-you-go plan. */
+		charge(bot, env, { type: "chat", used: result.cost ?? 0, data: {
 			model: options.model.id
-		}
-	});
+		} })
+	]);
 
 	return result;
 }
@@ -347,11 +346,6 @@ export async function resetConversation(bot: Bot, env: DBEnvironment, conversati
 	await bot.db.update("conversations", conversation.id, {
 		uuid: randomUUID(), history: []
 	});
-}
-
-/** Update a user's conversation. */
-export async function updateConversation(bot: Bot, conversation: Conversation, updates: Partial<Conversation>) {
-	await bot.db.update("conversations", conversation, updates);
 }
 
 function getModel(bot: Bot, env: DBEnvironment) {

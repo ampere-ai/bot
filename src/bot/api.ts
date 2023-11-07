@@ -178,7 +178,6 @@ class ImageAPI extends BaseAPI {
 		sampler?: string;
 		amount?: number;
 		model?: string;
-		stream?: boolean;
 	}, emitter?: Emitter<ImageGenerationResult>): Promise<ImageGenerationResult> {
 		return this.fetch({
 			path: "image/sh", emitter, options, stream: true
@@ -194,7 +193,6 @@ class ImageAPI extends BaseAPI {
 		guidance?: number;
 		amount?: number;
 		model?: string;
-		stream?: boolean;
 	}, emitter?: Emitter<ImageGenerationResult>): Promise<ImageGenerationResult> {
 		return this.fetch({
 			path: "image/deepinfra", emitter, options, stream: true
@@ -210,10 +208,18 @@ class ImageAPI extends BaseAPI {
 		guidance?: number;
 		sampler?: string;
 		amount?: number;
-		stream?: boolean;
 	}, emitter?: Emitter<ImageGenerationResult>): Promise<ImageGenerationResult> {
 		return this.fetch({
 			path: "image/kandinsky", emitter, options, stream: true
+		});
+	}
+
+	public async openai(options: {
+		prompt: string;
+		amount?: number;
+	}, emitter?: Emitter<ImageGenerationResult>): Promise<ImageGenerationResult> {
+		return this.fetch({
+			path: "image/openai", emitter, options, stream: false
 		});
 	}
 

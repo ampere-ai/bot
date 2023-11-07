@@ -8,11 +8,11 @@ import { type CampaignCategoryType, type CampaignDisplay, type CampaignRender, t
 import { type DBUser, DBUserType, DBRole } from "../db/types/user.js";
 import { InteractionHandlerOptions } from "./types/interaction.js";
 import { EmbedColor, MessageResponse } from "./utils/response.js";
+import { LocaleString, ToLocaleStrings, t } from "./i18n.js";
 import { handleInteraction } from "./interactions/mod.js";
 import { BRANDING_COLOR } from "../config.js";
 import { chunk } from "./utils/helpers.js";
 import { bot } from "./mod.js";
-import { LocaleString, ToLocaleStrings, t } from "./i18n.js";
 
 /** Ad display counters */
 const counters = new Map<string, number>();
@@ -229,7 +229,7 @@ export function buildCampaignFinder(env: DBEnvironment): MessageResponse {
 			buildCampaignFinderToolbar()
 		],
 
-		ephemeral: true
+		ephemeral: true, env
 	};
 }
 

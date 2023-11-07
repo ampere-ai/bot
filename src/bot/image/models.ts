@@ -40,6 +40,16 @@ export const IMAGE_MODELS: ImageModel[] = [
 	},
 
 	{
+		name: "Dall-E 3",
+		id: "dalle3",
+		path: "openai",
+
+		settings: {
+			forcedSize: { width: 1024, height: 1024 }
+		}
+	},
+
+	{
 		name: "Project Unreal Engine 5",
 		id: "ue5",
 		path: "sh",
