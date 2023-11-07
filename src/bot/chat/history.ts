@@ -3,7 +3,7 @@ import type { Bot } from "@discordeno/bot";
 import { get_encoding } from "@dqbd/tiktoken";
 const encoder = get_encoding("cl100k_base");
 
-import type { Conversation, ConversationMessage, ConversationUserMessage } from "../types/conversation.js";
+import type { APIChatMessage, Conversation, ConversationMessage, ConversationUserMessage } from "../types/conversation.js";
 import type { MarketplacePersonality } from "../../db/types/marketplace.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 import type { ChatModel } from "./models/mod.js";
@@ -32,7 +32,7 @@ export interface HistoryData {
 	temperature: number;
 
 	/** Messages in the history */
-	messages: ConversationMessage[];
+	messages: APIChatMessage[];
 }
 
 const MAX_LENGTH = {
@@ -52,7 +52,7 @@ const MAX_LENGTH = {
 };
 
 export function buildHistory({ bot, env, model, personality, conversation, input }: BuildHistoryOptions): HistoryData {
-	let messages: ConversationMessage[] = [];
+	let messages: APIChatMessage[] = [];
 	let tokens = 0;
 
 	const type = bot.db.type(env);
@@ -75,7 +75,7 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 		}
 
 		if (personality.data.prompt) {
-			if (Array.isArray(personality.data.prompt)) messages.push(...personality.data.prompt.map<ConversationMessage>(prompt => (
+			if (Array.isArray(personality.data.prompt)) messages.push(...personality.data.prompt.map<APIChatMessage>(prompt => (
 				{ role: "system", content: prompt }
 			)));
 			
@@ -97,7 +97,7 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 			role: "system", content: messages.map(m => m.content).join("\n\n")
 		} ];
 
-		/** Add the conversation's history, if the tone didn't disable it intentionally. */
+		/** Add the conversation's history, if the personality doesn't disable it intentionally. */
 		if (!personality.data.disableHistory) for (const entry of conversation.history) {
 			messages.push(
 				{ role: "user", content: entry.input.content },
@@ -106,7 +106,14 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 		}
 
 		/* Add the user's request. */
-		messages.push(input);
+		if (input.images && model.id === "gpt-4") {
+			messages.push({ role: "user", content: [
+				{ type: "text", text: input.content },
+				...input.images.map(url => ({ type: "image_url", image_url: { url, detail: "low" } }))
+			] });
+		} else {
+			messages.push({ ...input, role: "user" });
+		}
 
 		/* Tokens used for the entire history & prompt */
 		tokens = getChatMessageLength(...messages);
@@ -132,13 +139,13 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 }
 
 /** Count together all tokens contained in a list of conversation messages. */
-function getChatMessageLength(...messages: ConversationMessage[]) {
+function getChatMessageLength(...messages: (APIChatMessage | ConversationMessage)[]) {
 	/* Total tokens used for the messages */
 	let total = 0;
 
 	for (const message of messages) {
 		/* Map each property of the message to the number of tokens it contains. */
-		const propertyTokenCounts = Object.values(message).map(value => {
+		const propertyTokenCounts = Object.values(message).filter(value => typeof value === "string").map(value => {
 			/* Count the number of tokens in the property value. */
 			return getMessageTokens(value);
 		});

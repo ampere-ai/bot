@@ -100,7 +100,6 @@ export interface MarketplaceCategory<
 > {
 	type: DBMarketplaceType;
 	emoji: ComponentEmoji;
-	key: string;
 	default: string;
 	creator?: MarketplaceCreator<Fields>;
 }
@@ -114,7 +113,7 @@ function createCategory<Fields extends Record<string, MarketplaceCreatorField>>(
 export const MARKETPLACE_CATEGORIES = [
 	createCategory({
 		type: "personality", emoji: { name: "😊" },
-		key: "chat:personality", default: "personality-neutral",
+		default: "personality-neutral",
 
 		creator: {
 			fields: {
@@ -145,7 +144,7 @@ export const MARKETPLACE_CATEGORIES = [
 
 	createCategory({
 		type: "style", emoji: { name: "🖌️" },
-		key: "image:style", default: "style-none",
+		default: "style-none",
 
 		creator: {
 			fields: {
@@ -164,7 +163,7 @@ export const MARKETPLACE_CATEGORIES = [
 
 	createCategory({
 		type: "indicator", emoji: { name: "🔄" },
-		key: "general:indicator", default: "indicator-orb",
+		default: "indicator-orb",
 
 		creator: {
 			fields: {},

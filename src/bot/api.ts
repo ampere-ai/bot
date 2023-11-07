@@ -1,7 +1,7 @@
 import { fetchEventSource } from "@waylaidwanderer/fetch-event-source";
 
 import type { ImageGenerationResult, ImageInterrogateResult } from "./types/image.js";
-import type { ConversationMessage } from "./types/conversation.js";
+import type { APIChatMessage } from "./types/conversation.js";
 import type { Emitter, EmitterData } from "./utils/event.js";
 import type { ChatModelResult } from "./chat/models/mod.js";
 import type { DatasetType } from "../db/types/dataset.js";
@@ -118,7 +118,7 @@ class BaseAPI {
 
 class TextAPI extends BaseAPI {
 	public async gpt(options: {
-		messages: ConversationMessage[];
+		messages: APIChatMessage[];
 		maxTokens?: number;
 		temperature?: number;
 		model?: string;
@@ -130,7 +130,7 @@ class TextAPI extends BaseAPI {
 
 	public async deepinfra(options: {
 		model: string;
-		messages: ConversationMessage[];
+		messages: APIChatMessage[];
 		maxTokens?: number;
 		temperature?: number;
 	}, emitter: Emitter<ChatModelResult>): Promise<ChatModelResult> {
@@ -140,7 +140,7 @@ class TextAPI extends BaseAPI {
 	}
 
 	public async google(options: {
-		messages: ConversationMessage[];
+		messages: APIChatMessage[];
 		temperature?: number;
 		model?: "chat-bison-001";
 	}, emitter: Emitter<ChatModelResult>): Promise<ChatModelResult> {

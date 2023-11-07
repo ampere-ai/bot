@@ -1,6 +1,6 @@
 import type { Bot, ComponentEmoji } from "@discordeno/bot";
 
-import type { ConversationMessage, ConversationUserMessage } from "../../types/conversation.js";
+import type { ConversationUserMessage, APIChatMessage } from "../../types/conversation.js";
 import type { RestrictionName } from "../../utils/restriction.js";
 import type { CommandCooldown } from "../../types/command.js";
 import type { DBEnvironment } from "../../../db/types/mod.js";
@@ -30,7 +30,7 @@ export interface ChatModel {
 	cooldown?: CommandCooldown;
 
 	/* Initial instructions to pass to the model */
-	initialPrompt?: ConversationMessage | ConversationMessage[];
+	initialPrompt?: APIChatMessage | APIChatMessage[];
 
 	/** Limits of the model, in terms of tokens */
 	maxTokens: number;

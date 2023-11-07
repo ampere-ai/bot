@@ -66,18 +66,6 @@ export const SettingsCategories: SettingsCategory[] = [
 			},
 
 			{
-				id: "personality", emoji: "😊",
-				type: SettingsOptionType.String,
-				location: SettingsLocation.User,
-				hidden: true, default: "personality-neutral",
-
-				handler: async (bot, env) => {
-					const conversation = await bot.db.get<Conversation>("conversations", env.user.id);
-					if (conversation) await resetConversation(bot, env, conversation);
-				}
-			},
-
-			{
 				id: "partial_messages",
 				emoji: "⏳", default: true,
 				type: SettingsOptionType.Boolean,
@@ -99,14 +87,7 @@ export const SettingsCategories: SettingsCategory[] = [
 				choices: IMAGE_MODELS.map(m => ({
 					name: m.name, description: `image.models.${m.id}`, value: m.id
 				}))
-			},
-
-			{
-				id: "style", emoji: "🖌️",
-				location: SettingsLocation.User,
-				type: SettingsOptionType.String,
-				default: "style-none", hidden: true
-			},
+			}
 		]
 	},
 
@@ -163,13 +144,13 @@ export function whichEntry(location: SettingsLocation, env: DBEnvironment): DBUs
 		? env.guild! : env.user;
 }
 
-function getOption(key: string): SettingsOption {
+function getOption(key: string): SettingsOption | null {
 	const [ categoryID, optionID ] = key.split(":");
 
-	const category = SettingsCategories.find(c => c.id === categoryID)!;
-	const option = category.options.find(o => o.id === optionID)!;
+	const category = SettingsCategories.find(c => c.id === categoryID);
+	if (!category) return null;
 
-	return option;
+	return category.options.find(o => o.id === optionID) ?? null;
 }
 
 export function updateSettings<T extends DBUser | DBGuild>(
@@ -179,7 +160,7 @@ export function updateSettings<T extends DBUser | DBGuild>(
 		const option = getOption(key);
 
 		/** FIXME: Why do I have to cast it to 'never'?? */
-		if (option.handler) option.handler(bot, env, value as never);
+		if (option && option.handler) option.handler(bot, env, value as never);
 	}
 	
 	return bot.db.update<any>(`${location}s`, env[location]!, {
@@ -193,7 +174,7 @@ export function getSettingsValue<T = string | number | boolean>(
 	const value = env[location]!.settings[key] as T;
 	const option = getOption(key);
 
-	if (option.type === SettingsOptionType.Choices) {
+	if (option && option.type === SettingsOptionType.Choices) {
 		/* If no option is selected & it's optional, return null. */
 		if (value === "none") return null as T;
 		
@@ -203,7 +184,7 @@ export function getSettingsValue<T = string | number | boolean>(
 		else if (choice === null) return option.default;
 	}
 	
-	return value ?? option.default;
+	return value ?? option?.default;
 }
 
 export async function handleSettingsInteraction({ bot, args, env, interaction }: InteractionHandlerOptions) {
@@ -246,23 +227,23 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 			newValue = !currentValue;
 
 		} else if (option.type === SettingsOptionType.String) {
-			/** TODO: Implement */
+			/** TODO: Implement modal */
 			newValue = "";
 
 		} else if (option.type === SettingsOptionType.Choices) {
-			const choice = option.choices.find(c => c.value === newValue) ?? null;
 			newValue = interaction.data?.values?.[0] ?? currentValue;
+			const choice = option.choices.find(c => c.value === newValue) ?? null;
 
 			if (choice && choice.restrictions && !canUse(bot, env, choice.restrictions)) {
-				const allowed = restrictionTypes(choice.restrictions);
+				const allowed = restrictionTypes(env, choice.restrictions);
 
 				return void await interaction.reply({
 					embeds: {
-						description: `The choice **${choice.name}** is ${allowed.map(a => `**${a.description}** ${a.emoji}`).join(", ")}.`,
+						description: { key: "restrictions.messages.choice", data: { choice: choice.name, restrictions: allowed.map(a => `**${a.description}** ${a.emoji}`).join(", ") } },
 						color: EmbedColor.Orange
 					},
 		
-					ephemeral: true
+					ephemeral: true, env
 				});
 			}
 		} else if (option.type === SettingsOptionType.MultipleChoices) {
@@ -272,15 +253,15 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 				const choice = option.choices.find(c => c.value === val)!;
 
 				if (choice.restrictions && !canUse(bot, env, choice.restrictions)) {
-					const allowed = restrictionTypes(choice.restrictions);
+					const allowed = restrictionTypes(env, choice.restrictions);
 	
 					return void await interaction.reply({
 						embeds: {
-							description: `The choice **${choice.name}** is ${allowed.map(a => `**${a.description}** ${a.emoji}`).join(", ")}.`,
+							description: { key: "restrictions.messages.choice", data: { choice: choice.name, restrictions: allowed.map(a => `**${a.description}** ${a.emoji}`).join(", ") } },
 							color: EmbedColor.Orange
 						},
 			
-						ephemeral: true
+						ephemeral: true, env
 					});
 				}
 			}
@@ -316,7 +297,7 @@ export function buildSettingsPage(
 			bot, env, location === SettingsLocation.Guild ? "guild" : "user", categoryOptionKey(category, option)
 		);
 
-		if (!option.hidden) rows.push(buildOption(location, category, option, value));
+		if (!option.hidden) rows.push(buildOption(location, category, option, value, env));
 	}
 
 	rows.push(buildPageSwitcher(location, category));
@@ -324,7 +305,7 @@ export function buildSettingsPage(
 }
 
 function buildOption(
-	location: SettingsLocation, category: SettingsCategory, option: SettingsOption, current: string | number | boolean
+	location: SettingsLocation, category: SettingsCategory, option: SettingsOption, current: string | number | boolean, env: DBEnvironment
 ): ActionRow {
 	const components: (SelectMenuComponent | ButtonComponent)[] = [];
 
@@ -347,7 +328,7 @@ function buildOption(
 
 	} else if (option.type === SettingsOptionType.Choices || option.type === SettingsOptionType.MultipleChoices) {
 		const choices: SelectOption[] = option.choices.map(c => {
-			const restrictions = c.restrictions ? restrictionTypes(c.restrictions) : [];
+			const restrictions = c.restrictions ? restrictionTypes(env, c.restrictions) : [];
 
 			return {
 				label: `${c.name} ${restrictions.map(r => r.emoji).join(" ")}`, value: c.value,

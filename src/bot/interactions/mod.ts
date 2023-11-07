@@ -56,11 +56,11 @@ export async function handleInteraction(bot: Bot, interaction: Interaction) {
 		: true;
 
 	if (handler.restrictions && !access) {
-		const allowed = restrictionTypes(handler.restrictions);
+		const allowed = restrictionTypes(env, handler.restrictions);
 
 		return void await interaction.reply({
 			embeds: {
-				description: `This action is ${allowed.map(a => `**${a.description}** ${a.emoji}`).join(", ")}.`,
+				description: { key: "restrictions.messages.action", data: { restrictions: allowed.map(a => `**${a.description}** ${a.emoji}`).join(", ") } },
 				color: EmbedColor.Yellow
 			},
 

@@ -2,6 +2,7 @@ import type { Bot } from "@discordeno/bot";
 
 import type { DBEnvironment } from "../../db/types/mod.js";
 import { DBRole } from "../../db/types/user.js";
+import { t } from "../i18n.js";
 
 export interface RestrictionType {
 	/** Name of the restriction */
@@ -31,6 +32,14 @@ export enum RestrictionName {
 	PremiumSubscription = "sub"
 }
 
+const RestrictionEmojiMap: Record<RestrictionName, string> = {
+	[RestrictionName.Developer]: "🔧",
+	[RestrictionName.Premium]: "✨",
+	[RestrictionName.Moderator]: "🛠️",
+	[RestrictionName.PremiumPlan]: "📊",
+	[RestrictionName.PremiumSubscription]: "💸"
+};
+
 /** Determine which restriction type applies to a user. */
 function restrictions(bot: Bot, env: DBEnvironment): RestrictionName[] {
 	const types: RestrictionName[] = [];
@@ -55,36 +64,14 @@ export function canUse(bot: Bot, env: DBEnvironment, types: RestrictionName[]): 
 	return restrictions(bot, env).some(r => types.includes(r));
 }
 
-export function restrictionTypes(restrictions: RestrictionName[]) {
+export function restrictionTypes(env: DBEnvironment, restrictions: RestrictionName[]) {
 	const types: RestrictionType[] = [];
 
 	for (const r of restrictions) {
-		switch (r) {
-			case RestrictionName.Developer: {
-				types.push({ name: r, description: "developer-only", emoji: "🔧" });
-				break;
-			}
-
-			case RestrictionName.Premium: {
-				types.push({ name: r, description: "premium-only", emoji: "✨" });
-				break;
-			}
-
-			case RestrictionName.Moderator: {
-				types.push({ name: r, description: "moderator-only", emoji: "🛠️" });
-				break;
-			}
-
-			case RestrictionName.PremiumPlan: {
-				types.push({ name: r, description: "plan-only", emoji: "📊" });
-				break;
-			}
-
-			case RestrictionName.PremiumSubscription: {
-				types.push({ name: r, description: "subscription-only", emoji: "💸" });
-				break;
-			}
-		}
+		types.push({
+			name: r, description: t({ key: `restrictions.types.${r}`, env }),
+			emoji: RestrictionEmojiMap[r]
+		});
 	}
 
 	return types;

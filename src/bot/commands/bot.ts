@@ -55,7 +55,7 @@ export default createCommand({
 					},
 
 					{
-						name: "info.fields.cluster 💎", inline: true,
+						name: "info.fields.worker 💎", inline: true,
 						value: `\`${workerId + 1}\`/\`${info.workers.length}\`— \`${shardId + 1}\`/\`${info.shards.length}\``
 					},
 

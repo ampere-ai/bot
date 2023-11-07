@@ -8,7 +8,7 @@ import { type MarketplaceFilterOptions, type MarketplacePage, MARKETPLACE_CATEGO
 import { type DBMarketplaceEntry, type DBMarketplaceType, DBMarketplaceStatistics } from "../db/types/marketplace.js";
 import { type MessageResponse, EmbedColor } from "./utils/response.js";
 import { emojiToString, stringToEmoji } from "./utils/helpers.js";
-import { getSettingsValue, updateSettings } from "./settings.js";
+import { updateSettings } from "./settings.js";
 import { hasTranslation, t } from "./i18n.js";
 import { DBRole } from "../db/types/user.js";
 
@@ -66,11 +66,15 @@ async function incrementStatistics(bot: Bot, db: DBMarketplaceEntry, key: keyof 
 	});
 }
 
+function getMarketplaceKey(type: DBMarketplaceType) {
+	return `marketplace:${type}`;
+}
+
 export async function getMarketplaceSetting<T extends DBMarketplaceEntry>(
 	bot: Bot, env: DBEnvironment, type: DBMarketplaceType
 ): Promise<T> {
-	const { key, default: defaultID } = getMarketplaceCategory(type);
-	const id: string = getSettingsValue(bot, env, "user", key);
+	const { default: defaultID } = getMarketplaceCategory(type);
+	const id: string = env.user.settings[getMarketplaceKey(type)] ?? defaultID;
 
 	/* First, try getting the actual specified marketplace entry ID. If that doesn't exist, use the given default ID. */
 	const entry =
@@ -88,7 +92,7 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 		const category = getMarketplaceCategory(entry.type);
 
 		env.user = await updateSettings(bot, env, "user", {
-			[category.key]: entry.id
+			[`marketplace:${category.type}`]: entry.id
 		});
 		
 		entry = await incrementStatistics(bot, entry, "uses");
@@ -333,21 +337,19 @@ function buildEntryPreview(entry: DBMarketplaceEntry, env: DBEnvironment): Selec
 async function buildEntryOverview(bot: Bot, env: DBEnvironment, entry: DBMarketplaceEntry): Promise<MessageResponse> {
 	/* Current setting for this marketplace type */
 	const category = getMarketplaceCategory(entry.type);
-	const currentID: string | null = getSettingsValue(bot, env, "user", category.key);
+	const currentID = env.user.settings[getMarketplaceKey(category.type)];
 
 	const creator = !entry.status.builtIn
 		? await bot.helpers.getUser(entry.creator)
 		: null;
 
-	const buttons: ButtonComponent[] = [
-		{
-			type: MessageComponentTypes.Button,
-			style: ButtonStyles.Success,
-			label: "marketplace.buttons.use", customId: `market:use:${entry.id}`,
-			emoji: { name: "hand", id: 1152659477590458479n },
-			disabled: currentID === entry.id
-		}
-	];
+	const buttons: ButtonComponent[] = [ {
+		type: MessageComponentTypes.Button,
+		style: ButtonStyles.Success,
+		label: "marketplace.buttons.use", customId: `market:use:${entry.id}`,
+		emoji: { name: "hand", id: 1152659477590458479n },
+		disabled: currentID === entry.id
+	} ];
 
 	if (entry.creator === env.user.id || env.user.roles.includes(DBRole.Owner)) {
 		buttons.push(

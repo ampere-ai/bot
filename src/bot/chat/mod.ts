@@ -49,9 +49,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 	});
 
 	/* Input, to pass to the AI model */
-	const input: ConversationUserMessage = {
-		role: "user", content: clean(message)
-	};
+	const input: ConversationUserMessage = toInputMessage(message);
 
 	if (input.content.length === 0) {
 		return await bot.helpers.addReaction(message.channelId, message.id, "👋");
@@ -77,11 +75,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 		infractionNotice(env.user, isBanned(env.user)!)
 	);
 
-	/* User's loading indicator */
-	const indicator = (
-		await getMarketplaceSetting<MarketplaceIndicator>(bot, env, "indicator")
-	).data;
-
+	const indicator = (await getMarketplaceSetting<MarketplaceIndicator>(bot, env, "indicator")).data;
 	const personality = await getMarketplaceSetting<MarketplacePersonality>(bot, env, "personality");
 	const model = getModel(bot, env);
 
@@ -182,13 +176,11 @@ export async function handleMessage(bot: Bot, message: Message) {
 
 	/* Apply the model's specific cool-down to the user. */ 
 	if (model.cooldown && model.cooldown[type]) {
-		setCooldown(
-			bot, env, conversation, model.cooldown[type]!
-		);
+		setCooldown(bot, env, conversation, model.cooldown[type]!);
 	}
 }
 
-/** Execute the chat request, on the specified model. */
+/** Execute the chat request, with the user's selected model. */
 async function execute(options: ExecuteOptions): Promise<ConversationResult> {
 	const { bot, env, input } = options;
 	const id = randomUUID();
@@ -239,7 +231,7 @@ async function execute(options: ExecuteOptions): Promise<ConversationResult> {
 function formatResult(result: ChatModelResult, id: string): ConversationResult {
 	return {
 		id, done: result.done,
-		message: { role: "assistant", content: result.content.trim() },
+		message: { content: result.content.trim() },
 		cost: result.cost, finishReason: result.finishReason
 	};
 }
@@ -356,6 +348,16 @@ function getModel(bot: Bot, env: DBEnvironment) {
 /** Check whether the specified message pinged the bot. */
 function mentions(bot: Bot, message: Message) {
 	return message.mentionedUserIds.includes(bot.id) || !message.guildId;
+}
+
+/** Convert a Discord message to a usable input message. */
+function toInputMessage(message: Message): ConversationUserMessage {
+	return {
+		content: clean(message),
+
+		images: message.attachments && message.attachments.length > 0
+			? message.attachments.map(a => a.url) : undefined
+	};
 }
 
 /** Remove all bot & user mentions from the specified message. */

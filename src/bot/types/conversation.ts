@@ -27,14 +27,29 @@ export type ConversationResult = Pick<ChatModelResult, "done" | "cost" | "finish
 	message: ConversationMessage;
 }
 
-export interface ConversationMessage {
+export interface APIChatContent {
+	type: string;
+	text?: string;
+	image_url?: {
+		url: string;
+		detail?: string;
+	};
+}
+
+export interface APIChatMessage {
 	/** Author of the message */
 	role: "assistant" | "user" | "system";
 
+	/** Content of the message */
+	content: string | APIChatContent[];
+}
+
+export interface ConversationMessage {
 	/** Content of the message */
 	content: string;
 }
 
 export type ConversationUserMessage = ConversationMessage & {
-	role: "user";
+	/* Additional images to pass to the model */
+	images?: string[];
 }

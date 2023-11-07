@@ -45,15 +45,15 @@ export async function executeCommand(bot: Bot, interaction: Interaction) {
 		: true;
 
 	if (command.restrictions && !access) {
-		const allowed = restrictionTypes(command.restrictions);
+		const allowed = restrictionTypes(env, command.restrictions);
 
 		return void await interaction.reply({
 			embeds: {
-				description: `This command is ${allowed.map(a => `**${a.description}** ${a.emoji}`).join(", ")}.`,
+				description: { key: "restrictions.messages.command", data: { restrictions: allowed.map(a => `**${a.description}** ${a.emoji}`).join(", ") } },
 				color: EmbedColor.Yellow
 			},
 
-			ephemeral: true
+			ephemeral: true, env
 		});
 	}
 
