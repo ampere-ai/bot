@@ -19,10 +19,11 @@ import { ResponseError } from "../errors/response.js";
 import { handleError } from "../moderation/error.js";
 import { emojiToString } from "../utils/helpers.js";
 import { pickAdvertisement } from "../campaign.js";
-import { getSettingsValue } from "../settings.js";
+import { SettingsPlugins, getSettingsValue } from "../settings.js";
 import { buildHistory } from "./history.js";
 import { Emitter } from "../utils/event.js";
 import { charge } from "../premium.js";
+import { ToLocaleStrings } from "../i18n.js";
 
 interface ExecuteOptions {
 	bot: Bot;
@@ -45,14 +46,14 @@ export async function handleMessage(bot: Bot, message: Message) {
 	if (!mentions(bot, message)) return;
 
 	if (runningGenerations.has(message.author.id)) throw new ResponseError({
-		message: "You already have a request running; *wait for it to finish*", emoji: "😔"
+		message: "chat.errors.pending_request", emoji: "😔"
 	});
 
 	/* Input, to pass to the AI model */
-	const input: ConversationUserMessage = toInputMessage(message);
+	const input = toInputMessage(message);
 
 	if (input.content.length === 0) {
-		return await bot.helpers.addReaction(message.channelId, message.id, "👋");
+		return bot.helpers.addReaction(message.channelId, message.id, "👋");
 	}
 
 	const conversation: Conversation = await bot.db.fetch("conversations", message.author.id);
@@ -191,7 +192,7 @@ async function execute(options: ExecuteOptions): Promise<ConversationResult> {
 	/* The event emitter for the chat model, to send partial results */
 	const emitter = new Emitter<ChatModelResult>();
 
-	/* When the last event was sent, timestamp */
+	/* When the last event was sent */
 	let lastEvent = Date.now();
 
 	emitter.on(data => {
@@ -232,7 +233,8 @@ function formatResult(result: ChatModelResult, id: string): ConversationResult {
 	return {
 		id, done: result.done,
 		message: { content: result.content.trim() },
-		cost: result.cost, finishReason: result.finishReason
+		cost: result.cost, finishReason: result.finishReason,
+		tools: result.tools
 	};
 }
 
@@ -252,7 +254,7 @@ async function format(
 
 	let content = result.message.content.trim();
 
-	const components: ActionRow[] = [];
+	const components: ToLocaleStrings<ActionRow>[] = [];
 	const buttons: ButtonComponent[] = [];
 
 	const embeds: Embed[] = [];
@@ -281,6 +283,29 @@ async function format(
 		if (ad) {
 			components.push(ad.response.row);
 			embeds.push(ad.response.embed);
+		}
+
+		if (result.tools) {
+			components.push({
+				type: MessageComponentTypes.ActionRow,
+
+				components: [
+					{
+						type: MessageComponentTypes.Button,
+						label: { key: "chat.messages.plugins", data: { count: result.tools.length } },
+						customId: `settings:view:${SettingsLocation.User}:chat:plugin`,
+						style: ButtonStyles.Primary
+					},
+
+					...result.tools.map(t => ({
+						type: MessageComponentTypes.Button,
+						label: `chat.plugins.${t.id}.name`,
+						emoji: SettingsPlugins.find(p => p.id === t.id)!.emoji,
+						customId: randomUUID(), disabled: true,
+						style: ButtonStyles.Secondary
+					}))
+				] as any
+			});
 		}
 	}
 

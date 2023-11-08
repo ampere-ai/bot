@@ -16,7 +16,7 @@ export default createCommand({
 		});
 
 		if (runningGenerations.has(BigInt(conversation.id))) throw new ResponseError({
-			message: "reset.errors.pending", emoji: "😔"
+			message: "chat.errors.pending_request", emoji: "😔"
 		});
 
 		await resetConversation(bot, env, conversation);

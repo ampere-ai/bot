@@ -98,7 +98,7 @@ type MultipleChoiceSettingsOption<T> = BaseSettingsOption<T> & {
 
 	/* Minimum & maximum of options to pick */
 	min?: number;
-	max?: number;
+	max: number;
 }
 
 export interface SettingsCategory {

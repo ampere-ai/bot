@@ -16,6 +16,11 @@ import { resetConversation } from "./chat/mod.js";
 import { IMAGE_MODELS } from "./image/models.js";
 import { USER_LOCALES } from "./types/locale.js";
 
+export const SettingsPlugins = [
+	{ id: "weather", emoji: { name: "⛅" } },
+	{ id: "tenor", emoji: { name: "tenor", id: 1171918138963656724n } }
+];
+
 export const SettingsCategories: SettingsCategory[] = [
 	{
 		id: "general",
@@ -63,6 +68,20 @@ export const SettingsCategories: SettingsCategory[] = [
 					const conversation = await bot.db.get<Conversation>("conversations", env.user.id);
 					if (conversation) await resetConversation(bot, env, conversation);
 				}
+			},
+
+			{
+				id: "plugins",
+				emoji: "🚀", type: SettingsOptionType.MultipleChoices,
+				location: SettingsLocation.User,
+				max: 2, min: 0,
+				default: [],
+				
+				choices: SettingsPlugins.map(p => ({
+					name: `chat.plugins.${p.id}.name`,
+					description: `chat.plugins.${p.id}.desc`,
+					value: p.id, emoji: p.emoji
+				}))
 			},
 
 			{
@@ -247,9 +266,9 @@ export async function handleSettingsInteraction({ bot, args, env, interaction }:
 				});
 			}
 		} else if (option.type === SettingsOptionType.MultipleChoices) {
-			newValue = interaction.data?.values ?? currentValue;
+			newValue = (interaction.data?.values ?? currentValue) as string[];
 
-			for (const val of newValue as string[]) {
+			for (const val of newValue) {
 				const choice = option.choices.find(c => c.value === val)!;
 
 				if (choice.restrictions && !canUse(bot, env, choice.restrictions)) {

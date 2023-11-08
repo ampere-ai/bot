@@ -112,7 +112,7 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 				...input.images.map(url => ({ type: "image_url", image_url: { url, detail: "low" } }))
 			] });
 		} else {
-			messages.push({ ...input, role: "user" });
+			messages.push({ content: input.content, role: "user" });
 		}
 
 		/* Tokens used for the entire history & prompt */

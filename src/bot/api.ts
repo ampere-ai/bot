@@ -1,4 +1,5 @@
 import { fetchEventSource } from "@waylaidwanderer/fetch-event-source";
+import type { RequestMethods } from "@discordeno/rest";
 
 import type { ImageGenerationResult, ImageInterrogateResult } from "./types/image.js";
 import type { APIChatMessage } from "./types/conversation.js";
@@ -23,6 +24,9 @@ interface APIFetchOptions {
 
 	/** Raw binary data to pass to the API */
 	data?: Buffer;
+
+	/** Request method to use */
+	method?: RequestMethods;
 
 	/** Whether the response should be streaming */
 	stream?: boolean;
@@ -53,7 +57,7 @@ class BaseAPI {
 	}
 
 	protected async fetch<T = any>(
-		{ path, emitter, options, data: binary, stream }: APIFetchOptions
+		{ path, emitter, options, data: binary, method, stream }: APIFetchOptions
 	): Promise<T> {
 		const url = `${this.options.host}/${path}`;
 		const headers = this.headers();
@@ -62,7 +66,8 @@ class BaseAPI {
 			// eslint-disable-next-line no-async-promise-executor
 			return new Promise<T>(async (resolve, reject) => {
 				await fetchEventSource(url, {
-					method: "POST", headers,
+					method: method ?? "POST",
+					headers,
 
 					body: JSON.stringify({
 						...options, stream: true
@@ -121,6 +126,7 @@ class TextAPI extends BaseAPI {
 		messages: APIChatMessage[];
 		maxTokens?: number;
 		temperature?: number;
+		plugins: string[];
 		model?: string;
 	}, emitter: Emitter<ChatModelResult>): Promise<ChatModelResult> {
 		return this.fetch({
@@ -276,6 +282,15 @@ class OtherAPI extends BaseAPI {
 	}> {
 		return this.fetch({
 			path: "pay", options
+		});
+	}
+
+	public async plugins(): Promise<{
+		url: string;
+		id: string;
+	}> {
+		return this.fetch({
+			path: "other/models", method: "GET", options
 		});
 	}
 }

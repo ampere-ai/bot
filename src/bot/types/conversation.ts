@@ -1,4 +1,4 @@
-import type { ChatModelResult } from "../chat/models/mod.js";
+import type { ChatModelResult, ChatToolResult } from "../chat/models/mod.js";
 
 export interface Conversation {
 	/** ID of the conversation */
@@ -25,6 +25,9 @@ export type ConversationResult = Pick<ChatModelResult, "done" | "cost" | "finish
 	
 	/** The resulting message */
 	message: ConversationMessage;
+
+	/** Which tools were used */
+	tools?: ChatToolResult[];
 }
 
 export interface APIChatContent {
