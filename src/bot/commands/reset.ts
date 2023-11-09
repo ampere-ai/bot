@@ -8,7 +8,7 @@ import { EmbedColor } from "../utils/response.js";
 export default createCommand({
 	name: "reset",
 
-	handler: async ({ bot, env, interaction }) => {
+	handler: async ({ bot, interaction }) => {
 		const conversation = await bot.db.fetch<Conversation>("conversations", interaction.user.id);
 
 		if (conversation.history.length === 0) throw new ResponseError({
@@ -19,7 +19,7 @@ export default createCommand({
 			message: "chat.errors.pending_request", emoji: "😔"
 		});
 
-		await resetConversation(bot, env, conversation);
+		await resetConversation(bot, conversation);
 
 		return {
 			embeds: {

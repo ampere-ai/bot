@@ -353,21 +353,9 @@ async function format(
 }
 
 /** Reset the user's conversation. */
-export async function resetConversation(bot: Bot, env: DBEnvironment, conversation: Conversation) {
-	/* Save the previous conversation to a dataset entry, if it's worth it. */
-	if (conversation.history.length > 1) {
-		const personality = await getMarketplaceSetting<MarketplacePersonality>(bot, env, "personality");
-		const model = getModel(bot, env);
-
-		await bot.api.dataset.add("conversation", conversation.uuid, {
-			model: model.id, personality: personality.id,
-			history: conversation.history
-		});
-	}
-
-	/* Clear the history & generate a new unique dataset identifier. */
+export async function resetConversation(bot: Bot, conversation: Conversation) {
 	await bot.db.update("conversations", conversation.id, {
-		uuid: randomUUID(), history: []
+		history: []
 	});
 }
 

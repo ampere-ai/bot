@@ -61,7 +61,7 @@ export const SettingsCategories: SettingsCategory[] = [
 
 				handler: async (bot, env) => {
 					const conversation = await bot.db.get<Conversation>("conversations", env.user.id);
-					if (conversation) await resetConversation(bot, env, conversation);
+					if (conversation) await resetConversation(bot, conversation);
 				}
 			},
 

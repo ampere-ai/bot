@@ -1,4 +1,4 @@
-export type DatasetType = "conversation" | "image";
+export type DatasetType = "image";
 
 export interface DBDatasetEntry<T = any> {
 	/** Unique identifier of the entry */

@@ -4,9 +4,6 @@ export interface Conversation {
 	/** ID of the conversation */
 	id: string;
 
-	/** Unique ID of the *current* conversation, used for dataset saving */
-	uuid: string;
-
 	/** Interactions in the history */
 	history: ConversationInteraction[];
 }
