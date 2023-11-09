@@ -77,9 +77,7 @@ function transformCommand(command: Command): CreateApplicationCommand {
 /** Figure out whether a command counts as private. */
 export function isPrivateCommand(command: Command) {
 	if (!command.restrictions || command.restrictions.length === 0) return false;
-
-	return command.restrictions.includes(RestrictionName.Moderator)
-		|| command.restrictions.includes(RestrictionName.Developer);
+	return command.restrictions.includes(RestrictionName.Developer);
 }
 
 export async function registerCommands(bot: Bot) {

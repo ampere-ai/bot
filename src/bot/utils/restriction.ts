@@ -17,15 +17,11 @@ export interface RestrictionType {
 
 export enum RestrictionName {
 	/** Restricted to bot developers & the development server */
-	Developer = "dev",
-
-	/** Restricted to bot moderators */
-	Moderator = "mod"
+	Developer = "dev"
 }
 
 const RestrictionEmojiMap: Record<RestrictionName, string> = {
-	[RestrictionName.Developer]: "🔧",
-	[RestrictionName.Moderator]: "🛠️"
+	[RestrictionName.Developer]: "🔧"
 };
 
 /** Determine which restriction type applies to a user. */
