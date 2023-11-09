@@ -25,9 +25,6 @@ export interface HistoryData {
 	/** Maximum amount of tokens to generate */
 	maxTokens: number;
 
-	/** Amount of tokens used for the history */
-	usedTokens: number;
-
 	/** Which temperature to use; how creative the AI is */
 	temperature: number;
 
@@ -120,7 +117,7 @@ export function buildHistory({ bot, env, model, personality, conversation, input
 	);
 
 	return {
-		maxTokens: maxGenerationLength, usedTokens: tokens, temperature: 0.5, messages
+		maxTokens: maxGenerationLength, temperature: 0.5, messages
 	};
 }
 

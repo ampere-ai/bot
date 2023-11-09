@@ -89,8 +89,6 @@ app.use(express.json({
 	limit: "50mb"
 }));
 
-
-
 app.all("/*", async (req, res) => {
 	if (HTTP_AUTH !== req.headers.authorization) {
 		return res.status(401).json({ error: "Invalid authorization" });

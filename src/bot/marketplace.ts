@@ -444,7 +444,7 @@ export function localizeMarketplaceEntry(entry: DBMarketplaceEntry, env: DBEnvir
 
 /** Check whether a user can create & manage entries in the marketplace. */
 function canCreateInMarketplace(env: DBEnvironment) {
-	return env.user.roles.includes(DBRole.Tester);
+	return env.user.roles.includes(DBRole.Owner);
 }
 
 /** Sort the given marketplace entries accordingly. */

@@ -8,15 +8,13 @@ import type { Conversation, ConversationResult, ConversationUserMessage } from "
 import { MarketplaceIndicator, type MarketplacePersonality } from "../../db/types/marketplace.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
-import { infractionNotice, isBanned, moderate, moderationNotice } from "../moderation/mod.js";
 import { cooldownNotice, getCooldown, hasCooldown, setCooldown } from "../utils/cooldown.js";
 import { transformResponse, type MessageResponse, EmbedColor } from "../utils/response.js";
-import { type ModerationResult, ModerationSource } from "../moderation/types/mod.js";
 import { CHAT_MODELS, type ChatModel, type ChatModelResult } from "./models/mod.js";
 import { getMarketplaceSetting, localizeMarketplaceEntry } from "../marketplace.js";
 import { SettingsLocation } from "../types/settings.js";
 import { ResponseError } from "../errors/response.js";
-import { handleError } from "../moderation/error.js";
+import { handleError } from "../utils/error.js";
 import { emojiToString } from "../utils/helpers.js";
 import { getSettingsValue } from "../settings.js";
 import { ToLocaleStrings } from "../i18n.js";
@@ -69,10 +67,6 @@ export async function handleMessage(bot: Bot, message: Message) {
 		}, remaining);
 	}
 
-	if (isBanned(env.user)) return void await message.reply(
-		infractionNotice(env.user, isBanned(env.user)!)
-	);
-
 	const indicator = (await getMarketplaceSetting<MarketplaceIndicator>(bot, env, "indicator")).data;
 	const personality = await getMarketplaceSetting<MarketplacePersonality>(bot, env, "personality");
 	const model = getModel(bot, env);
@@ -93,7 +87,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 				queued = true;
 
 				const reply = await message.reply(await format({
-					env, model, personality, indicator, result, moderation
+					env, model, personality, indicator, result
 				}));
 
 				messageID = reply.id;
@@ -103,7 +97,7 @@ export async function handleMessage(bot: Bot, message: Message) {
 					message.channelId, messageID,
 					
 					transformResponse(await format({
-						env, model, personality, indicator, result, moderation
+						env, model, personality, indicator, result
 					}))
 				);
 			}
@@ -115,14 +109,6 @@ export async function handleMessage(bot: Bot, message: Message) {
 	/* Whether partial messages should be enabled */
 	const partial = getSettingsValue<boolean>(bot, env, "user", "chat:partial_messages");
 	if (partial) emitter.on(handler);
-
-	const moderation = await moderate({
-		bot, env, user: message.author, content: input.content, source: ModerationSource.ChatFromUser
-	});
-
-	if (moderation.blocked) return void await message.reply(
-		moderationNotice({ result: moderation, env })
-	);
 
 	/* Start the generation process. */
 	try {
@@ -150,12 +136,12 @@ export async function handleMessage(bot: Bot, message: Message) {
 				message.channelId, messageID,
 				
 				transformResponse(await format({
-					env, model, personality, indicator, result, moderation
+					env, model, personality, indicator, result
 				}))
 			);
 		} else {
 			await message.reply(await format({
-				env, model, personality, indicator, result, moderation
+				env, model, personality, indicator, result
 			}));
 		} 
 
@@ -234,10 +220,9 @@ function formatResult(result: ChatModelResult, id: string): ConversationResult {
 
 /** Format the chat model's response to be displayed nicely on Discord. */
 async function format(
-	{ env, result, model, personality, indicator, moderation }: Pick<ExecuteOptions, "env" | "model" | "personality"> & {
+	{ env, result, model, personality, indicator }: Pick<ExecuteOptions, "env" | "model" | "personality"> & {
 		result: ConversationResult;
 		indicator: ComponentEmoji;
-		moderation: ModerationResult;
 	}
 ) {
 	const response: MessageResponse = {
@@ -312,10 +297,6 @@ async function format(
 			});
 		}
 	}
-
-	if (result.done && moderation.flagged) embeds.push(
-		moderationNotice({ result: moderation, env, small: true }).embeds as Embed
-	);
 
 	if (result.finishReason === "length") {
 		embeds.push({

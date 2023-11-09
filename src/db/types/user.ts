@@ -1,5 +1,4 @@
 import type { DBSettings } from "../../bot/types/settings.js";
-import type { DBInfraction } from "./moderation.js";
 
 export interface DBUser {
 	/** ID of the user */
@@ -7,9 +6,6 @@ export interface DBUser {
 
 	/** When the user first interacted with the bot */
 	created: string;
-
-	/** Moderation history of the user */
-	infractions: DBInfraction[];
 
 	/** The user's configured settings */
 	settings: DBSettings;
@@ -22,11 +18,9 @@ export interface DBUser {
 }
 
 export enum DBRole {
-	Owner = "owner",
-	Moderator = "moderator",
-	Tester = "tester"
+	Owner = "owner"
 }
 
 export const USER_ROLES = [
-	DBRole.Owner, DBRole.Moderator, DBRole.Tester 
+	DBRole.Owner
 ];

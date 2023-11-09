@@ -3,7 +3,7 @@ import { bold } from "colorette";
 
 import type { DBEnvironment } from "../../db/types/mod.js";
 
-import { EmbedColor, MessageResponse, transformResponse } from "../utils/response.js";
+import { EmbedColor, MessageResponse, transformResponse } from "./response.js";
 import { MOD_CHANNELS } from "../../config.js";
 
 interface JSONError {

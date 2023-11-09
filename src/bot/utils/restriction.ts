@@ -33,8 +33,7 @@ function restrictions(bot: Bot, env: DBEnvironment): RestrictionName[] {
 	const types: RestrictionName[] = [];
 
 	if (env.user.roles.includes(DBRole.Owner)) types.push(RestrictionName.Developer);
-	if (env.user.roles.includes(DBRole.Moderator)) types.push(RestrictionName.Moderator);
-
+	
 	return types;
 }
 

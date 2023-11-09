@@ -1,7 +1,5 @@
 import { ApplicationCommandOptionTypes } from "@discordeno/bot";
 
-import { moderate, moderationNotice } from "../moderation/mod.js";
-import { ModerationSource } from "../moderation/types/mod.js";
 import { createCommand } from "../helpers/command.js";
 import { ResponseError } from "../errors/response.js";
 import { USER_LOCALES } from "../types/locale.js";
@@ -30,12 +28,6 @@ export default createCommand({
 	handler: async ({ bot, env, interaction, options: { content, to } }) => {
 		/* Which language to translate the given text into */
 		const language = USER_LOCALES.find(l => l.id === to) ?? USER_LOCALES[0];
-
-		const moderation = await moderate({
-			bot, env, user: interaction.user, content, source: ModerationSource.TranslationPrompt
-		});
-	
-		if (moderation.blocked) return moderationNotice({ result: moderation, env });
 		await interaction.deferReply();
 
 		try {

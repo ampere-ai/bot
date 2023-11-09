@@ -8,12 +8,8 @@ import imagine, { generateModelChoices } from "./imagine.js";
 import marketplace from "./marketplace.js";
 import translate from "./translate.js";
 import settings from "./settings.js";
-import pardon from "./mod/pardon.js";
 import roles from "./dev/roles.js";
-import info from "./mod/info.js";
-import warn from "./mod/warn.js";
 import reset from "./reset.js";
-import ban from "./mod/ban.js";
 import dev from "./dev/dev.js";
 import bot from "./bot.js";
 
@@ -21,7 +17,8 @@ import bot from "./bot.js";
 import { RestrictionName } from "../utils/restriction.js";
 
 export const COMMANDS: Command<any, any>[] = [
-	settings, reset, imagine, info, bot, ban, pardon, warn, dev, roles, translate, marketplace
+	settings, reset, imagine, bot, translate, marketplace,
+	dev, roles
 ];
 
 function transformCommand(command: Command): CreateApplicationCommand {
@@ -95,7 +92,7 @@ export async function registerCommands(bot: Bot) {
 			commands.filter(c => !isPrivateCommand(c)).map(transformCommand)
 		),
 
-		/* Moderation & developer commands */
+		/* Developer commands */
 		bot.rest.upsertGuildApplicationCommands(
 			MOD_GUILD_ID, commands.filter(c => isPrivateCommand(c)).map(transformCommand)
 		)

@@ -1,12 +1,12 @@
 import { ApplicationCommandOptionTypes } from "@discordeno/types";
 
 import { DBRole, DBUser, USER_ROLES } from "../../../db/types/user.js";
-import { toModerationTarget } from "../../moderation/tools.js";
 import { RestrictionName } from "../../utils/restriction.js";
 import { createCommand } from "../../helpers/command.js";
 import { ResponseError } from "../../errors/response.js";
 import { EmbedColor } from "../../utils/response.js";
 import { titleCase } from "../../utils/helpers.js";
+import { avatarUrl } from "@discordeno/utils";
 
 export default createCommand({
 	name: "roles",
@@ -44,8 +44,6 @@ export default createCommand({
 			message: { key: "mod.errors.invalid_target", data: { type: sub } }
 		});
 
-		const target = toModerationTarget(discordEntry);
-
 		if (sub === "add" && db.roles.includes(role)) throw new ResponseError({
 			message: { key: "mod.errors.already_has_role", data: { role: titleCase(role) } }
 		});
@@ -63,7 +61,7 @@ export default createCommand({
 		return {
 			embeds: {
 				description: { key: `mod.messages.role.${sub}`, data: { name: titleCase(role) } },
-				author: { name: target.name, iconUrl: target.icon },
+				author: { name: discordEntry.username, iconUrl: avatarUrl(discordEntry.id, discordEntry.discriminator, { avatar: discordEntry.avatar, format: "png" }) },
 				color: EmbedColor.Yellow
 			},
 

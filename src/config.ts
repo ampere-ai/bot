@@ -11,8 +11,7 @@ export const MOD_GUILD_ID = BigInt(process.env.MOD_GUILD_ID!);
 
 /** Various moderation log channels */
 export const MOD_CHANNELS = {
-	ERRORS: BigInt(process.env.MOD_CHANNEL_ERRORS_ID!),
-	LOGS: BigInt(process.env.MOD_CHANNEL_LOGS_ID!)
+	ERRORS: BigInt(process.env.MOD_CHANNEL_ERRORS_ID!)
 };
 
 /** Load distribution */

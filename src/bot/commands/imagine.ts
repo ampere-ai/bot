@@ -12,12 +12,10 @@ import { fetchMarketplaceEntry, getMarketplaceSetting } from "../marketplace.js"
 import { type ImageGenerationResult, IMAGE_SAMPLERS } from "../types/image.js";
 import { DISCORD_LOCALE_MAP, USER_LOCALES } from "../types/locale.js";
 import { EmbedColor, MessageResponse } from "../utils/response.js";
-import { moderate, moderationNotice } from "../moderation/mod.js";
-import { ModerationSource } from "../moderation/types/mod.js";
 import { emojiToString, truncate } from "../utils/helpers.js";
 import { ResponseError } from "../errors/response.js";
 import { createCommand } from "../helpers/command.js";
-import { handleError } from "../moderation/error.js";
+import { handleError } from "../utils/error.js";
 import { getSettingsValue } from "../settings.js";
 import { IMAGE_MODELS } from "../image/models.js";
 import { BRANDING_COLOR } from "../../config.js";
@@ -129,12 +127,6 @@ export default createCommand({
 				model: model.name, ...model.settings.forcedSize
 			} }
 		});
-
-		const moderation = await moderate({
-			bot, env, user: interaction.user, content: prompt, source: ModerationSource.ImagePrompt
-		});
-
-		if (moderation.blocked) return moderationNotice({ result: moderation, env });
 
 		try {
 			await start({
