@@ -15,14 +15,8 @@ export default createCommand({
 	restrictions: [ RestrictionName.Moderator ],
 
 	sub: {
-		user: {
-			description: "Revoke a user's ban from the bot",
-
-		},
-
-		guild: {
-			description: "Revoke a server's ban from the bot"
-		}
+		user: {},
+		guild: {}
 	},
 
 	options: {

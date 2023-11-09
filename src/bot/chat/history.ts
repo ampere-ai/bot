@@ -36,30 +36,16 @@ export interface HistoryData {
 }
 
 const MAX_LENGTH = {
-	input: {
-		user: 600,
-		voter: 650,
-		subscription: 900,
-		plan: 1000
-	},
-
-	output: {
-		user: 300,
-		voter: 350,
-		subscription: 650,
-		plan: 1000
-	}
+	input: 800,
+	output: 600
 };
 
 export function buildHistory({ bot, env, model, personality, conversation, input }: BuildHistoryOptions): HistoryData {
 	let messages: APIChatMessage[] = [];
 	let tokens = 0;
-
-	const type = bot.db.type(env);
 	
-	/** TODO: Limits for pay-as-you-go members */
-	let maxGenerationLength = Math.min(MAX_LENGTH.output[type], model.maxTokens);
-	const maxContextLength = Math.min(MAX_LENGTH.input[type], model.maxTokens);
+	let maxGenerationLength = MAX_LENGTH.output;
+	const maxContextLength = MAX_LENGTH.input;
 
 	if (getChatMessageLength(input) > maxContextLength) {
 		throw new ChatError(ChatErrorType.Length);

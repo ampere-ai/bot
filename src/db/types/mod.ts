@@ -2,15 +2,14 @@ import type { PostgrestError } from "@supabase/supabase-js";
 
 import type { Conversation } from "../../bot/types/conversation.js";
 import type { DBDatasetEntry } from "./dataset.js";
-import type { DBCampaign } from "./campaign.js";
 import type { DBGuild } from "./guild.js";
 import type { DBImage } from "./image.js";
 import type { DBUser } from "./user.js";
 
-export type CollectionName = "users" | "guilds" | "conversations" | "campaigns" | "datasets" | "marketplace";
-export const CollectionNames: CollectionName[] = [ "users", "guilds", "conversations", "campaigns", "datasets", "marketplace" ];
+export type CollectionName = "users" | "guilds" | "conversations" | "datasets" | "marketplace";
+export const CollectionNames: CollectionName[] = [ "users", "guilds", "conversations", "datasets", "marketplace" ];
 
-export type DBType = DBUser | DBGuild | Conversation | DBImage | DBCampaign | DBDatasetEntry;
+export type DBType = DBUser | DBGuild | Conversation | DBImage | DBDatasetEntry;
 
 export type DBObject = {
 	id: string;

@@ -1,12 +1,12 @@
+import { Locales, Localization } from "@discordeno/types";
 import i18next, { TOptions, i18n } from "i18next";
 import { constants } from "fs";
 import fs from "fs/promises";
 
+import { DISCORD_LOCALE_MAP, USER_LOCALES } from "./types/locale.js";
 import { DBEnvironment } from "../db/types/mod.js";
 import { getSettingsValue } from "./settings.js";
-import { DISCORD_LOCALE_MAP, USER_LOCALES } from "./types/locale.js";
 import { bot } from "./mod.js";
-import { Locales, Localization } from "@discordeno/types";
 
 export type LocaleString = {
 	key: string;
@@ -74,7 +74,7 @@ export function translateObject<T extends {[key: string]: any } | LocaleString |
 		const translated: any = {};
 
 		for (const key of Object.keys(obj)) {
-			translated[key] = key !== "customId" && key !== "url" && key !== "id" && obj[key] !== "premium"
+			translated[key] = key !== "customId" && key !== "url" && key !== "id"
 				? translateObject(obj[key], env)
 				: obj[key];
 		}

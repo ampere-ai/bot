@@ -83,18 +83,20 @@ type StringSettingsOption = BaseSettingsOption<string> & {
 	maxLength?: number;
 }
 
-type ChoiceSettingsOption<T> = BaseSettingsOption<T | null> & {
-	type: SettingsOptionType.Choices;
-
+type BaseChoiceSettingsOption<T> = BaseSettingsOption<T | null> & {
 	/** Choices for the option */
 	choices: SettingsOptionChoice<T>[];
+
+	/** Handler, to fetch all of the available choices at runtime */
+	fetch?: (bot: Bot) => Promise<SettingsOptionChoice<T>[]> | SettingsOptionChoice<T>[];
 }
 
-type MultipleChoiceSettingsOption<T> = BaseSettingsOption<T> & {
-	type: SettingsOptionType.MultipleChoices;
+type ChoiceSettingsOption<T> = BaseChoiceSettingsOption<T | null> & {
+	type: SettingsOptionType.Choices;
+}
 
-	/** Choices for the option */
-	choices: SettingsOptionChoice<T>[];
+type MultipleChoiceSettingsOption<T> = BaseChoiceSettingsOption<T> & {
+	type: SettingsOptionType.MultipleChoices;
 
 	/* Minimum & maximum of options to pick */
 	min?: number;

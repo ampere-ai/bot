@@ -18,14 +18,12 @@ import { emojiToString, truncate } from "../utils/helpers.js";
 import { ResponseError } from "../errors/response.js";
 import { createCommand } from "../helpers/command.js";
 import { handleError } from "../moderation/error.js";
-import { pickAdvertisement } from "../campaign.js";
 import { getSettingsValue } from "../settings.js";
 import { IMAGE_MODELS } from "../image/models.js";
 import { BRANDING_COLOR } from "../../config.js";
 import { mergeImages } from "../utils/image.js";
 import { hasTranslation, t } from "../i18n.js";
 import { Emitter } from "../utils/event.js";
-import { charge } from "../premium.js";
 
 interface ImageStartOptions {
 	bot: Bot;
@@ -63,12 +61,7 @@ const DEFAULT_GEN_OPTIONS = {
 
 export default createCommand({
 	name: "imagine",
-
-	cooldown: {
-		user: 1.75 * 60 * 1000,
-		voter: 1.5 * 60 * 1000,
-		subscription: 30 * 1000
-	},
+	cooldown: 30 * 1000,
 
 	options: {
 		prompt: {
@@ -305,12 +298,6 @@ async function start(options: ImageStartOptions) {
 		message: "images.errors.all_nsfw", emoji: "🔞"
 	});
 
-	await charge(bot, env, {
-		type: "image", used: result.cost ?? 0, data: {
-			model: model.id
-		}
-	});
-
 	/* Add the image request to the dataset. */
 	await bot.api.dataset.add<DBImage>("image", result.id, {
 		cost: result.cost, model: model.id,
@@ -328,19 +315,9 @@ async function start(options: ImageStartOptions) {
 		);
 	}));
 
-	const response = await message.edit(await formatResult({
+	await message.edit(await formatResult({
 		...options, result, size
 	}));
-
-	/* Advertisement to display */
-	const ad = await pickAdvertisement(env);
-
-	if (ad) {
-		await response.reply({
-			components: [ ad.response.row ],
-			embeds: ad.response.embed
-		});
-	}
 }
 
 /** Format the image generation result into a clean embed. */
@@ -372,7 +349,7 @@ async function formatResult(options: ImageFormatOptions & ImageStartOptions): Pr
 		},
 
 		components: buildToolbar({ action, result }),
-		file: { name: `${result.id}.png`, blob: grid }
+		files: [ { name: `${result.id}.png`, blob: grid } ]
 	};
 }
 

@@ -5,12 +5,6 @@ export default createChatModel({
 	emoji: { name: "meta", id: 1151164065209651280n },
 
 	maxTokens: 2048,
-	
-	cooldown: {
-		user: 60 * 1000,
-		voter: 45 * 1000,
-		subscription: 10 * 1000
-	},
 
 	initialPrompt: {
 		role: "system",

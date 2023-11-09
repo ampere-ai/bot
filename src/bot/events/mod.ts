@@ -5,7 +5,6 @@ import { bot } from "../mod.js";
 
 import interactionCreate from "./interaction/mod.js";
 import messageCreate from "./message/create.js";
-import guildCreate from "./guild/create.js";
 
 export interface Event<T extends keyof EventHandlers> {
     name: T;
@@ -13,7 +12,7 @@ export interface Event<T extends keyof EventHandlers> {
 }
 
 const EVENTS = [
-	interactionCreate, messageCreate, guildCreate
+	interactionCreate, messageCreate
 ];
 
 export function setupEvents() {

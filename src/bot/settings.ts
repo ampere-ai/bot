@@ -16,11 +16,6 @@ import { resetConversation } from "./chat/mod.js";
 import { IMAGE_MODELS } from "./image/models.js";
 import { USER_LOCALES } from "./types/locale.js";
 
-export const SettingsPlugins = [
-	{ id: "weather", emoji: { name: "⛅" } },
-	{ id: "tenor", emoji: { name: "tenor", id: 1171918138963656724n } }
-];
-
 export const SettingsCategories: SettingsCategory[] = [
 	{
 		id: "general",
@@ -76,12 +71,15 @@ export const SettingsCategories: SettingsCategory[] = [
 				location: SettingsLocation.User,
 				max: 2, min: 0,
 				default: [],
-				
-				choices: SettingsPlugins.map(p => ({
-					name: `chat.plugins.${p.id}.name`,
-					description: `chat.plugins.${p.id}.desc`,
-					value: p.id, emoji: p.emoji
-				}))
+				choices: [],
+
+				fetch: bot => {
+					return bot.dynamic.plugins.map(p => ({
+						name: `chat.plugins.${p.id}.name`,
+						description: `chat.plugins.${p.id}.desc`,
+						value: p.id, emoji: p.emoji
+					}));
+				}
 			},
 
 			{
@@ -106,49 +104,6 @@ export const SettingsCategories: SettingsCategory[] = [
 				choices: IMAGE_MODELS.map(m => ({
 					name: m.name, description: `image.models.${m.id}`, value: m.id
 				}))
-			}
-		]
-	},
-
-	{
-		id: "premium",
-		emoji: "✨",
-		
-		options: [
-			{
-				id: "type_priority", emoji: "✨",
-				location: SettingsLocation.Both, default: "plan",
-				type: SettingsOptionType.Choices,
-
-				choices: [
-					{
-						name: "premium.settings.payg_priority.name", emoji: "📊", value: "plan",
-						description: "premium.settings.payg_priority.desc"
-					},
-		
-					{
-						name: "premium.settings.subscription_priority.name", emoji: "💸", value: "subscription",
-						description: "premium.settings.subscription_priority.name"
-					}
-				]
-			},
-
-			{
-				id: "location_priority", emoji: "✨",
-				location: SettingsLocation.User, default: "guild",
-				type: SettingsOptionType.Choices,
-
-				choices: [
-					{
-						name: "premium.settings.guild_priority.name", emoji: "☎️", value: "guild",
-						description: "premium.settings.guild_priority.desc"
-					},
-		
-					{
-						name: "premium.settings.user_priority.name", emoji: "👤", value: "user",
-						description: "premium.settings.user_priority.desc"
-					}
-				]
 			}
 		]
 	}
@@ -185,6 +140,18 @@ export function updateSettings<T extends DBUser | DBGuild>(
 	return bot.db.update<any>(`${location}s`, env[location]!, {
 		settings: { ...env.user.settings, ...changes }
 	});
+}
+
+/** Load the choices of all dynamic settings. */
+export async function fetchSettings(bot: Bot) {
+	for (const category of SettingsCategories) {
+		for (const option of category.options) {
+			if (option.type !== SettingsOptionType.Choices && option.type !== SettingsOptionType.MultipleChoices) continue;
+			if (!option.fetch) continue;
+
+			option.choices = await option.fetch(bot);
+		}
+	}
 }
 
 export function getSettingsValue<T = string | number | boolean>(

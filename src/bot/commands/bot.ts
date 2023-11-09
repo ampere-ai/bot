@@ -1,9 +1,8 @@
-import { ButtonStyles, MessageComponentTypes } from "@discordeno/types";
 import { memoryUsage } from "process";
 
 import type { ManagerHTTPWorkerInfoResponse } from "../../gateway/types/manager.js";
 
-import { BRANDING_COLOR, GATEWAY_URL, HTTP_AUTH, SHARDS_PER_WORKER, SUPPORT_INVITE } from "../../config.js";
+import { BRANDING_COLOR, GATEWAY_URL, HTTP_AUTH, SHARDS_PER_WORKER } from "../../config.js";
 import { createCommand } from "../helpers/command.js";
 
 export default createCommand({
@@ -70,35 +69,6 @@ export default createCommand({
 					}
 				]
 			},
-
-			components: [
-				{
-					type: MessageComponentTypes.ActionRow,
-
-					components: [
-						{
-							type: MessageComponentTypes.Button,
-							style: ButtonStyles.Link,
-							label: "info.buttons.invite",
-							url: `https://discord.com/oauth2/authorize?client_id=${bot.id}&permissions=281357371712&scope=bot%20applications.commands`
-						},
-
-						{
-							type: MessageComponentTypes.Button,
-							style: ButtonStyles.Link,
-							label: "info.buttons.support",
-							url: `https://${SUPPORT_INVITE}`
-						},
-
-						{
-							type: MessageComponentTypes.Button,
-							style: ButtonStyles.Link,
-							label: "GitHub",
-							url: "https://github.com/ampere-ai"
-						}
-					]
-				}
-			],
 
 			ephemeral: true
 		};

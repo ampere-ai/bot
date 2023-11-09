@@ -6,25 +6,22 @@ import { MOD_GUILD_ID } from "../../config.js";
 
 import imagine, { generateModelChoices } from "./imagine.js";
 import marketplace from "./marketplace.js";
-import campaign from "./mod/campaigns.js";
 import translate from "./translate.js";
 import settings from "./settings.js";
 import pardon from "./mod/pardon.js";
-import premium from "./premium.js";
 import roles from "./dev/roles.js";
 import info from "./mod/info.js";
 import warn from "./mod/warn.js";
 import reset from "./reset.js";
 import ban from "./mod/ban.js";
 import dev from "./dev/dev.js";
-import vote from "./vote.js";
 import bot from "./bot.js";
 
 /* The order is important; don't try to fix it */
 import { RestrictionName } from "../utils/restriction.js";
 
 export const COMMANDS: Command<any, any>[] = [
-	settings, reset, imagine, premium, info, bot, ban, pardon, warn, dev, roles, translate, vote, marketplace, campaign
+	settings, reset, imagine, info, bot, ban, pardon, warn, dev, roles, translate, marketplace
 ];
 
 function transformCommand(command: Command): CreateApplicationCommand {

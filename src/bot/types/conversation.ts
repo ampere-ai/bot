@@ -50,6 +50,9 @@ export interface APIChatMessage {
 export interface ConversationMessage {
 	/** Content of the message */
 	content: string;
+
+	/** Attached images in the message, Base64 data */
+	images?: string[];
 }
 
 export type ConversationUserMessage = ConversationMessage & {

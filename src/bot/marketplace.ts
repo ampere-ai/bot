@@ -243,8 +243,6 @@ export async function handleMarketplaceInteraction({ bot, interaction, env, args
 
 /** Build an overview of all marketplace entries, paginated. */
 export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, options: MarketplaceFilterOptions): Promise<MessageResponse> {
-	const canCreate = canCreateInMarketplace(env);
-
 	const map = await getEntries(bot, options);
 	const pages = await pageCount(map);
 
@@ -297,7 +295,7 @@ export async function buildMarketplaceOverview(bot: Bot, env: DBEnvironment, opt
 		]
 	});
 
-	if (canCreate) rows[rows.length - 1].components.unshift({
+	if (canCreateInMarketplace(env)) rows[rows.length - 1].components.unshift({
 		type: MessageComponentTypes.Button,
 		style: ButtonStyles.Primary,
 		emoji: { name: "create", id: 1153016555374911618n },

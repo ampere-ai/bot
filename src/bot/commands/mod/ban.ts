@@ -34,13 +34,8 @@ export default createCommand({
 	restrictions: [ RestrictionName.Moderator ],
 
 	sub: {
-		user: {
-			description: "Ban a user from using the bot",
-		},
-
-		guild: {
-			description: "Ban a server from using the bot"
-		}
+		user: {},
+		guild: {}
 	},
 
 	options: {

@@ -11,12 +11,10 @@ import { EmbedColor } from "../utils/response.js";
 import marketplace from "./marketplace.js";
 import moderation from "./moderation.js";
 import settings from "./settings.js";
-import campaign from "./campaign.js";
-import premium from "./premium.js";
 import imagine from "./imagine.js";
 
 export const HANDLERS: InteractionHandler[] = [
-	settings, premium, campaign, imagine, moderation, marketplace
+	settings, imagine, moderation, marketplace
 ];
 
 export const INTERACTION_ID_SEP = ":";
@@ -31,7 +29,6 @@ export async function handleInteraction(bot: Bot, interaction: Interaction) {
 	if (!handler) return;
 
 	const env = await bot.db.env(interaction.user.id, interaction.guildId);
-	const type = bot.db.type(env);
 
 	if (isBanned(env.user)) return void await interaction.reply(
 		infractionNotice(env.user, isBanned(env.user)!)
@@ -46,7 +43,7 @@ export async function handleInteraction(bot: Bot, interaction: Interaction) {
 				interaction.deleteReply().catch(() => {});
 			}, remaining);
 		} else {
-			if (handler.cooldown[type]) setCooldown(bot, env, interaction, handler.cooldown[type]!);
+			if (handler.cooldown) setCooldown(env, interaction, handler.cooldown);
 		}
 	}
 

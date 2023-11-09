@@ -9,8 +9,8 @@ import type { DBUser } from "../../db/types/user.js";
 
 import { EmbedColor, transformResponse, type MessageResponse } from "../utils/response.js";
 import { buildInfractionInfo, buildModerationLogs } from "./tools.js";
-import { MOD_CHANNELS, SUPPORT_INVITE } from "../../config.js";
 import { applyFilters, executeFilters } from "./filters.js";
+import { MOD_CHANNELS } from "../../config.js";
 import { t } from "../i18n.js";
 
 /** Moderate the given prompt. */
@@ -56,7 +56,6 @@ export async function moderate(options: ModerationOptions) {
 export function moderationNotice({ result, env, small }: ModerationNoticeOptions): MessageResponse {
 	const embed: Embed = {
 		title: small ? undefined : "mod.flags.block 🤨",
-		footer: small ? undefined : { text: SUPPORT_INVITE },
 		color: result.blocked ? EmbedColor.Red : EmbedColor.Orange 
 	};
 
@@ -88,7 +87,7 @@ export async function giveInfraction<T extends DBGuild | DBUser>(bot: Bot, entry
 		await sendInfractionDM(bot, entry, data);
 	}
 
-	return bot.db.update<T>((entry as DBUser).voted !== undefined ? "users" : "guilds", entry, {
+	return bot.db.update<T>((entry as DBUser).roles !== undefined ? "users" : "guilds", entry, {
 		infractions: [
 			...entry.infractions, data
 		]
@@ -136,7 +135,7 @@ export function isBanned(entry: DBGuild | DBUser) {
 
 export async function sendInfractionDM(bot: Bot, entry: DBGuild | DBUser, infraction: DBInfraction) {
 	/* TODO: DM the guild owner about the infraction */
-	if ((entry as DBUser).voted === undefined) return;
+	if ((entry as DBUser).roles === undefined) return;
 
 	/* ID of the user to DM */
 	const id = entry.id;
@@ -152,15 +151,13 @@ export async function sendInfractionDM(bot: Bot, entry: DBGuild | DBUser, infrac
 
 /** Display an infraction nicely to the user. */
 export function infractionNotice(entry: DBGuild | DBUser, infraction: DBInfraction): MessageResponse {
-	const location = (entry as DBUser).voted !== undefined ? "user" : "guild";
+	const location = (entry as DBUser).roles !== undefined ? "user" : "guild";
 
 	if (infraction.type === "ban") {
 		return {
 			embeds: {
 				title: `${location === "guild" ? "This server was" : "You were"} **${infraction.until ? "temporarily" : "permanently"}** banned from using the bot 😔`,
-				description: `_If you want to appeal or have questions about this ban, join our **[support server](https://${SUPPORT_INVITE})**_.`,
 				fields: buildInfractionInfo(infraction).fields,
-				footer: { text: SUPPORT_INVITE },
 				color: EmbedColor.Red
 			},
 
@@ -171,9 +168,7 @@ export function infractionNotice(entry: DBGuild | DBUser, infraction: DBInfracti
 		return {
 			embeds: {
 				title: `${location === "guild" ? "Your server's" : "Your"} ban was revoked & you can use the bot again 🙌`,
-				description: `_If you have any further questions regarding this matter, join our **[support server](https://${SUPPORT_INVITE})**_.`,
 				fields: buildInfractionInfo(infraction).fields,
-				footer: { text: SUPPORT_INVITE },
 				color: EmbedColor.Yellow
 			},
 
@@ -186,7 +181,6 @@ export function infractionNotice(entry: DBGuild | DBUser, infraction: DBInfracti
 				title: "mod.flags.warn",
 				description: `${location === "guild" ? "This server" : "You"} received a warning, as a consequence of ${location === "guild" ? "the" : "your"} interactions with our bot. *This is only a warning, you can continue to use the bot. If ${location === "guild" ? "your server" : "you"} however ${location === "guild" ? "keeps" : "keep"} violating our **usage policies**, we may have to take further moderative actions*.`,
 				fields: buildInfractionInfo(infraction).fields,
-				footer: { text: SUPPORT_INVITE },
 				color: EmbedColor.Orange
 			},
 

@@ -7,19 +7,21 @@ import { GatewayMessage } from "../gateway/types/worker.js";
 
 import { setupTransformers } from "./transformers/mod.js";
 import { registerCommands } from "./commands/mod.js";
-import { setupPaymentHandler } from "./premium.js";
-import { fetchCampaigns } from "./campaign.js";
+import { fetchSettings } from "./settings.js";
 import { setupEvents } from "./events/mod.js";
-import { setupVoteHandler } from "./vote.js";
 import { setupI18N } from "./i18n.js";
 import { createAPI } from "./api.js";
 import { createDB } from "./db.js";
 
 async function customizeBot(bot: Bot) {
 	bot.logger = createLogger({ name: "[BOT]" });
-	bot.db = await createDB(bot);
+	bot.db = await createDB();
 	bot.api = createAPI();
 	bot.rabbitmq = new RabbitMQ.Connection(RABBITMQ_URI);
+
+	bot.dynamic = {
+		plugins: await bot.api.other.plugins()
+	};
 
 	return bot;
 }
@@ -47,10 +49,7 @@ async function handleGatewayMessage({ payload, shard }: GatewayMessage) {
 
 await setupI18N();
 await registerCommands(bot);
-await fetchCampaigns();
-
-setupPaymentHandler(bot);
-setupVoteHandler(bot);
+await fetchSettings(bot);
 
 setupTransformers();
 setupEvents();

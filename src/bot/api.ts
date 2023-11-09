@@ -268,29 +268,12 @@ class StorageAPI extends BaseAPI {
 }
 
 class OtherAPI extends BaseAPI {
-	public async pay(options: {
-		user: {
-			name: string;
-			id: string;
-		};
-		guild?: string;
-		type: string;
-		credits?: number;
-	}): Promise<{
-		url: string;
-		id: string;
-	}> {
-		return this.fetch({
-			path: "pay", options
-		});
-	}
-
 	public async plugins(): Promise<{
-		url: string;
 		id: string;
-	}> {
+		emoji: string;
+	}[]> {
 		return this.fetch({
-			path: "other/models", method: "GET", options
+			path: "other/plugins", method: "GET"
 		});
 	}
 }

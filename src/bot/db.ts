@@ -1,14 +1,12 @@
 import RabbitMQ from "rabbitmq-client";
-import { Bot } from "@discordeno/bot";
 
 import type { CollectionName, DBEnvironment, DBObject, DBQueueResult, DBRequestAll, DBRequestCount, DBRequestData, DBRequestFetch, DBRequestGet, DBRequestType, DBRequestUpdate, DBResponse, DBType } from "../db/types/mod.js";
 import type { DBGuild } from "../db/types/guild.js";
+import type { DBUser } from "../db/types/user.js";
 
-import { DBRole, DBUserType, type DBUser } from "../db/types/user.js";
-import { getSettingsValue } from "./settings.js";
 import { RABBITMQ_URI } from "../config.js";
 
-export async function createDB(bot: Bot) {
+export async function createDB() {
 	const connection = new RabbitMQ.Connection(RABBITMQ_URI);
 
 	const rpc = connection.createRPCClient({
@@ -74,73 +72,9 @@ export async function createDB(bot: Bot) {
 		return execute("flush");
 	};
 
-	const premium = (env: DBEnvironment): { type: "subscription" | "plan", location: "guild" | "user" } | null => {
-		/* In which order to use the plans in */
-		const locationPriority: "guild" | "user" = getSettingsValue(bot, env, "user", "premium:location_priority");
-
-		/* Whether to prefer the Premium of the guild or user itself */
-		const typePriority: "plan" | "subscription" = getSettingsValue(
-			bot, env, env.guild ? locationPriority : "user", "premium:type_priority"
-		);
-
-		const checks: Record<typeof typePriority, (entry: DBGuild | DBUser) => boolean> = {
-			subscription: entry => {
-				/* Give all moderators access to Premium. */
-				if (
-					(entry as DBUser).roles && (entry as DBUser).roles.includes(DBRole.Moderator)
-				) return true;
-
-				return entry.subscription !== null && Date.now() < entry.subscription.expires;
-			},
-
-			plan: entry => entry.plan !== null && entry.plan.total > entry.plan.used
-		};
-
-		const locations: typeof locationPriority[] = [ "guild", "user" ];
-		const types: typeof typePriority[] = [ "plan", "subscription" ];
-
-		if (locationPriority !== locations[0]) locations.reverse();
-		if (typePriority !== types[0]) types.reverse();
-
-		for (const type of types) {
-			for (const location of locations) {
-				const entry = env[location];
-				if (!entry) continue;
-
-				if (checks[type](entry)) return {
-					location, type
-				};
-			}
-		}
-
-		return null;
-	};
-
-	const voted = (user: DBUser) => {
-		if (!user.voted) return null;
-		if (Date.now() - Date.parse(user.voted) > 12.5 * 60 * 60 * 1000) return null;
-
-		return Date.parse(user.voted);
-	};
-
-	const types = (env: DBEnvironment): DBUserType[] => {
-		const types: DBUserType[] = [];
-		const p = premium(env);
-
-		if (p) {
-			if (p.type === "subscription") types.push(DBUserType.PremiumSubscription);
-			else types.push(DBUserType.PremiumPlan);
-		}
-
-		if (voted(env.user)) types.push(DBUserType.Voter);
-		types.push(DBUserType.User);
-		
-		return types;
-	};
-
 	return { 
-		rpc, execute, get, fetch, update, remove, all, count, clearCache, flush,
-		premium, voted, types,
+		rpc, execute, get, fetch, update, remove,
+		all, count, clearCache, flush,
 
 		env: async (user: bigint, guild?: bigint): Promise<DBEnvironment> => {
 			const data: Partial<DBEnvironment> = {};
@@ -163,10 +97,6 @@ export async function createDB(bot: Bot) {
 			]);
 
 			return data as DBEnvironment;
-		},
-
-		type: (env: DBEnvironment): DBUserType => {
-			return types(env)[0];
 		}
 	};
 }

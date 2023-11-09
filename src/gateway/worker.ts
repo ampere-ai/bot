@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { ActivityTypes, DiscordGatewayPayload, DiscordGuild, DiscordMessage, DiscordReady, DiscordUnavailableGuild } from "@discordeno/types";
+import { DiscordGatewayPayload, DiscordGuild, DiscordMessage, DiscordReady, DiscordUnavailableGuild } from "@discordeno/types";
 import { Collection, createLogger, snakelize } from "@discordeno/utils";
 import { parentPort, workerData } from "worker_threads";
 import { DiscordenoShard } from "@discordeno/gateway";
@@ -125,15 +125,9 @@ parent.on("message", async (message: WorkerMessage) => {
 				});
 
 			shard.makePresence = async () => ({
-				status: "online",
+				status: "dnd",
 				since: null,
-	
-				activities: [
-					{
-						type: ActivityTypes.Game,
-						name: "with AI » @Ampere"
-					}
-				]
+				activities: []
 			});
 
 			shards.set(shard.id, shard);

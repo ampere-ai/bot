@@ -1,7 +1,6 @@
 import { RestrictionName } from "../../utils/restriction.js";
 import { createCommand } from "../../helpers/command.js";
 import { EmbedColor } from "../../utils/response.js";
-import { fetchCampaigns } from "../../campaign.js";
 
 export default createCommand({
 	name: "dev",
@@ -15,7 +14,6 @@ export default createCommand({
 	handler: async ({ bot, sub }) => {
 		if (sub === "refresh_cache") {
 			await bot.db.clearCache();
-			await fetchCampaigns();
 		} else if (sub === "flush") {
 			const result = await bot.db.flush();
 

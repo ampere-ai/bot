@@ -4,8 +4,6 @@ import type { RestrictionName } from "../utils/restriction.js";
 import type { MessageResponse } from "../utils/response.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
-import { DBUserType } from "../../db/types/user.js";
-
 export interface SubCommand {}
 
 interface BaseCommandOption<T extends ApplicationCommandOptionTypes> {
@@ -53,7 +51,7 @@ type OptionsWithRequiredProperty<T extends Record<string, BaseCommandOption<any>
 type ExtractSubCommands<T extends Record<string, SubCommand>> = 
 	T extends Record<string, never> ? undefined : keyof T;
 
-export type CommandCooldown = Partial<Record<DBUserType, number>>;
+export type CommandCooldown = number;
 
 interface CommandHandlerOptions<
 	Options extends Record<string, CommandOption>,

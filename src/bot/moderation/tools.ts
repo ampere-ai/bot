@@ -186,8 +186,7 @@ export async function buildModerationOverview(bot: Bot, location: "user" | "guil
 		const user = db as DBUser;
 
 		fields.push(
-			{ name: "mod.info.roles ⚒️", value: [ ...user.roles, "*User*" ].map(role => `**${titleCase(role)}**`).join(", ") },
-			{ name: "mod.info.voted 📩", value: user.voted ? `<t:${Math.round(Date.parse(user.voted) / 1000)}:R>` : "❌" },
+			{ name: "mod.info.roles ⚒️", value: [ ...user.roles, "*User*" ].map(role => `**${titleCase(role)}**`).join(", ") }
 		);
 	} else {
 		const guild = entry as Guild;

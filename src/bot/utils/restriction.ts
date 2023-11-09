@@ -11,7 +11,7 @@ export interface RestrictionType {
 	/** Emoji of the restriction */
 	emoji: string;
 
-	/** Description of the restriction, e.g. "premium-only" */
+	/** Description of the restriction, e.g. "developer-only" */
 	description: string;
 }
 
@@ -19,25 +19,13 @@ export enum RestrictionName {
 	/** Restricted to bot developers & the development server */
 	Developer = "dev",
 
-	/** Restricted to Premium members of both types */
-	Premium = "premium",
-
 	/** Restricted to bot moderators */
-	Moderator = "mod",
-
-	/** Restricted to Premium pay-as-you-go plan members */
-	PremiumPlan = "plan",
-
-	/** Restricted to Premium subscription members */
-	PremiumSubscription = "sub"
+	Moderator = "mod"
 }
 
 const RestrictionEmojiMap: Record<RestrictionName, string> = {
 	[RestrictionName.Developer]: "🔧",
-	[RestrictionName.Premium]: "✨",
-	[RestrictionName.Moderator]: "🛠️",
-	[RestrictionName.PremiumPlan]: "📊",
-	[RestrictionName.PremiumSubscription]: "💸"
+	[RestrictionName.Moderator]: "🛠️"
 };
 
 /** Determine which restriction type applies to a user. */
@@ -46,15 +34,6 @@ function restrictions(bot: Bot, env: DBEnvironment): RestrictionName[] {
 
 	if (env.user.roles.includes(DBRole.Owner)) types.push(RestrictionName.Developer);
 	if (env.user.roles.includes(DBRole.Moderator)) types.push(RestrictionName.Moderator);
-
-	const premium = bot.db.premium(env);
-
-	if (premium) {
-		if (premium.type === "subscription") types.push(RestrictionName.PremiumSubscription);
-		if (premium.type === "plan") types.push(RestrictionName.PremiumPlan);
-		
-		types.push(RestrictionName.Premium);
-	}
 
 	return types;
 }

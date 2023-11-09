@@ -1,4 +1,3 @@
-import { RestrictionName } from "../../utils/restriction.js";
 import { createChatModel } from "../../helpers/chat.js";
 import { getSettingsValue } from "../../settings.js";
 
@@ -6,12 +5,7 @@ export default createChatModel({
 	name: "GPT-4", id: "gpt-4",
 	emoji: { name: "✨" },
 
-	restrictions: [ RestrictionName.Premium ],
 	maxTokens: 8191,
-
-	cooldown: {
-		subscription: 30 * 1000
-	},
 
 	initialPrompt: {
 		role: "system",

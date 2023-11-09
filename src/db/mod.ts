@@ -22,16 +22,12 @@ const CollectionTemplates: Partial<Record<CollectionName, (id: string) => DBObje
 	guilds: id => (({
 		id,
 		created: new Date().toISOString(),
-		subscription: null, plan: null,
-		settings: {}, metadata: {},
-		infractions: []
+		infractions: [], settings: {}, metadata: {}
 	}) as DBGuild),
 
 	users: id => (({
 		id,
 		created: new Date().toISOString(),
-		voted: null,
-		subscription: null, plan: null,
 		settings: {}, metadata: {},
 		infractions: [], roles: []
 	}) as DBUser),

@@ -1,4 +1,4 @@
-import { type Interaction, type Embed, type Bot, Collection, MessageComponentTypes, ButtonStyles } from "@discordeno/bot";
+import { type Interaction, type Embed, type Bot, Collection } from "@discordeno/bot";
 
 import type { Conversation } from "../types/conversation.js";
 import type { DBEnvironment } from "../../db/types/mod.js";
@@ -14,7 +14,6 @@ const cooldowns: Collection<string, number> = new Collection();
 
 export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTarget) {
 	const cooldown = getCooldown(target);
-	const premium = bot.db.premium(env);
 
 	const response: MessageResponse = {
 		ephemeral: true, env
@@ -27,26 +26,6 @@ export function cooldownNotice(bot: Bot, env: DBEnvironment, target: CooldownTar
 			color: EmbedColor.Yellow
 		}
 	];
-
-	if (!premium) {
-		embeds.push({
-			description: "premium.cooldown",
-			color: EmbedColor.Orange
-		});
-
-		response.components = [ {
-			type: MessageComponentTypes.ActionRow,
-
-			components: [
-				{
-					type: MessageComponentTypes.Button,
-					label: "premium.buttons.upgrade", emoji: { name: "💸" },
-					customId: "premium:purchase",
-					style: ButtonStyles.Success
-				}
-			]
-		} ];
-	}
 
 	response.embeds = embeds;
 	return response;
@@ -65,12 +44,8 @@ export function hasCooldown(target: CooldownTarget) {
 	return getCooldown(target) !== null;
 }
 
-export function setCooldown(bot: Bot, env: DBEnvironment, target: CooldownTarget, duration: number) {
+export function setCooldown(env: DBEnvironment, target: CooldownTarget, duration: number) {
 	if (env.user.roles.includes(DBRole.Owner)) return;
-	
-	const premium = bot.db.premium(env);
-	if (premium?.type === "plan") return;
-
 	cooldowns.set(cooldownKey(target), Date.now() + duration);
 }
 

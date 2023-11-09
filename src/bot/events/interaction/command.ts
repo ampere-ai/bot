@@ -18,7 +18,6 @@ export async function executeCommand(bot: Bot, interaction: Interaction) {
 	if (!command) return;
 
 	const env = await bot.db.env(interaction.user.id, interaction.guildId);
-	const type = bot.db.type(env);
 
 	if (isBanned(env.user)) return void await interaction.reply(
 		infractionNotice(env.user, isBanned(env.user)!)
@@ -33,9 +32,7 @@ export async function executeCommand(bot: Bot, interaction: Interaction) {
 				interaction.deleteReply().catch(() => {});
 			}, remaining);
 		} else {
-			if (command.cooldown[type]) setCooldown(
-				bot, env, interaction, command.cooldown[type]!
-			);
+			if (command.cooldown) setCooldown( env, interaction, command.cooldown);
 		}
 	}
 

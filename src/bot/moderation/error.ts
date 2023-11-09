@@ -4,7 +4,7 @@ import { bold } from "colorette";
 import type { DBEnvironment } from "../../db/types/mod.js";
 
 import { EmbedColor, MessageResponse, transformResponse } from "../utils/response.js";
-import { MOD_CHANNELS, SUPPORT_INVITE } from "../../config.js";
+import { MOD_CHANNELS } from "../../config.js";
 
 interface JSONError {
 	name: string;
@@ -30,7 +30,7 @@ export async function handleError(bot: Bot, { env, error }: HandleErrorOptions):
 	return {
 		embeds: {
 			title: "error.title 😬",
-			description: { key: "error.desc", data: { invite: SUPPORT_INVITE } },
+			description: "error.desc",
 			color: EmbedColor.Red
 		},
 

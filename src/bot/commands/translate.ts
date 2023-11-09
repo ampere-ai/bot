@@ -10,12 +10,7 @@ import { APIError } from "../errors/api.js";
 
 export default createCommand({
 	name: "translate",
-
-	cooldown: {
-		user: 2.5 * 60 * 1000,
-		voter: 2.25 * 60 * 1000,
-		subscription: 30 * 1000
-	},
+	cooldown: 2.5 * 60 * 1000,
 
 	options: {
 		content: {

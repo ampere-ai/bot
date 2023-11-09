@@ -43,15 +43,12 @@ export const REDIS_PORT = process.env.REDIS_PORT ? Number(process.env.REDIS_PORT
 export const DB_URL = process.env.DB_URL!;
 export const DB_KEY = process.env.DB_KEY!;
 
-/** Ampere API keys */
+/** API keys */
 export const API_KEY = process.env.API_KEY!;
 export const API_HOST = process.env.API_HOST!;
 
 /** How often to save database changes, in seconds */
 export const DB_QUEUE_INTERVAL = Number(process.env.DB_QUEUE_INTERVAL!);
-
-/** Support server invite code */
-export const SUPPORT_INVITE = `discord.gg/${process.env.SUPPORT_INVITE_CODE!}`;
 
 /* Color to use for most embeds */
 export const BRANDING_COLOR = parseInt(process.env.BRANDING_COLOR!, 16);

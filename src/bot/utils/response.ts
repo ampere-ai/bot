@@ -18,14 +18,14 @@ export interface MessageResponse {
 	/** Components of the message */
 	components?: ToLocaleStrings<ActionRow>[];
 
-	/** Which file to upload */
-	file?: {
+	/** Which files to attach */
+	files?: {
 		/** Name of the file */
 		name: string;
 
 		/** Base64-encoded data of the file */
 		blob: string;
-	};
+	}[];
 
     /** Whether the response should only be shown to the author */
     ephemeral?: boolean;
@@ -98,9 +98,9 @@ export function transformResponse<T extends (CreateMessageOptions | EditMessage 
 			} : undefined,
 		}, response.env!),
 
-		files: response.file ? [ {
-			name: response.file.name,
-			blob: new Blob([ Buffer.from(response.file.blob, "base64") ])
-		} ] : undefined
+		files: response.files && response.files.length > 0 ? response.files.map(f => ({
+			name: f.name,
+			blob: new Blob([ Buffer.from(f.blob, "base64") ])
+		})) : undefined
 	} as T;
 }

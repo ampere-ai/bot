@@ -6,12 +6,6 @@ export default createChatModel({
 
 	maxTokens: 2048,
 	
-	cooldown: {
-		user: 60 * 1000,
-		voter: 45 * 1000,
-		subscription: 10 * 1000
-	},
-	
 	handler: async ({ bot, emitter, history }) => {
 		return bot.api.text.deepinfra({
 			model: "mistralai/Mistral-7B-Instruct-v0.1",

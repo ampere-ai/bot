@@ -16,6 +16,11 @@ declare module "@discordeno/bot" {
         /** API */
         api: ReturnType<typeof createAPI>;
 
+		/** Various dynamic values */
+		dynamic: {
+			plugins: { id: string; emoji: string; }[];
+		};
+
 		/** RabbitMQ connection */
 		rabbitmq: RabbitMQ.Connection;
     }

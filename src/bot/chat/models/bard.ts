@@ -7,12 +7,6 @@ export default createChatModel({
 
 	restrictions: [ RestrictionName.Developer ],
 	maxTokens: 2048,
-	
-	cooldown: {
-		user: 60 * 1000,
-		voter: 45 * 1000,
-		subscription: 10 * 1000
-	},
 
 	initialPrompt: {
 		role: "system",
